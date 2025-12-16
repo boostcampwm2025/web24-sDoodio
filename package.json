@@ -1,0 +1,34 @@
+{
+  "name": "web24-boostcamp",
+  "private": true,
+  "packageManager": "pnpm@10.23.0",
+  "scripts": {
+    "dev": "pnpm -C apps/frontend dev",
+    "build": "pnpm -C apps/frontend build",
+    "preview": "pnpm -C apps/frontend preview",
+    "typecheck": "pnpm -C apps/frontend typecheck",
+    "test": "pnpm -C apps/frontend test",
+    "test:e2e": "pnpm -C apps/frontend test:e2e",
+    "lint": "pnpm -C apps/frontend lint",
+    "format": "pnpm -C apps/frontend format"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.0",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-config-airbnb-typescript": "^18.0.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-import-resolver-typescript": "^3.10.1",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "prettier": "^3.4.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  }
+}
