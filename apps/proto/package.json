@@ -1,0 +1,15 @@
+{
+  "name": "@web24/proto",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev:push": "node --watch src/push.js",
+    "start:push": "node src/push.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "web-push": "^3.6.7"
+  }
+}
+

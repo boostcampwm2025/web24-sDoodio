@@ -1,0 +1,1 @@
+docker run --rm -it cloudflare/cloudflared:1800-17533b124c22 tunnel --url http://host.docker.internal:3001   

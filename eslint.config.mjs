@@ -33,6 +33,9 @@ export default [
 
   {
     files: ['**/*.{ts,tsx,js,jsx}'],
+    languageOptions: {
+      ecmaVersion: 2022,
+    },
     plugins: {
       'react-hooks': reactHooks,
       'react-refresh': reactRefresh,

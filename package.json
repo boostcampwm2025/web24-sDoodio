@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "pnpm -F @web24/frontend dev",
+    "dev:push": "pnpm -F @web24/frontend build && pnpm -F @web24/proto dev:push",
     "build": "pnpm -F @web24/frontend build",
     "preview": "pnpm -F @web24/frontend preview",
     "typecheck": "pnpm -F @web24/frontend typecheck",
