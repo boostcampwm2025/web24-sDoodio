@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+
+# 의존성 파일이 변경되었는지 확인
+if git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD | grep --quiet 'package.json\|pnpm-lock.yaml'; then
+  echo ""
+  echo "📦 의존성 파일이 변경되었습니다!"
+  echo "🔄 pnpm install 실행 중..."
+  echo ""
+  pnpm install
+  echo ""
+  echo "✅ 의존성 설치 완료!"
+  echo ""
+fi
