@@ -1,0 +1,137 @@
+name: Auto Merge PR
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  auto-merge:
+    # Approve된 경우에만 실행 (develop 브랜치로 가는 PR에서만)
+    if: github.event.review.state == 'approved' && github.event.pull_request.base.ref == 'develop'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check approvals and merge
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            
+            // PR 정보 가져오기
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber
+            });
+            
+            // Draft PR은 머지하지 않음
+            if (pr.draft) {
+              console.log('⏭️ Draft PR은 자동 머지하지 않습니다.');
+              return;
+            }
+            
+            // Mergeable 상태 확인
+            if (pr.mergeable === false) {
+              console.log('❌ PR이 머지 불가능한 상태입니다 (충돌 발생).');
+              return;
+            }
+            
+            // 모든 리뷰 가져오기
+            const { data: reviews } = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber
+            });
+            
+            // 각 리뷰어의 최신 리뷰만 가져오기 (같은 사람이 여러 번 리뷰할 수 있음)
+            const latestReviewsByUser = {};
+            reviews.forEach(review => {
+              const userId = review.user.login;
+              if (!latestReviewsByUser[userId] || 
+                  new Date(review.submitted_at) > new Date(latestReviewsByUser[userId].submitted_at)) {
+                latestReviewsByUser[userId] = review;
+              }
+            });
+            
+            // Approve 개수 카운트
+            const approvals = Object.values(latestReviewsByUser).filter(
+              review => review.state === 'APPROVED'
+            );
+            const approvalCount = approvals.length;
+            
+            console.log(`📊 현재 Approve 개수: ${approvalCount}/2`);
+            console.log(`✅ Approved by: ${approvals.map(r => r.user.login).join(', ')}`);
+            
+            // 2명 이상의 approve가 있는지 확인
+            if (approvalCount < 2) {
+              console.log('⏳ 아직 2명의 approve가 필요합니다.');
+              return;
+            }
+            
+            // CI/CD 등 required checks 통과 확인
+            const { data: checks } = await github.rest.checks.listForRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: pr.head.sha
+            });
+            
+            const failedChecks = checks.check_runs.filter(
+              check => check.conclusion === 'failure' || check.conclusion === 'cancelled'
+            );
+            
+            if (failedChecks.length > 0) {
+              console.log('❌ 실패한 체크가 있습니다:');
+              failedChecks.forEach(check => console.log(`  - ${check.name}: ${check.conclusion}`));
+              return;
+            }
+            
+            // 모든 조건 통과 → 자동 머지
+            console.log('🚀 모든 조건을 만족했습니다. PR을 머지합니다...');
+            
+            // PR의 모든 커밋 가져오기
+            const { data: commits } = await github.rest.pulls.listCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber
+            });
+            
+            // 커밋 메시지 리스트 생성 (GitHub 기본 squash merge 형식)
+            const commitMessages = commits.map(commit => {
+              const message = commit.commit.message.split('\n')[0]; // 첫 줄만
+              return `* ${message}`;
+            }).join('\n');
+            
+            const fullCommitMessage = `${pr.body || ''}\n\n${commitMessages}`;
+            
+            try {
+              await github.rest.pulls.merge({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+                merge_method: 'squash',
+                commit_title: pr.title,
+                commit_message: fullCommitMessage
+              });
+              
+              console.log('✅ PR 머지 완료!');
+              
+              // 머지 후 브랜치 삭제
+              const headRef = pr.head.ref;
+              try {
+                await github.rest.git.deleteRef({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  ref: `heads/${headRef}`
+                });
+                console.log(`🗑️ 브랜치 삭제 완료: ${headRef}`);
+              } catch (error) {
+                console.log(`⚠️ 브랜치 삭제 실패 (이미 삭제되었을 수 있음): ${error.message}`);
+              }
+              
+            } catch (error) {
+              console.log(`❌ PR 머지 실패: ${error.message}`);
+            }
