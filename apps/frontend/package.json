@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest",
+    "test:run": "vitest run",
     "test:ui": "vitest --ui",
     "test:e2e": "pnpm build && playwright test",
     "lint": "eslint .",
