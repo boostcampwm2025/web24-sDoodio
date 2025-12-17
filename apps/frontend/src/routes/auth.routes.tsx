@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes } from "react-router-dom";
 
 function LoginPage() {
   return (
@@ -13,7 +13,10 @@ export function AuthRoutes() {
   return (
     <Routes>
       <Route element={<LoginPage />} path="login" />
-      <Route element={<div className="text-zinc-300">Auth Not Found</div>} path="*" />
+      <Route
+        element={<div className="text-zinc-300">Auth Not Found</div>}
+        path="*"
+      />
     </Routes>
   );
 }

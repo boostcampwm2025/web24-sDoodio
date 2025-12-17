@@ -1,7 +1,7 @@
-import { APP_NAME } from '@web24/shared';
+import { APP_NAME } from "@web24/shared";
 
-import { AppRoutes } from '@/routes';
-import { useAbcdeStore } from '@/stores/useAbcdeStore';
+import { AppRoutes } from "@/routes";
+import { useAbcdeStore } from "@/stores/useAbcdeStore";
 
 export function App() {
   const count = useAbcdeStore((s) => s.count);

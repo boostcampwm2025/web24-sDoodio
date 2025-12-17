@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
-import { fetchSomethingA } from '../apis/fetchSomethingA.api';
-import type { DodoRoomData } from '../types/dodo-room.types';
+import { fetchSomethingA } from "../apis/fetchSomethingA.api";
+import type { DodoRoomData } from "../types/dodo-room.types";
 
 type UseDodoRoomResult = {
   room: DodoRoomData | null;
@@ -22,7 +22,8 @@ export function useHook(roomId: string): UseDodoRoomResult {
         if (!cancelled) setRoom(data);
       })
       .catch((e: unknown) => {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Unknown error');
+        if (!cancelled)
+          setError(e instanceof Error ? e.message : "Unknown error");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

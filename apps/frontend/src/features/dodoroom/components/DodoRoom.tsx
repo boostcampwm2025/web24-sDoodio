@@ -1,7 +1,7 @@
-import { useHook } from '../hooks/useHook';
+import { useHook } from "../hooks/useHook";
 
 export function DodoRoom() {
-  const { room, error, loading } = useHook('demo');
+  const { room, error, loading } = useHook("demo");
 
   let content = <p className="mt-2 text-sm text-zinc-400">No data</p>;
   if (loading) content = <p className="mt-2 text-sm text-zinc-400">Loading…</p>;
