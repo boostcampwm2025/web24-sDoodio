@@ -5,7 +5,7 @@ commit_msg=$(cat "$1")
 
 # Conventional Commits 패턴
 # 형식: type: subject
-pattern="^(feat|fix|docs|style|refactor|test|setting|ci|chore): .{1,}"
+pattern="^(feat|fix|docs|style|refactor|test|setting|ci|chore|migration): .{1,}"
 
 if ! echo "$commit_msg" | grep -qE "$pattern"; then
   echo ""
@@ -23,6 +23,7 @@ if ! echo "$commit_msg" | grep -qE "$pattern"; then
   echo "  - setting:  환경 설정 변경"
   echo "  - ci:       CI 설정 변경"
   echo "  - chore:    그 외 작업"
+  echo "  - migration:  DB 스키마 변경"
   echo ""
   echo "📝 예시:" -> 한글 예시로..
   echo "  feat: 로그인 기능 추가"
