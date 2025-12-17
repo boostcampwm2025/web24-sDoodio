@@ -1,0 +1,66 @@
+name: Auto Assign and Request Reviewers
+
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  assign-and-review:
+    # Draft PR은 제외
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Auto assign PR creator and request reviewers
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const prAuthor = context.payload.pull_request.user.login;
+            
+            // 1. PR 작성자를 assignee로 지정
+            await github.rest.issues.addAssignees({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              assignees: [prAuthor]
+            });
+            console.log(`✅ Assignee 지정 완료: ${prAuthor}`);
+            
+            // 2. 저장소의 collaborator 목록 가져오기
+            const { data: collaborators } = await github.rest.repos.listCollaborators({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              affiliation: 'direct', // direct collaborators만 (조직 멤버 제외)
+              permission: 'push' // push 권한 이상인 사용자만
+            });
+            
+            // collaborator username 목록 추출
+            const collaboratorUsernames = collaborators.map(c => c.login);
+            console.log(`📋 Collaborator 목록: ${collaboratorUsernames.join(', ')}`);
+            
+            // 3. PR 작성자를 제외한 리뷰어 풀 생성
+            const availableReviewers = collaboratorUsernames.filter(
+              username => username !== prAuthor
+            );
+            console.log(`🔍 사용 가능한 리뷰어: ${availableReviewers.join(', ')}`);
+            
+            // 4. 2명의 랜덤 리뷰어 선택
+            const shuffled = availableReviewers.sort(() => 0.5 - Math.random());
+            const selectedReviewers = shuffled.slice(0, 2);
+            
+            // 4. 리뷰어 요청
+            if (selectedReviewers.length > 0) {
+              await github.rest.pulls.requestReviewers({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+                reviewers: selectedReviewers
+              });
+              console.log(`✅ 리뷰어 요청 완료: ${selectedReviewers.join(', ')}`);
+            } else {
+              console.log('⚠️ 사용 가능한 리뷰어가 없습니다.');
+            }

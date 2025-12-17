@@ -10,7 +10,10 @@ describe('fetchSomethingA', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    await expect(fetchSomethingA('demo')).resolves.toEqual({ id: 'demo', name: 'Demo' });
+    await expect(fetchSomethingA('demo')).resolves.toEqual({
+      id: 'demo',
+      name: 'Demo',
+    });
     expect(fetchMock).toHaveBeenCalledWith('/dodo-rooms/demo');
   });
 });
