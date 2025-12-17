@@ -15,13 +15,6 @@ const VAPID_PRIVATE_KEY = 'M8MsN069sNygzZk0u2E2vfVp-1TlhppwRv0tcCd7PX4';
 const app = express();
 app.use(express.json());
 
-const frontendDistDir = path.join(__dirname, '..', '..', 'frontend', 'dist');
-const frontendIndexHtml = path.join(frontendDistDir, 'index.html');
-app.use(express.static(frontendDistDir));
-app.get('*', (_req, res) => {
-  res.sendFile(frontendIndexHtml);
-});
-
 const subscriptionByEndpoint = new Map();
 
 app.get('/vapid/public-key', async (_req, res) => {
@@ -60,6 +53,13 @@ app.post('/push/test', async (req, res) => {
     sent,
     total: subscriptions.length,
   });
+});
+
+const frontendDistDir = path.join(__dirname, '..', '..', 'frontend', 'dist');
+const frontendIndexHtml = path.join(frontendDistDir, 'index.html');
+app.use(express.static(frontendDistDir));
+app.get('*', (_req, res) => {
+  res.sendFile(frontendIndexHtml);
 });
 
 async function main() {
