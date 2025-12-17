@@ -1,9 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from 'vitest';
 
-import { useAbcdeStore } from "./useAbcdeStore";
+import { useAbcdeStore } from './useAbcdeStore';
 
-describe("useAbcdeStore", () => {
-  it("increments count", () => {
+describe('useAbcdeStore', () => {
+  it('increments count', () => {
     useAbcdeStore.setState({ count: 0 });
     expect(useAbcdeStore.getState().count).toBe(0);
     useAbcdeStore.getState().increment();
