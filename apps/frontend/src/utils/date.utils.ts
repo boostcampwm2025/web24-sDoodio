@@ -8,4 +8,3 @@ export function getLocalDateKey(date: Date = new Date()) {
   const day = pad2(date.getDate());
   return `${year}-${month}-${day}`;
 }
-

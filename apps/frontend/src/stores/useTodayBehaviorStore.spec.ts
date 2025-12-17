@@ -17,12 +17,10 @@ describe('useTodayBehaviorStore', () => {
     useBehaviorPoolStore.getState().add({ title: '영단어 10개', categoryId: 'study' });
     useBehaviorPoolStore.getState().add({ title: '기타 연습', categoryId: 'hobby' });
 
-    useTodayBehaviorStore
-      .getState()
-      .drawRandomFromPool(2, {
-        randomNumberGenerator: createSeededRng(123),
-        now: new Date('2025-01-01T12:00:00'),
-      });
+    useTodayBehaviorStore.getState().drawRandomFromPool(2, {
+      randomNumberGenerator: createSeededRng(123),
+      now: new Date('2025-01-01T12:00:00'),
+    });
 
     const { items } = useTodayBehaviorStore.getState();
     expect(items).toHaveLength(2);
