@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import { AppRoutes } from '@/routes';
 
 export function App() {
-
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
     navigator.serviceWorker
@@ -19,7 +18,7 @@ export function App() {
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
           <h1 className="text-lg font-semibold">{APP_NAME}</h1>
           <Link className="text-sm text-zinc-300 hover:underline" to="/push">
-              Push
+            Push
           </Link>
         </div>
       </header>
