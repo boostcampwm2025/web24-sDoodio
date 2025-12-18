@@ -1,19 +1,12 @@
 import { useScroll } from '@/shared/hooks/useScroll';
 import { Bell } from 'lucide-react';
-import type { RoutePath } from '@/shared/types/layout.types';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { MENU_ITEMS } from '@/shared/constants/menu';
 
 function DesktopHeader() {
   const navigate = useNavigate();
   const location = useLocation();
   const isScrolled = useScroll(10);
-
-  const menuItems: { path: RoutePath; label: string }[] = [
-    { path: '/', label: '홈' },
-    { path: '/all-habits', label: '전체 습관' },
-    { path: '/stats', label: '통계' },
-    { path: '/myroom', label: '두두의방' },
-  ];
 
   return (
     <header
@@ -30,7 +23,7 @@ function DesktopHeader() {
 
         {/* 메뉴 */}
         <nav className="flex items-center gap-12">
-          {menuItems.map((item) => {
+          {MENU_ITEMS.map((item) => {
             const isActive = location.pathname === item.path;
             return (
               <button

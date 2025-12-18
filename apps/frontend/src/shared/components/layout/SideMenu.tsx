@@ -1,6 +1,7 @@
 import type { SideMenuProps } from '@/shared/types/layout.types';
 import { useEffect } from 'react';
 import { X } from 'lucide-react';
+import { BREAKPOINTS } from '@/shared/constants/breakpoints';
 
 function SideMenu({ isOpen, onClose }: SideMenuProps) {
   // 스크롤 잠금
@@ -18,7 +19,7 @@ function SideMenu({ isOpen, onClose }: SideMenuProps) {
   // 데스크탑 크기가 되면 닫기
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 768 && isOpen) {
+      if (window.innerWidth >= BREAKPOINTS.TABLET && isOpen) {
         onClose();
       }
     };
