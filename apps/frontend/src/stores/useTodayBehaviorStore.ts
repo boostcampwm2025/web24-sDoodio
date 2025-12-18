@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-import type { TodayBehaviorItem } from '@/shared/behaviors/behavior.types';
-import { getLocalDateKey } from '@/utils/date.utils';
+import type { TodayBehaviorItem } from '@/shared/types/behavior.types';
+import { getLocalDateKey, getLocalWeekday } from '@/utils/date.utils';
 import { pickRandomUnique } from '@/utils/random.utils';
 
 import { useBehaviorPoolStore } from './useBehaviorPoolStore';
@@ -17,6 +17,7 @@ interface TodayBehaviorState {
   items: TodayBehaviorItem[];
   ensureToday: (now?: Date) => void;
   setFromPool: (behaviorIds: string[], now?: Date) => void;
+  addFromPool: (behaviorIds: string[], now?: Date) => void;
   drawRandomFromPool: (count: number, options?: DrawOptions) => void;
   toggleDone: (behaviorId: string) => void;
   clear: (now?: Date) => void;
@@ -57,6 +58,27 @@ export const useTodayBehaviorStore = create<TodayBehaviorState>()(
       },
 
       /**
+       * 행동 풀에서 행동 아이템들을 오늘 행동 목록에 "추가" (기존 유지 + 중복 방지)
+       * @param behaviorIds 행동 풀에서 가져올 행동의 Id들
+       * @param now 오늘 날짜
+       */
+      addFromPool: (behaviorIds, now) => {
+        get().ensureToday(now);
+        const poolIds = new Set(useBehaviorPoolStore.getState().items.map((b) => b.id));
+        const toAdd = uniqueStrings(behaviorIds).filter((id) => poolIds.has(id));
+
+        const existing = get().items;
+        const existingIds = new Set(existing.map((item) => item.behaviorId));
+        const merged = [...existing];
+
+        toAdd.forEach((behaviorId) => {
+          if (!existingIds.has(behaviorId)) merged.push({ behaviorId, done: false });
+        });
+
+        set({ items: merged });
+      },
+
+      /**
        * 행동 풀에서 랜덤으로 뽑아 오늘 행동 목록을 설정
        * @param count 뽑아올 행동 아이템 수
        * @param options
@@ -65,9 +87,15 @@ export const useTodayBehaviorStore = create<TodayBehaviorState>()(
         const { randomNumberGenerator, now } = options ?? {};
         get().ensureToday(now);
 
-        const pool = useBehaviorPoolStore.getState().items;
+        const weekday = getLocalWeekday(now);
+        const pool = useBehaviorPoolStore
+          .getState()
+          .items.filter(
+            (b) =>
+              b.isRandomRecommended && (b.weekdays.length === 0 || b.weekdays.includes(weekday)),
+          );
         const ids = pool.map((b) => b.id);
-        const picked = pickRandomUnique(ids, count, randomNumberGenerator);
+        const picked = pickRandomUnique(ids, count, randomNumberGenerator ?? Math.random);
         set({ items: picked.map((behaviorId) => ({ behaviorId, done: false })) });
       },
 

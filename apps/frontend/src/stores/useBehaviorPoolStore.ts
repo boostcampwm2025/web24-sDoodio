@@ -1,16 +1,18 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-import type { BehaviorCategoryId, BehaviorItem, Weekday } from '@/shared/behaviors/behavior.types';
-import { BEHAVIOR_CATEGORIES } from '@/shared/behaviors/behaviorCategory';
-import { WEEKDAYS } from '@/shared/behaviors/weekdays';
+import type { BehaviorCategoryId, BehaviorItem, Weekday } from '@/shared/types/behavior.types';
+import { BEHAVIOR_CATEGORIES } from '@/shared/constants/behaviorCategory';
+import { WEEKDAYS } from '@/shared/constants/weekdays';
 
 interface CreateBehaviorInput {
   title: string;
   description?: string;
+  identityStatement?: string;
   categoryId: BehaviorCategoryId;
   weekdays?: readonly Weekday[];
   isAiRecommended?: boolean;
+  isRandomRecommended?: boolean;
 }
 
 interface BehaviorPoolState {
@@ -36,6 +38,10 @@ function normalizeDescription(description: string | undefined) {
   return (description ?? '').trim().replace(/\s+/g, ' ');
 }
 
+function normalizeIdentityStatement(identityStatement: string | undefined) {
+  return (identityStatement ?? '').trim().replace(/\s+/g, ' ');
+}
+
 function normalizeWeekdays(weekdays: readonly Weekday[] | undefined) {
   if (!weekdays) return [...WEEKDAYS];
   return [...new Set(weekdays)];
@@ -46,7 +52,15 @@ export const useBehaviorPoolStore = create<BehaviorPoolState>()(
     (set, get) => ({
       items: [],
 
-      add: ({ title, description, categoryId, weekdays, isAiRecommended }) => {
+      add: ({
+        title,
+        description,
+        identityStatement,
+        categoryId,
+        weekdays,
+        isAiRecommended,
+        isRandomRecommended,
+      }) => {
         const normalized = normalizeTitle(title);
         if (!normalized) throw new Error('행동 제목이 필요합니다.');
 
@@ -54,9 +68,11 @@ export const useBehaviorPoolStore = create<BehaviorPoolState>()(
           id: createId(),
           title: normalized,
           description: normalizeDescription(description),
+          identityStatement: normalizeIdentityStatement(identityStatement),
           categoryId,
           weekdays: normalizeWeekdays(weekdays),
           isAiRecommended: isAiRecommended ?? false,
+          isRandomRecommended: isRandomRecommended ?? false,
           totalCompletions: 0,
           createdAt: Date.now(),
         };
@@ -111,9 +127,11 @@ export const useBehaviorPoolStore = create<BehaviorPoolState>()(
           id: createId(),
           title: `${category.label} 기본 행동`,
           description: '',
+          identityStatement: '',
           categoryId: category.id,
           weekdays: [...WEEKDAYS],
           isAiRecommended: false,
+          isRandomRecommended: false,
           totalCompletions: 0,
           createdAt: Date.now(),
         }));
@@ -124,7 +142,20 @@ export const useBehaviorPoolStore = create<BehaviorPoolState>()(
     {
       name: 'web24.behaviorPool',
       storage: createJSONStorage(() => localStorage),
-      version: 1,
+      version: 2,
+      migrate: (persistedState) => {
+        const state = persistedState as { items?: unknown };
+        const items = Array.isArray(state.items) ? state.items : [];
+
+        return {
+          ...state,
+          items: items.map((item) => {
+            if (!item || typeof item !== 'object') return item;
+            if ('identityStatement' in item) return item;
+            return { ...(item as object), identityStatement: '' };
+          }),
+        };
+      },
     },
   ),
 );
