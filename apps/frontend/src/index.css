@@ -2,6 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  @keyframes wave-slide {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  @keyframes bubble-rise {
+    0% {
+      transform: translateY(100px) scale(0.5);
+      opacity: 0;
+    }
+    30% {
+      opacity: 0.3;
+    }
+    100% {
+      transform: translateY(-200px) scale(1.5);
+      opacity: 0;
+    }
+  }
+}
+
 html,
 body {
   height: 100%;
