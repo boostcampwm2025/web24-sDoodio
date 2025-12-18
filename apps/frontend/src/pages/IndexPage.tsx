@@ -7,7 +7,8 @@ export function IndexPage() {
       </header>
 
       <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-6 text-sm text-zinc-300">
-        여기서부터 기능 페이지를 추가해 주세요.
+        <p>여기서부터 기능 페이지를 추가해 주세요.</p>
+        <p className="mt-3" />
       </div>
     </section>
   );

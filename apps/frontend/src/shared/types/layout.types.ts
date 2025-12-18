@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 
-export type RoutePath = '/' | '/all-habits' | '/stats' | '/myroom';
+export type RoutePath = '/' | '/all-behaviors' | '/stats' | '/myroom';
 
 export interface SideMenuProps {
   isOpen: boolean;

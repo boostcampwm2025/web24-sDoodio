@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import { BehaviorPoolFab } from '@/features/behaviorPool/components/BehaviorPoolFab';
 import DesktopHeader from './DesktopHeader';
 import MobileHeader from './MobileHeader';
 import MobileTabBar from './MobileTabBar';
@@ -21,7 +22,8 @@ function Layout({ children }: { children: ReactNode }) {
         {children}
       </main>
 
-      {/* + FAB 버튼 */}
+      {/* + FAB */}
+      <BehaviorPoolFab />
 
       {/* 모바일 탭 바 */}
       <MobileTabBar />
