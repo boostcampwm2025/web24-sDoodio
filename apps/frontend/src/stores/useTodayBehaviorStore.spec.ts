@@ -84,20 +84,20 @@ describe('useTodayBehaviorStore', () => {
     expect(useTodayBehaviorStore.getState().items.map((i) => i.behaviorId)).toEqual([a.id, b.id]);
   });
 
-  it('오늘 행동 아이템 토글 시 행동 누적 수행 횟수 증감', () => {
+  it('오늘 행동 아이템 수행 시 행동 누적 수행 횟수 증가', () => {
     const created = useBehaviorPoolStore
       .getState()
       .add({ title: '물 마시기', categoryId: 'health' });
     useTodayBehaviorStore.getState().setFromPool([created.id], new Date('2025-01-01'));
 
-    useTodayBehaviorStore.getState().toggleDone(created.id);
+    useTodayBehaviorStore.getState().incrementCount(created.id);
     expect(
       useBehaviorPoolStore.getState().items.find((b) => b.id === created.id)?.totalCompletions,
     ).toBe(1);
 
-    useTodayBehaviorStore.getState().toggleDone(created.id);
+    useTodayBehaviorStore.getState().incrementCount(created.id);
     expect(
       useBehaviorPoolStore.getState().items.find((b) => b.id === created.id)?.totalCompletions,
-    ).toBe(0);
+    ).toBe(2);
   });
 });

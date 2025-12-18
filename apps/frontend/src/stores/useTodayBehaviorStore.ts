@@ -19,7 +19,7 @@ interface TodayBehaviorState {
   setFromPool: (behaviorIds: string[], now?: Date) => void;
   addFromPool: (behaviorIds: string[], now?: Date) => void;
   drawRandomFromPool: (count: number, options?: DrawOptions) => void;
-  toggleDone: (behaviorId: string) => void;
+  incrementCount: (behaviorId: string) => void;
   clear: (now?: Date) => void;
 }
 
@@ -53,7 +53,7 @@ export const useTodayBehaviorStore = create<TodayBehaviorState>()(
         const poolIds = new Set(useBehaviorPoolStore.getState().items.map((b) => b.id));
         const next = uniqueStrings(behaviorIds)
           .filter((id) => poolIds.has(id))
-          .map<TodayBehaviorItem>((behaviorId) => ({ behaviorId, done: false }));
+          .map<TodayBehaviorItem>((behaviorId) => ({ behaviorId, currentCount: 0 }));
         set({ items: next });
       },
 
@@ -72,7 +72,7 @@ export const useTodayBehaviorStore = create<TodayBehaviorState>()(
         const merged = [...existing];
 
         toAdd.forEach((behaviorId) => {
-          if (!existingIds.has(behaviorId)) merged.push({ behaviorId, done: false });
+          if (!existingIds.has(behaviorId)) merged.push({ behaviorId, currentCount: 0 });
         });
 
         set({ items: merged });
@@ -96,22 +96,22 @@ export const useTodayBehaviorStore = create<TodayBehaviorState>()(
           );
         const ids = pool.map((b) => b.id);
         const picked = pickRandomUnique(ids, count, randomNumberGenerator ?? Math.random);
-        set({ items: picked.map((behaviorId) => ({ behaviorId, done: false })) });
+        set({ items: picked.map((behaviorId) => ({ behaviorId, currentCount: 0 })) });
       },
 
-      toggleDone: (behaviorId) => {
+      incrementCount: (behaviorId) => {
         const current = get().items.find((item) => item.behaviorId === behaviorId);
         if (!current) return;
 
-        const nextDone = !current.done;
         set((state) => ({
           items: state.items.map((item) =>
-            item.behaviorId === behaviorId ? { ...item, done: nextDone } : item,
+            item.behaviorId === behaviorId
+              ? { ...item, currentCount: item.currentCount + 1 }
+              : item,
           ),
         }));
 
-        const delta = nextDone ? 1 : -1;
-        useBehaviorPoolStore.getState().adjustTotalCompletions(behaviorId, delta);
+        useBehaviorPoolStore.getState().adjustTotalCompletions(behaviorId, 1);
       },
 
       clear: (now) => {
@@ -122,7 +122,7 @@ export const useTodayBehaviorStore = create<TodayBehaviorState>()(
     {
       name: 'web24.todayBehaviors',
       storage: createJSONStorage(() => localStorage),
-      version: 1,
+      version: 2, // Version bump for schema change
     },
   ),
 );

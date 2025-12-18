@@ -19,7 +19,7 @@ export interface BehaviorItem {
 
 export interface TodayBehaviorItem {
   behaviorId: string;
-  done: boolean;
+  currentCount: number;
 }
 
 export interface DodoPreset {
