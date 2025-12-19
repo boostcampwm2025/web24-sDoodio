@@ -25,7 +25,7 @@ export function HabitCard({
       className={[
         'group flex flex-col rounded-2xl border border-zinc-100 bg-white p-6 shadow-sm transition-all',
         'hover:-translate-y-1 hover:shadow-md',
-        variant === 'grid' ? 'h-full' : 'mb-4 break-inside-avoid',
+        variant === 'grid' ? 'max-h-80' : 'mb-4 break-inside-avoid',
       ].join(' ')}
     >
       <Link to="/behavior/1">

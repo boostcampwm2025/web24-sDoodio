@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { BehaviorPoolFab } from '@/features/behaviorPool/components/BehaviorPoolFab';
+import { FirstStampOverlay } from '../FirstStampOverlay';
 import DesktopHeader from './DesktopHeader';
 import MobileHeader from './MobileHeader';
 import MobileTabBar from './MobileTabBar';
@@ -27,6 +28,9 @@ function Layout({ children }: { children: ReactNode }) {
 
       {/* 모바일 탭 바 */}
       <MobileTabBar />
+
+      {/* 첫 시도 오버레이 */}
+      <FirstStampOverlay />
     </div>
   );
 }

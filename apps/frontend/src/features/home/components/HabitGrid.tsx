@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { useBehaviorPoolStore } from '@/stores/useBehaviorPoolStore';
 import { useTodayBehaviorStore } from '@/stores/useTodayBehaviorStore';
 import { BEHAVIOR_CATEGORIES } from '@/shared/constants/behaviorCategory';
+import useDodoChatStore from '@/stores/useDodoChatStore';
 import { HabitCard } from './HabitCard';
 
 interface HabitGridProps {
@@ -12,17 +13,19 @@ interface HabitGridProps {
 export function HabitGrid({ variant }: HabitGridProps) {
   const { items: todayItems, incrementCount, drawRandomFromPool } = useTodayBehaviorStore();
   const { items: poolItems, seedDefaultsIfEmpty } = useBehaviorPoolStore();
+  const { setRandomQuote } = useDodoChatStore();
+  const hasInitialized = useRef(false);
 
   useEffect(() => {
     seedDefaultsIfEmpty();
+  }, [seedDefaultsIfEmpty]);
 
-    if (todayItems.length === 0) {
-      const poolCount = useBehaviorPoolStore.getState().items.length;
-      if (poolCount > 0) {
-        drawRandomFromPool(5, { now: new Date() });
-      }
+  useEffect(() => {
+    if (!hasInitialized.current && todayItems.length === 0 && poolItems.length > 0) {
+      drawRandomFromPool(5, { now: new Date() });
+      hasInitialized.current = true;
     }
-  });
+  }, [todayItems.length, poolItems.length, drawRandomFromPool]);
 
   const habits = todayItems
     .map((todayItem) => {
@@ -38,7 +41,10 @@ export function HabitGrid({ variant }: HabitGridProps) {
         description: definition.description || '습관에 대한 설명입니다.',
         category: categoryInfo,
         currentCount: todayItem.currentCount,
-        onStickerClick: () => incrementCount(definition.id),
+        onStickerClick: () => {
+          incrementCount(definition.id);
+          setRandomQuote();
+        },
       };
     })
     .filter(Boolean);
@@ -50,7 +56,7 @@ export function HabitGrid({ variant }: HabitGridProps) {
       <div
         className={
           variant === 'grid'
-            ? 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3'
+            ? 'grid grid-cols-1 items-start gap-4 sm:grid-cols-2 lg:grid-cols-3'
             : 'columns-1 gap-4 sm:columns-2 lg:columns-3'
         }
       >

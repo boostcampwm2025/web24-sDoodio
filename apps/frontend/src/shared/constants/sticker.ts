@@ -1,1 +1,1 @@
-export const MAX_STICKERS: number = 100;
+export const MAX_STICKERS: number = 20;

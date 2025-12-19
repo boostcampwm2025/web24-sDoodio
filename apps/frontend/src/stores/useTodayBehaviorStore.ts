@@ -6,6 +6,7 @@ import { getLocalDateKey, getLocalWeekday } from '@/utils/date.utils';
 import { pickRandomUnique } from '@/utils/random.utils';
 
 import { useBehaviorPoolStore } from './useBehaviorPoolStore';
+import useDodoChatStore from './useDodoChatStore';
 
 interface DrawOptions {
   randomNumberGenerator?: () => number;
@@ -100,8 +101,11 @@ export const useTodayBehaviorStore = create<TodayBehaviorState>()(
       },
 
       incrementCount: (behaviorId) => {
-        const current = get().items.find((item) => item.behaviorId === behaviorId);
+        const currentItems = get().items;
+        const current = currentItems.find((item) => item.behaviorId === behaviorId);
         if (!current) return;
+
+        const isFirstStampForBehavior = current.currentCount === 0;
 
         set((state) => ({
           items: state.items.map((item) =>
@@ -110,6 +114,10 @@ export const useTodayBehaviorStore = create<TodayBehaviorState>()(
               : item,
           ),
         }));
+
+        if (isFirstStampForBehavior) {
+          useDodoChatStore.getState().showFirstStampOverlay();
+        }
 
         useBehaviorPoolStore.getState().adjustTotalCompletions(behaviorId, 1);
       },
