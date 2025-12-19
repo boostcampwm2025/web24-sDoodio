@@ -1,4 +1,5 @@
 import { MAX_STICKERS } from '@/shared/constants/sticker';
+import { useState, useEffect } from 'react';
 import StickerCell from './StickerCell';
 
 export interface StickerBoardProps {
@@ -9,6 +10,22 @@ export interface StickerBoardProps {
 
 export function StickerBoard({ currentCount, columns = 5, onStickerClick }: StickerBoardProps) {
   const visibleCount = Math.min(MAX_STICKERS, currentCount + 1);
+  const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
+
+  const handleStickerClick = () => {
+    setLastClickedIndex(currentCount);
+    onStickerClick();
+  };
+
+  useEffect(() => {
+    if (lastClickedIndex !== null) {
+      const timer = setTimeout(() => {
+        setLastClickedIndex(null);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+    return () => {};
+  }, [lastClickedIndex]);
 
   return (
     <div
@@ -18,14 +35,15 @@ export function StickerBoard({ currentCount, columns = 5, onStickerClick }: Stic
       {Array.from({ length: visibleCount }, (_, index) => {
         const isFilled = index < currentCount;
         const isNext = index === currentCount;
-        const isClickable = isNext && Boolean(onStickerClick);
+        const isClickable = isNext && Boolean(handleStickerClick);
 
         return (
           <StickerCell
             key={`sticker-${index}`}
             isFilled={isFilled}
             isClickable={isClickable}
-            onClick={onStickerClick}
+            onClick={handleStickerClick}
+            isNewlyFilled={index === lastClickedIndex}
           />
         );
       })}
