@@ -32,7 +32,7 @@ function DodoChat({ quote }: DodoChatProps) {
       </div>
 
       {/* 말풍선 */}
-      <div className="relative w-fit max-w-xl rounded-2xl bg-zinc-600 px-6 py-6 text-white shadow-xl">
+      <div className="relative w-fit max-w-2xl rounded-2xl bg-zinc-600 px-6 py-6 text-white shadow-xl">
         <div className="absolute -left-3 top-1/2 h-0 w-0 -translate-y-1/2 border-y-[10px] border-r-[12px] border-y-transparent border-r-zinc-600" />
         <p className="font-medium leading-relaxed">
           {displayedQuote}
