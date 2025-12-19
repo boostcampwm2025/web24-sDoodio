@@ -131,7 +131,7 @@ export const useBehaviorPoolStore = create<BehaviorPoolState>()(
           categoryId: category.id,
           weekdays: [...WEEKDAYS],
           isAiRecommended: false,
-          isRandomRecommended: false,
+          isRandomRecommended: true,
           totalCompletions: 0,
           createdAt: Date.now(),
         }));

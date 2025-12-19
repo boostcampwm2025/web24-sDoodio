@@ -25,6 +25,26 @@
       opacity: 0;
     }
   }
+
+  .animation-delay-100 {
+    animation-delay: 100ms;
+  }
+
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .animation-delay-300 {
+    animation-delay: 300ms;
+  }
+
+  .animation-delay-500 {
+    animation-delay: 500ms;
+  }
+
+  .animation-delay-700 {
+    animation-delay: 700ms;
+  }
 }
 
 html,
@@ -33,5 +53,5 @@ body {
 }
 
 body {
-  @apply bg-zinc-950 text-zinc-100;
+  @apply bg-[#F7F7F5] text-zinc-900;
 }
