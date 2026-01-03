@@ -1,4 +1,4 @@
-# web24-boostcamp (frontend)
+# web24-boostcamp (frontend)!
 
 Monorepo scaffold for a frontend stack:
 
