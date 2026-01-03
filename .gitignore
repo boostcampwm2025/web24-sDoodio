@@ -13,3 +13,9 @@
 **/coverage
 **/playwright-report
 **/test-results
+
+# gemini-cli settings
+.gemini/
+
+# GitHub App credentials
+gha-creds-*.json
