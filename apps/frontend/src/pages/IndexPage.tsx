@@ -16,7 +16,7 @@ export function IndexPage() {
   return (
     <div className="flex flex-col pt-2">
       <Hero nickname="뚜웰" quote={quote} />
-      <HabitGrid variant="grid" />
+      <HabitGrid variant="masonry" />
     </div>
   );
 }
