@@ -1,0 +1,34 @@
+name: Doo-Well
+
+services:
+  db:
+    image: pgvector/pgvector:pg18-trixie
+    container_name: doowell-pgvector
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: devuser
+      POSTGRES_PASSWORD: devpass
+      POSTGRES_DB: doowelldevdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql
+
+  pgadmin:
+    image: dpage/pgadmin4:8.9
+    container_name: doowell-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: adminpass
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+      - ./servers.json:/pgadmin4/servers.json
+
+volumes:
+  pg_data:
+  pgadmin_data:

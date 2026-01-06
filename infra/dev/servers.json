@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "dev-pgvector",
+      "Group": "Servers",
+      "Host": "db",
+      "Port": 5432,
+      "MaintenanceDB": "doowelldevdb",
+      "Username": "devuser",
+      "SSLMode": "prefer"
+    }
+  }
+}
