@@ -2,8 +2,10 @@ import { Body, Controller, Get, Post } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { CreateSampleSchema, type CreateSampleRequest } from '@web24/shared';
 import { AppEntitySample } from './app.sample.entity';
 import { AppService } from './app.service';
+import { ZodValidationPipe } from './common/pipes/zod-validation.pipe';
 
 @Controller()
 export class AppController {
@@ -19,8 +21,10 @@ export class AppController {
   }
 
   @Post('samples')
-  async createSample(@Body('name') name: string): Promise<AppEntitySample> {
-    const sample = this.samplesRepository.create({ name });
+  async createSample(
+    @Body(new ZodValidationPipe(CreateSampleSchema)) body: CreateSampleRequest,
+  ): Promise<AppEntitySample> {
+    const sample = this.samplesRepository.create({ name: body.name });
     return this.samplesRepository.save(sample);
   }
 }
