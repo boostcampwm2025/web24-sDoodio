@@ -8,14 +8,19 @@
   },
   "scripts": {
     "dev": "pnpm -F @web24/frontend dev",
+    "dev:backend": "pnpm -F @web24/backend start:dev",
     "build": "pnpm -F @web24/frontend build",
+    "build:backend": "pnpm -F @web24/backend build",
     "preview": "pnpm -F @web24/frontend preview",
     "typecheck": "pnpm -F @web24/frontend typecheck",
     "test": "pnpm -F @web24/frontend test",
+    "test:backend": "pnpm -F @web24/backend test",
     "test:run": "pnpm -F @web24/frontend test:run",
     "test:e2e": "pnpm -F @web24/frontend test:e2e",
     "lint": "pnpm -F @web24/frontend lint",
+    "lint:backend": "pnpm -F @web24/backend lint",
     "format": "pnpm -F @web24/frontend format",
+    "format:backend": "pnpm -F @web24/backend format",
     "format:check": "pnpm -F @web24/frontend exec prettier --check .",
     "ci:local": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm build && pnpm test:run",
     "prepare": "husky"
@@ -24,6 +29,10 @@
     "apps/frontend/**/*.{ts,tsx}": [
       "pnpm -F @web24/frontend format",
       "pnpm -F @web24/frontend lint --fix"
+    ],
+    "apps/backend/**/*.ts": [
+      "pnpm -F @web24/backend format",
+      "pnpm -F @web24/backend lint --fix"
     ],
     "packages/**/*.{ts,tsx}": [
       "prettier --write",
