@@ -36,12 +36,12 @@ jobs:
       
       - name: Run ESLint
         run: pnpm lint
-      
+
+      - name: Build project
+        run: pnpm build
+
       - name: Run type checking
         run: pnpm typecheck
       
-      - name: Build project
-        run: pnpm build
-      
       - name: Run tests
-        run: pnpm test:run
+        run: pnpm test
