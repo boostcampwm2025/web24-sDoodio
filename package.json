@@ -35,7 +35,7 @@
     "migration:run:prod": "pnpm -F @web24/backend migration:run:prod",
     "migration:revert": "pnpm -F @web24/backend migration:revert",
     "migration:revert:prod": "pnpm -F @web24/backend migration:revert:prod",
-    "ci:local": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm build && pnpm test",
+    "ci:local": "pnpm format:check && pnpm lint && pnpm build && pnpm typecheck && pnpm test",
     "prepare": "husky"
   },
   "lint-staged": {

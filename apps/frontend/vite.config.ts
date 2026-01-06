@@ -10,6 +10,11 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    commonjsOptions: {
+      include: [/node_modules/, /packages\/shared\/dist/],
+    },
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
