@@ -1,13 +1,8 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity } from 'typeorm';
+import { BaseIdCreatedEntity } from './common/entities/base.entity';
 
 @Entity({ name: 'app_samples' })
-export class AppEntitySample {
-  @PrimaryGeneratedColumn()
-  id!: number;
-
+export class AppEntitySample extends BaseIdCreatedEntity {
   @Column({ type: 'text' })
   name!: string;
-
-  @CreateDateColumn({ name: 'created_at' })
-  createdAt!: Date;
 }
