@@ -1,6 +1,45 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@theme {
+  /* Background Colors */
+  --color-bg-normal: #f2f1eb;
+  --color-bg-light: #fefefe;
+  --color-bg-alternative: #edeae4;
+
+  /* Primary Colors */
+  --color-primary-weak: #d1c6b7;
+  --color-primary-normal: #bdb4a8;
+  --color-primary-strong: #a89f94;
+
+  /* Secondary Colors */
+  --color-secondary-weak: #d4dcb8;
+  --color-secondary-normal: #c6ceaa;
+  --color-secondary-strong: #b7bda2;
+
+  /* Goal Colors */
+  --color-goal-1: #e4b2b9;
+  --color-goal-2: #e48b84;
+  --color-goal-3: #edc06a;
+  --color-goal-4: #d7d1ab;
+  --color-goal-5: #abd7b9;
+  --color-goal-6: #abd1d7;
+  --color-goal-7: #8ba49d;
+  --color-goal-8: #b6aea8;
+  --color-goal-9: #d7c1ab;
+  --color-goal-10: #c9bae3;
+
+  /* Difficulty Colors */
+  --color-difficulty-1: #81c784;
+  --color-difficulty-2: #fbc02d;
+  --color-difficulty-3: #f57c00;
+  --color-difficulty-4: #d84343;
+  --color-difficulty-ai: #4386d8;
+
+  /* Label Colors */
+  --color-label-normal: #252322;
+  --color-label-alternative: #383533;
+  --color-label-disable: #6b5a4a;
+}
 
 html,
 body {
@@ -8,5 +47,6 @@ body {
 }
 
 body {
-  @apply bg-zinc-950 text-zinc-100;
+  background-color: var(--color-bg-normal);
+  color: var(--color-label-normal);
 }
