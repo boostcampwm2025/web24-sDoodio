@@ -27,6 +27,12 @@
     "typecheck:fe": "pnpm -F @web24/frontend typecheck",
     "typecheck:be": "pnpm -F @web24/backend typecheck",
     "format:check": "concurrently \"pnpm -F @web24/frontend format:check\" \"pnpm -F @web24/backend format:check\"",
+    "migration:generate": "pnpm -F @web24/backend migration:generate",
+    "migration:create": "pnpm -F @web24/backend migration:create",
+    "migration:run": "pnpm -F @web24/backend migration:run",
+    "migration:run:prod": "pnpm -F @web24/backend migration:run:prod",
+    "migration:revert": "pnpm -F @web24/backend migration:revert",
+    "migration:revert:prod": "pnpm -F @web24/backend migration:revert:prod",
     "ci:local": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm build && pnpm test",
     "prepare": "husky"
   },
