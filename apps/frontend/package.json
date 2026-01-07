@@ -13,7 +13,8 @@
     "test:ui": "vitest --ui",
     "test:e2e": "pnpm build && playwright test",
     "lint": "eslint .",
-    "format": "prettier -w ."
+    "format": "prettier -w .",
+    "format:check": "pnpm exec prettier --check ."
   },
   "dependencies": {
     "@web24/shared": "workspace:*",

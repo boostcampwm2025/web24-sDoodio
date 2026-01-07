@@ -12,7 +12,11 @@ const compat = new FlatCompat({
   baseDirectory: __dirname,
 });
 
-const tsconfigProjects = ['./apps/frontend/tsconfig.eslint.json', './packages/shared/tsconfig.json'];
+const tsconfigProjects = [
+  './apps/frontend/tsconfig.eslint.json',
+  './apps/backend/tsconfig.eslint.json',
+  './packages/shared/tsconfig.json',
+];
 
 export default [
   {
@@ -22,6 +26,7 @@ export default [
       '**/coverage/**',
       '**/playwright-report/**',
       '**/test-results/**',
+      'eslint.config.mjs',
     ],
   },
 
@@ -33,12 +38,7 @@ export default [
 
   {
     files: ['**/*.{ts,tsx,js,jsx}'],
-    plugins: {
-      'react-hooks': reactHooks,
-      'react-refresh': reactRefresh,
-    },
     settings: {
-      react: { version: 'detect' },
       'import/resolver': {
         typescript: {
           project: tsconfigProjects,
@@ -49,16 +49,36 @@ export default [
       },
     },
     rules: {
-      ...reactHooks.configs.recommended.rules,
       'import/prefer-default-export': 'off',
-      'react/react-in-jsx-scope': 'off',
-      'react/jsx-filename-extension': ['warn', { extensions: ['.jsx', '.tsx'] }],
-      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       'import/extensions': [
         'error',
         'ignorePackages',
         { js: 'never', jsx: 'never', ts: 'never', tsx: 'never' },
       ],
+    },
+  },
+  {
+    files: ['apps/frontend/**/*.{ts,tsx,js,jsx}'],
+    plugins: {
+      'react-hooks': reactHooks,
+      'react-refresh': reactRefresh,
+    },
+    settings: {
+      react: { version: 'detect' },
+    },
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      'react/react-in-jsx-scope': 'off',
+      'react/jsx-filename-extension': ['warn', { extensions: ['.jsx', '.tsx'] }],
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+    },
+  },
+  {
+    files: ['apps/backend/**/*.{ts,js}'],
+    rules: {
+      'class-methods-use-this': 'off',
+      '@typescript-eslint/no-floating-promises': 'warn',
+      '@typescript-eslint/no-unsafe-argument': 'warn',
     },
   },
 
@@ -77,6 +97,7 @@ export default [
       '**/*.spec.{ts,tsx,js,jsx}',
       '**/__test__/**/*.{ts,tsx,js,jsx}',
       '**/src/test/**/*.{ts,tsx,js,jsx,d.ts}',
+      '**/test/**/*.{ts,tsx,js,jsx}',
       '**/playwright.config.{ts,js,mjs,cjs}',
       '**/vite.config.{ts,js,mjs,cjs}',
     ],
