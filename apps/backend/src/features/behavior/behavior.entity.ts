@@ -1,6 +1,6 @@
-import { BaseIdCreatedUpdatedDeletedEntity } from 'src/common/entities/base-id-created-updated-deleted.entity';
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { BEHAVIOR_TITLE_MAX_LENGTH, BehaviorDifficulty } from '@web24/shared';
+import { BaseIdCreatedUpdatedDeletedEntity } from '../../common/entities/base.entity';
 import { Goal } from '../goal/goal.entity';
 
 @Entity({ name: 'behaviors' })

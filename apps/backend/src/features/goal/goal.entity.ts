@@ -1,7 +1,7 @@
 import { GOAL_TITLE_MAX_LENGTH, GoalColors } from '@web24/shared';
-import { BaseIdCreatedUpdatedDeletedEntity } from 'src/common/entities/base-id-created-updated-deleted.entity';
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { Behavior } from '../behavior/behavior.entity';
+import { BaseIdCreatedUpdatedDeletedEntity } from '../../common/entities/base.entity';
 import { User } from '../user/user.entity';
 
 @Entity({ name: 'goals' })
