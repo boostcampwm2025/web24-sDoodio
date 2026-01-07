@@ -1,14 +1,11 @@
 import { Route, Routes } from 'react-router-dom';
-
-import { DodoRoom } from '@/features/dodoroom/components/DodoRoom';
-import { AuthRoutes } from './auth.routes';
+import { IndexPage } from '@/pages/IndexPage';
 
 export function AppRoutes() {
   return (
     <Routes>
-      <Route element={<DodoRoom />} index />
-      <Route element={<AuthRoutes />} path="/auth/*" />
-      <Route element={<div className="text-zinc-300">Not Found</div>} path="*" />
+      <Route element={<IndexPage />} index />
+      <Route element={<div className="text-label-disable">Not Found</div>} path="*" />
     </Routes>
   );
 }
