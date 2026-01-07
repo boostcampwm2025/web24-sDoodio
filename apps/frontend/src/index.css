@@ -1,6 +1,186 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css');
+
+@theme {
+  /* ===== Typography ===== */
+  /* Font Family */
+  --font-sans:
+    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto,
+    'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic',
+    'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+
+  /* ===== Colors ===== */
+  /* Background Colors */
+  --color-bg-normal: #f2f1eb;
+  --color-bg-light: #fefefe;
+  --color-bg-alternative: #edeae4;
+
+  /* Primary Colors */
+  --color-primary-weak: #d1c6b7;
+  --color-primary-normal: #bdb4a8;
+  --color-primary-strong: #a89f94;
+
+  /* Secondary Colors */
+  --color-secondary-weak: #d4dcb8;
+  --color-secondary-normal: #c6ceaa;
+  --color-secondary-strong: #b7bda2;
+
+  /* Goal Colors */
+  --color-goal-1: #e4b2b9;
+  --color-goal-2: #e48b84;
+  --color-goal-3: #edc06a;
+  --color-goal-4: #d7d1ab;
+  --color-goal-5: #abd7b9;
+  --color-goal-6: #abd1d7;
+  --color-goal-7: #8ba49d;
+  --color-goal-8: #b6aea8;
+  --color-goal-9: #d7c1ab;
+  --color-goal-10: #c9bae3;
+
+  /* Difficulty Colors */
+  --color-difficulty-1: #81c784;
+  --color-difficulty-2: #fbc02d;
+  --color-difficulty-3: #f57c00;
+  --color-difficulty-4: #d84343;
+  --color-difficulty-ai: #4386d8;
+
+  /* Label Colors */
+  --color-label-normal: #252322;
+  --color-label-alternative: #383533;
+  --color-label-disable: #6b5a4a;
+
+  /* ===== Shadows ===== */
+  --shadow-normal:
+    0px 1px 2px rgba(0, 0, 0, 0.12), 0px 0px 1px rgba(0, 0, 0, 0.08),
+    0px 0px 1px rgba(0, 0, 0, 0.08);
+  --shadow-emphasize:
+    0px 2px 8px rgba(0, 0, 0, 0.12), 0px 1px 4px rgba(0, 0, 0, 0.08),
+    0px 0px 1px rgba(0, 0, 0, 0.08);
+  --shadow-strong:
+    0px 6px 12px rgba(0, 0, 0, 0.12), 0px 4px 8px rgba(0, 0, 0, 0.08),
+    0px 0px 4px rgba(0, 0, 0, 0.08);
+  --shadow-heavy:
+    0px 16px 20px rgba(0, 0, 0, 0.12), 0px 8px 16px rgba(0, 0, 0, 0.08),
+    0px 0px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Typography Utilities */
+@layer utilities {
+  /* Display Styles */
+  .text-display-1 {
+    font-size: 3.5rem; /* 56px */
+    line-height: 1.286; /* 72px */
+    letter-spacing: -0.0319em;
+  }
+
+  .text-display-2 {
+    font-size: 2.5rem; /* 40px */
+    line-height: 1.3; /* 52px */
+    letter-spacing: -0.0282em;
+  }
+
+  /* Title Styles */
+  .text-title-1 {
+    font-size: 2.25rem; /* 36px */
+    line-height: 1.334; /* 48px */
+    letter-spacing: -0.027em;
+  }
+
+  .text-title-2 {
+    font-size: 1.75rem; /* 28px */
+    line-height: 1.358; /* 38px */
+    letter-spacing: -0.0236em;
+  }
+
+  .text-title-3 {
+    font-size: 1.5rem; /* 24px */
+    line-height: 1.334; /* 32px */
+    letter-spacing: -0.023em;
+  }
+
+  /* Heading Styles */
+  .text-heading-1 {
+    font-size: 1.375rem; /* 22px */
+    line-height: 1.364; /* 30px */
+    letter-spacing: -0.0194em;
+  }
+
+  .text-heading-2 {
+    font-size: 1.25rem; /* 20px */
+    line-height: 1.4; /* 28px */
+    letter-spacing: -0.012em;
+  }
+
+  /* Headline Styles */
+  .text-headline-1 {
+    font-size: 1.125rem; /* 18px */
+    line-height: 1.445; /* 26px */
+    letter-spacing: -0.002em;
+  }
+
+  .text-headline-2 {
+    font-size: 1.0625rem; /* 17px */
+    line-height: 1.412; /* 24px */
+    letter-spacing: 0em;
+  }
+
+  /* Body Styles */
+  .text-body-1 {
+    font-size: 1rem; /* 16px */
+    line-height: 1.5; /* 24px - Normal */
+    letter-spacing: 0.0057em;
+  }
+
+  .text-body-1-reading {
+    font-size: 1rem; /* 16px */
+    line-height: 1.625; /* 26px - Reading */
+    letter-spacing: 0.0057em;
+  }
+
+  .text-body-2 {
+    font-size: 0.9375rem; /* 15px */
+    line-height: 1.467; /* 22px - Normal */
+    letter-spacing: 0.0096em;
+  }
+
+  .text-body-2-reading {
+    font-size: 0.9375rem; /* 15px */
+    line-height: 1.6; /* 24px - Reading */
+    letter-spacing: 0.0096em;
+  }
+
+  /* Label Styles */
+  .text-label-1 {
+    font-size: 0.875rem; /* 14px */
+    line-height: 1.429; /* 20px - Normal */
+    letter-spacing: 0.0145em;
+  }
+
+  .text-label-1-reading {
+    font-size: 0.875rem; /* 14px */
+    line-height: 1.571; /* 22px - Reading */
+    letter-spacing: 0.0145em;
+  }
+
+  .text-label-2 {
+    font-size: 0.8125rem; /* 13px */
+    line-height: 1.385; /* 18px */
+    letter-spacing: 0.0194em;
+  }
+
+  /* Caption Styles */
+  .text-caption-1 {
+    font-size: 0.75rem; /* 12px */
+    line-height: 1.334; /* 16px */
+    letter-spacing: 0.0252em;
+  }
+
+  .text-caption-2 {
+    font-size: 0.6875rem; /* 11px */
+    line-height: 1.273; /* 14px */
+    letter-spacing: 0.0311em;
+  }
+}
 
 html,
 body {
@@ -8,5 +188,7 @@ body {
 }
 
 body {
-  @apply bg-zinc-950 text-zinc-100;
+  background-color: var(--color-bg-normal);
+  color: var(--color-label-normal);
+  font-family: var(--font-sans);
 }
