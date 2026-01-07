@@ -3,6 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppEntitySample } from './app.sample.entity';
 import { AppService } from './app.service';
+import { User } from './features/user/user.entity';
 
 describe('AppController', () => {
   let appController: AppController;
@@ -14,6 +15,13 @@ describe('AppController', () => {
         AppService,
         {
           provide: getRepositoryToken(AppEntitySample),
+          useValue: {
+            create: jest.fn(),
+            save: jest.fn(),
+          },
+        },
+        {
+          provide: getRepositoryToken(User),
           useValue: {
             create: jest.fn(),
             save: jest.fn(),
