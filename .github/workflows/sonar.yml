@@ -16,6 +16,20 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Setup pnpm
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run backend tests with coverage
+        run: pnpm -F @web24/backend test:cov
+
       # 소나큐브 스캔 실행
       - name: SonarQube Scan
         uses: sonarsource/sonarqube-scan-action@v5.0.0
