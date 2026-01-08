@@ -1,7 +1,11 @@
-import type { SideMenuProps } from '@/shared/types/layout.types';
 import { useEffect } from 'react';
 import { X } from 'lucide-react';
 import { BREAKPOINTS } from '@/shared/constants/breakpoints';
+
+interface SideMenuProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
 
 function SideMenu({ isOpen, onClose }: SideMenuProps) {
   // 스크롤 잠금

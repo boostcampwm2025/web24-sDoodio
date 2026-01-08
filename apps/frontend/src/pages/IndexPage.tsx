@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Hero } from '@/features/home/components/Hero';
 import useDodoChatStore from '@/stores/useDodoChatStore';
-import { AIBehaviorCard } from '@/features/behavior/components/AIBehaviorCard';
+import { AIBehaviorContainer } from '@/features/behavior/components/AIBehaviorContainer';
 import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
 import { TodayBahaviorList } from '@/features/behavior/components/TodayBehaviorList';
 
@@ -35,7 +35,7 @@ export function IndexPage() {
     <div className="bg-bg-normal flex flex-col pt-2">
       <Hero quote={quote} />
       {/* 테스트 */}
-      <AIBehaviorCard behavior={mockBehaviorCard} onToggle={() => {}} />
+      <AIBehaviorContainer behavior={mockBehaviorCard} onToggle={() => {}} />
       <TodayBahaviorList behaviors={mockTodayBehaviorList} onToggle={() => {}} />
       {/* <AICard />
       behavior 폴더

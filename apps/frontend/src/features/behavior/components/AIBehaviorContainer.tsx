@@ -1,7 +1,12 @@
 import { BehaviorCard } from '@/shared/components/behavior/BehaviorCard';
-import type { BehaviorProps } from '@/shared/components/behavior/BehaviorCard.types';
+import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
 
-export function AIBehaviorCard({ behavior, onToggle }: BehaviorProps) {
+interface BehaviorProps {
+  behavior: Behavior;
+  onToggle: () => void;
+}
+
+export function AIBehaviorContainer({ behavior, onToggle }: BehaviorProps) {
   return (
     <div className="animate-in fade-in slide-in-from-top-4 border-primary-weak/60 bg-primary-weak/30 relative mb-10 overflow-hidden rounded-4xl border p-6 duration-500">
       <div className="relative z-10">

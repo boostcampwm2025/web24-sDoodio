@@ -9,8 +9,3 @@ export interface Behavior {
   difficulty: Difficulty;
   isRecommended: boolean;
 }
-
-export interface BehaviorProps {
-  behavior: Behavior;
-  onToggle: () => void;
-}

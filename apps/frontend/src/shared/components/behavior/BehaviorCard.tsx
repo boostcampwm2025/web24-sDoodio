@@ -1,5 +1,11 @@
 import { CheckCircle2 } from 'lucide-react';
-import type { BehaviorProps, Difficulty } from './BehaviorCard.types';
+
+import type { Behavior, Difficulty } from '@/shared/components/behavior/BehaviorCard.types';
+
+interface BehaviorProps {
+  behavior: Behavior;
+  onToggle: () => void;
+}
 
 function DifficultyBadge({ level }: { level: Difficulty }) {
   const styles = {

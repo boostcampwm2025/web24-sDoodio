@@ -19,7 +19,7 @@ function DodoChat({ quote }: DodoChatProps) {
       if (index >= quote.length) {
         clearInterval(intervalId);
       }
-    }, 150);
+    }, 80);
 
     return () => clearInterval(intervalId);
   }, [quote]);

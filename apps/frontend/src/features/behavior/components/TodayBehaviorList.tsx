@@ -1,7 +1,11 @@
 import { BehaviorCard } from '@/shared/components/behavior/BehaviorCard';
 import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
 import { Plus } from 'lucide-react';
-import type { BehaviorListProps } from '../types/behavior.types';
+
+interface BehaviorListProps {
+  behaviors: Behavior[];
+  onToggle: (id: string) => void;
+}
 
 export function TodayBahaviorList({ behaviors, onToggle }: BehaviorListProps) {
   return (
