@@ -75,45 +75,49 @@ export function NewGoalFrame({
   };
 
   return (
-    <div className="bg-bg-normal flex h-screen w-full items-center justify-center p-8">
-      <div className="bg-bg-light shadow-heavy flex h-full max-h-180 w-full max-w-270 overflow-hidden rounded-[40px]">
+    <div className="bg-bg-normal flex h-full w-full items-center justify-center p-4 md:p-8 lg:p-12">
+      <div className="bg-bg-light shadow-heavy flex h-[700px] w-full max-w-sm flex-shrink-0 flex-col overflow-hidden rounded-3xl md:h-[800px] md:max-w-3xl md:rounded-4xl lg:h-[850px] lg:max-w-[1240px] lg:flex-row">
         {/* 왼쪽 - 두두 캐릭터 및 대사 영역 */}
-        <div className="relative flex w-1/2 flex-col items-center justify-center p-12">
+        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center p-6 pb-0 md:p-8 md:pb-0 lg:p-12 lg:pb-12">
           {/* 말풍선 */}
           {/* TODO: 타이핑 효과 넣기 */}
-          <div className="relative mb-12 flex w-full flex-col items-center">
-            <div className="bg-bg-alternative relative flex min-h-50 w-full max-w-sm items-center justify-center rounded-4xl shadow-sm">
-              <p className="text-heading-2 text-label-normal text-center leading-relaxed font-bold break-keep whitespace-pre-line">
+          <div className="relative mb-2 flex w-full flex-col items-center md:mb-6 lg:mb-12">
+            <div className="bg-bg-alternative relative flex min-h-16 w-full max-w-xs items-center justify-center rounded-3xl px-6 shadow-sm md:min-h-28 md:max-w-sm md:rounded-4xl lg:min-h-50">
+              <p className="text-label-normal text-body-1 md:text-headline-1 lg:text-heading-2 text-center leading-relaxed font-bold break-keep whitespace-pre-line">
                 {currentStep.dialogue}
               </p>
             </div>
-            <div className="absolute -bottom-18 left-16 flex flex-col gap-2">
-              <div className="bg-bg-alternative -ml-8 h-6 w-6 rounded-full opacity-80" />
-              <div className="bg-bg-alternative -ml-5 h-4 w-4 rounded-full opacity-60" />
-              <div className="bg-bg-alternative -ml-3 h-2 w-2 rounded-full opacity-50" />
+            <div className="absolute -bottom-10 left-10 flex flex-col gap-1 md:-bottom-18 md:left-16 md:gap-2">
+              <div className="bg-bg-alternative -ml-4 h-3 w-3 rounded-full opacity-80 md:-ml-8 md:h-6 md:w-6" />
+              <div className="bg-bg-alternative -ml-3 h-2 w-2 rounded-full opacity-60 md:-ml-5 md:h-4 md:w-4" />
+              <div className="bg-bg-alternative -ml-2 h-1.5 w-1.5 rounded-full opacity-50 md:h-2 md:w-2" />
             </div>
           </div>
 
           {/* 두두 */}
-          <div className="mt-auto w-full max-w-75 flex-1">
-            <img src="/DodoSit.png" alt="앉은 두두" />
+          <div className="mt-auto flex w-full items-center justify-center lg:block">
+            <div className="w-full max-w-24 md:max-w-40 lg:max-w-75">
+              <img src="/DodoSit.png" alt="앉은 두두" className="h-full w-full object-contain" />
+            </div>
           </div>
         </div>
 
         {/* Divider */}
-        <div className="my-12 w-[1.5px] bg-[#EAEAEA]" />
+        <div className="my-4 h-[1.5px] w-full shrink-0 bg-[#EAEAEA] lg:my-12 lg:h-auto lg:w-[1.5px]" />
 
         {/* 오른쪽 */}
-        <div className="flex w-1/2 flex-col">
-          <div className="flex items-center justify-between px-12 pt-12">
-            <h2 className="text-heading-1 text-label-normal font-bold">{currentStep.headerText}</h2>
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-6 pt-0 md:p-8 md:pt-0 lg:p-12">
+          <div className="flex shrink-0 items-center justify-between">
+            <h2 className="text-label-normal text-headline-1 md:text-heading-1 font-bold">
+              {currentStep.headerText}
+            </h2>
 
             {/* Skip 버튼 */}
             {currentStep.unskippable ? null : (
               <button
                 onClick={handleSkip}
                 type="button"
-                className="text-headline-1 text-primary-weak hover:text-primary-strong font-bold transition-colors"
+                className="text-label-1 text-primary-weak hover:text-primary-strong md:text-headline-1 transition-colors md:font-bold"
               >
                 skip
               </button>
@@ -121,13 +125,13 @@ export function NewGoalFrame({
           </div>
 
           {/* 콘텐츠 영역 */}
-          <div className="relative mt-8 flex-1 overflow-hidden px-12">
-            <div className={`h-full transition-all duration-300 ease-in-out ${currentAnimation}`}>
-              <div className="flex h-full w-full">{currentStep.content}</div>
+          <div className="relative mt-4 flex-1 overflow-x-hidden overflow-y-auto md:mt-8">
+            <div className={`transition-all duration-300 ease-in-out ${currentAnimation}`}>
+              <div className="flex min-h-full w-full py-4 lg:py-0">{currentStep.content}</div>
             </div>
           </div>
 
-          <div className="flex flex-row items-center justify-between px-12 py-8">
+          <div className="flex flex-row items-center justify-between pt-4 md:pt-6 lg:pt-8">
             {/* 이전 버튼 */}
             <button
               onClick={handlePrev}

@@ -15,7 +15,7 @@ export function TemplateSelection({
   onSelect,
 }: TemplateSelectionProps) {
   return (
-    <div className="flex h-full w-full flex-col justify-center gap-3">
+    <div className="flex w-full flex-col gap-3">
       {templates.map((template) => (
         <GoalTemplateButton
           key={template.id}

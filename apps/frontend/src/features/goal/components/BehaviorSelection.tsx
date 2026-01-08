@@ -19,7 +19,7 @@ export function BehaviorSelection({
   onAdd,
 }: BehaviorSelectionProps) {
   return (
-    <div className="flex h-full w-full flex-col justify-center gap-3 overflow-y-auto">
+    <div className="flex w-full flex-col gap-3">
       {behaviors.map((item) => (
         <InputItemRow
           key={item.id}

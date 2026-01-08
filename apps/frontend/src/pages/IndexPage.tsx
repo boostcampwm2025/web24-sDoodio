@@ -33,7 +33,7 @@ export function IndexPage() {
   const aiBehavior = behaviors[0];
 
   return (
-    <div className="bg-bg-normal flex flex-col pt-2">
+    <div className="bg-bg-normal mx-auto flex max-w-5xl flex-col pt-2">
       {/* 두두의 말 */}
       <Hero quote={quote} />
 

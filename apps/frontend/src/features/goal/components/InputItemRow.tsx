@@ -22,7 +22,7 @@ export function InputItemRow({
       <button
         type="button"
         onClick={onAdd}
-        className="text-primary-strong hover:bg-bg-alternative bg-bg-normal flex h-16 w-full items-center justify-center rounded-2xl transition-colors"
+        className="text-primary-strong hover:bg-bg-alternative bg-bg-normal flex h-16 w-full shrink-0 items-center justify-center rounded-2xl transition-colors"
       >
         <Plus className="h-6 w-6 stroke-[3px]" />
       </button>
@@ -30,7 +30,7 @@ export function InputItemRow({
   }
 
   return (
-    <div className="bg-bg-normal focus-within:ring-primary-weak flex h-16 w-full items-center gap-2 overflow-hidden rounded-2xl px-6 transition-all focus-within:ring-2">
+    <div className="bg-bg-normal focus-within:ring-primary-weak flex h-16 w-full shrink-0 items-center gap-2 overflow-hidden rounded-2xl px-6 transition-all focus-within:ring-2">
       <input
         type="text"
         value={value}
