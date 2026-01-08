@@ -37,7 +37,7 @@ describe('fetchGoalTemplates', () => {
         },
       },
     ]);
-    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('/goal/templates'));
+    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('/goals/templates'));
   });
 
   it('응답이 정상적이지 않으면 에러를 던진다', async () => {
