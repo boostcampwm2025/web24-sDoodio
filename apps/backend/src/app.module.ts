@@ -7,6 +7,7 @@ import { AppController } from './app.controller';
 import { AppEntitySample } from './app.sample.entity';
 import { AppService } from './app.service';
 import { User } from './features/user/user.entity';
+import { BehaviorModule } from './features/behavior/behavior.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { User } from './features/user/user.entity';
       },
     }),
     TypeOrmModule.forFeature([AppEntitySample, User]),
+    BehaviorModule,
   ],
   controllers: [AppController],
   providers: [AppService],
