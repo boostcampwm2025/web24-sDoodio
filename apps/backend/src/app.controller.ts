@@ -6,6 +6,7 @@ import { CreateSampleSchema, type CreateSampleRequest } from '@web24/shared';
 import { AppEntitySample } from './app.sample.entity';
 import { AppService } from './app.service';
 import { ZodValidationPipe } from './common/pipes/zod-validation.pipe';
+import { User } from './features/user/user.entity';
 
 @Controller()
 export class AppController {
@@ -13,6 +14,8 @@ export class AppController {
     private readonly appService: AppService,
     @InjectRepository(AppEntitySample)
     private readonly samplesRepository: Repository<AppEntitySample>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
 
   @Get()
@@ -26,5 +29,11 @@ export class AppController {
   ): Promise<AppEntitySample> {
     const sample = this.samplesRepository.create({ name: body.name });
     return this.samplesRepository.save(sample);
+  }
+
+  @Post('test/user')
+  async createUser(): Promise<User> {
+    const user = this.userRepository.create({ nickname: '테스트' });
+    return this.userRepository.save(user);
   }
 }
