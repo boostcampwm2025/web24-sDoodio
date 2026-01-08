@@ -2,11 +2,11 @@ import { Minus, Plus } from 'lucide-react';
 
 interface InputItemRowProps {
   value: string;
-  onChange: (value: string) => void | undefined;
-  onDelete: () => void | undefined;
-  onAdd: () => void | undefined;
+  onChange?: (value: string) => void;
+  onDelete?: () => void;
+  onAdd?: () => void;
   placeholder: string;
-  variant: 'default' | 'add';
+  variant?: 'default' | 'add';
 }
 
 export function InputItemRow({
