@@ -11,7 +11,7 @@ interface BehaviorListProps {
 }
 
 export function TodayBahaviorList({ goals, behaviors, onToggle }: BehaviorListProps) {
-  const [activeGoal, setActiveGoal] = useState<string | 'ALL'>('ALL');
+  const [activeGoal, setActiveGoal] = useState<string>('ALL');
 
   const filteredBehaviors = useMemo(() => {
     if (activeGoal === 'ALL') return behaviors;

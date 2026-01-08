@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { randomInt } from 'crypto';
+import { randomInt } from 'node:crypto';
 import { Behavior } from './behavior.entity';
 
 @Injectable()
