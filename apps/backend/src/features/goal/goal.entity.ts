@@ -1,4 +1,4 @@
-import { GOAL_TITLE_MAX_LENGTH, GoalColors } from '@web24/shared';
+import { GOAL_COLORS, GOAL_TITLE_MAX_LENGTH, type GoalColor } from '@web24/shared';
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { Behavior } from '../behavior/behavior.entity';
 import { BaseIdCreatedUpdatedDeletedEntity } from '../../common/entities/base.entity';
@@ -15,8 +15,8 @@ export class Goal extends BaseIdCreatedUpdatedDeletedEntity {
   @JoinColumn({ name: 'userId' })
   user!: User;
 
-  @Column({ type: 'enum', enum: GoalColors })
-  color!: GoalColors;
+  @Column({ type: 'enum', enum: Object.values(GOAL_COLORS) })
+  color!: GoalColor;
 
   @OneToMany(() => Behavior, (behavior) => behavior.goal)
   behaviors!: Behavior[];

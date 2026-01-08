@@ -1,5 +1,9 @@
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
-import { BEHAVIOR_TITLE_MAX_LENGTH, BehaviorDifficulty } from '@web24/shared';
+import {
+  BEHAVIOR_DIFFICULTIES,
+  BEHAVIOR_TITLE_MAX_LENGTH,
+  type BehaviorDifficulty,
+} from '@web24/shared';
 import { BaseIdCreatedUpdatedDeletedEntity } from '../../common/entities/base.entity';
 import { Goal } from '../goal/goal.entity';
 
@@ -14,6 +18,6 @@ export class Behavior extends BaseIdCreatedUpdatedDeletedEntity {
   @Column({ type: 'varchar', length: BEHAVIOR_TITLE_MAX_LENGTH })
   title!: string;
 
-  @Column({ type: 'enum', enum: BehaviorDifficulty })
+  @Column({ type: 'enum', enum: BEHAVIOR_DIFFICULTIES })
   difficulty!: BehaviorDifficulty;
 }
