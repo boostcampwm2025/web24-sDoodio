@@ -23,6 +23,21 @@ function DifficultyBadge({ level }: { level: Difficulty }) {
 }
 
 export function BehaviorCard({ behavior, onToggle }: BehaviorProps) {
+  const GOAL_COLOR_CLASS: Record<string, string> = {
+    'light-pink': 'bg-goal-light-pnk',
+    pink: 'bg-goal-pink',
+    yellow: 'bg-goal-yellow',
+    sand: 'bg-goal-sand',
+    mint: 'bg-goal-mint',
+    blue: 'bg-goal-blue',
+    'gray-mint': 'bg-goal-gray-mint',
+    'warm-gray': 'bg-goal-warm-gray',
+    beige: 'bg-goal-beige',
+    lavender: 'bg-goal-lavender',
+  };
+
+  const bgColor = GOAL_COLOR_CLASS[behavior.goalColor] ?? 'bg-goal-beige';
+
   return (
     <div
       className={`group bg-bg-light relative flex items-center gap-4 rounded-2xl px-7 py-5 transition-all duration-500 ${
@@ -32,7 +47,7 @@ export function BehaviorCard({ behavior, onToggle }: BehaviorProps) {
       } `}
     >
       {/* 왼쪽 컬러 바 */}
-      <div className={`absolute top-0 bottom-0 left-0 w-3.5 rounded-l-2xl ${behavior.goalColor}`} />
+      <div className={`absolute top-0 bottom-0 left-0 w-3.5 rounded-l-2xl ${bgColor}`} />
       <div className="flex-1 pl-3">
         <div className="mb-1 flex items-center gap-2">
           <span className="bg-bg-alternative text-label-disable rounded px-2 py-0.5 text-xs font-bold">
