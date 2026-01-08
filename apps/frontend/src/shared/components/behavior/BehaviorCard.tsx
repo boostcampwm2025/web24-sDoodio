@@ -20,13 +20,11 @@ function DifficultyBadge({ level }: { level: Difficulty }) {
 export function BehaviorCard({ behavior, onToggle }: BehaviorProps) {
   return (
     <div
-      className={`group bg-bg-light relative flex cursor-pointer items-center gap-4 rounded-2xl px-7 py-5 transition-all duration-500 ${
+      className={`group bg-bg-light relative flex items-center gap-4 rounded-2xl px-7 py-5 transition-all duration-500 ${
         behavior.isChecked
           ? 'border-bg-alternative bg-bg-light scale-[0.99] opacity-60 shadow-none saturate-50'
-          : 'border-transparent shadow-[var(--shadow-normal)] hover:-translate-y-1 hover:shadow-[var(--shadow-strong)]'
+          : 'border-transparent shadow-(--shadow-normal) hover:-translate-y-1 hover:shadow-(--shadow-strong)'
       } `}
-      onClick={onToggle}
-      role="presentation"
     >
       {/* 왼쪽 컬러 바 */}
       <div className={`absolute top-0 bottom-0 left-0 w-3.5 rounded-l-2xl ${behavior.goalColor}`} />
@@ -50,15 +48,17 @@ export function BehaviorCard({ behavior, onToggle }: BehaviorProps) {
       </div>
 
       {/* 토글 버튼 */}
-      <div
-        className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all duration-300 ${
+      <button
+        type="button"
+        onClick={onToggle}
+        className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 transition-all duration-300 ${
           behavior.isChecked
             ? `${behavior.goalColor} text-bg-light border-transparent` // 완료됨: 목표 색상 배경
             : 'border-primary-weak text-primary-normal group-hover:border-primary-strong group-hover:text-primary-strong' // 미완료
         } `}
       >
         <CheckCircle2 size={20} strokeWidth={3} />
-      </div>
+      </button>
     </div>
   );
 }

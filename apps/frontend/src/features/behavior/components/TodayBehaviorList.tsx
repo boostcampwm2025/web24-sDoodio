@@ -8,7 +8,7 @@ export function TodayBahaviorList({ behaviors, onToggle }: BehaviorListProps) {
     <div className="mb-4 flex-col items-center justify-between px-4">
       <h3 className="mb-2 flex items-center gap-2 text-lg font-bold">
         오늘의 행동
-        <span className="rounded-fullpx-2 py-0.5 text-xs font-bold">{behaviors.length}</span>
+        <span className="rounded-full px-2 py-0.5 text-xs font-bold">{behaviors.length}</span>
       </h3>
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
