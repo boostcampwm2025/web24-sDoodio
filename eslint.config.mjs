@@ -81,6 +81,12 @@ export default [
       '@typescript-eslint/no-unsafe-argument': 'warn',
     },
   },
+  {
+    files: ['apps/backend/**/*.entity.ts'],
+    rules: {
+      'import/no-cycle': 'off',
+    },
+  },
 
   {
     files: ['**/*.{ts,tsx}'],

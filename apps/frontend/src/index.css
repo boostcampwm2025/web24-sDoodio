@@ -26,16 +26,16 @@
   --color-secondary-strong: #b7bda2;
 
   /* Goal Colors */
-  --color-goal-1: #e4b2b9;
-  --color-goal-2: #e48b84;
-  --color-goal-3: #edc06a;
-  --color-goal-4: #d7d1ab;
-  --color-goal-5: #abd7b9;
-  --color-goal-6: #abd1d7;
-  --color-goal-7: #8ba49d;
-  --color-goal-8: #b6aea8;
-  --color-goal-9: #d7c1ab;
-  --color-goal-10: #c9bae3;
+  --color-goal-light-pink: #e4b2b9;
+  --color-goal-pink: #e48b84;
+  --color-goal-yellow: #edc06a;
+  --color-goal-sand: #d7d1ab;
+  --color-goal-mint: #abd7b9;
+  --color-goal-blue: #abd1d7;
+  --color-goal-gray-mint: #8ba49d;
+  --color-goal-warm-gray: #b6aea8;
+  --color-goal-beige: #d7c1ab;
+  --color-goal-lavender: #c9bae3;
 
   /* Difficulty Colors */
   --color-difficulty-1: #81c784;
