@@ -50,6 +50,8 @@ export function BehaviorCard({ behavior, onToggle }: BehaviorProps) {
       {/* 토글 버튼 */}
       <button
         type="button"
+        aria-label={`${behavior.title} 완료 토글`}
+        aria-pressed={behavior.isChecked}
         onClick={onToggle}
         className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 transition-all duration-300 ${
           behavior.isChecked

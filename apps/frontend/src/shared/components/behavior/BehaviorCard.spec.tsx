@@ -25,7 +25,7 @@ describe('BehaviorCard', () => {
     expect(screen.getByText('건강')).toBeInTheDocument();
   });
 
-  it('카드를 클릭하면 onToggle이 호출된다', () => {
+  it('카드의 토글버튼을 클릭하면 onToggle이 호출된다', () => {
     const onToggle = vi.fn();
 
     render(
@@ -43,7 +43,7 @@ describe('BehaviorCard', () => {
       />,
     );
 
-    fireEvent.click(screen.getByText('스트레칭'));
+    fireEvent.click(screen.getByRole('button', { name: /스트레칭 완료 토글/ }));
     expect(onToggle).toHaveBeenCalled();
   });
 });
