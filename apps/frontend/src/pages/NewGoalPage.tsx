@@ -56,7 +56,7 @@ export function NewGoalPage() {
           onSelect={(templateId) => {
             const templateIdx = templates.findIndex((template) => template.id === templateId);
             setSelectedTemplateId(templateId);
-            const selectedTemplate = templateIdx !== -1 ? templates.at(templateIdx) : null;
+            const selectedTemplate = templateIdx === -1 ? null : templates.at(templateIdx);
             setOpenBehaviors(
               (selectedTemplate?.level.마음열기 ?? []).map((title) => ({
                 id: crypto.randomUUID(),
@@ -196,13 +196,9 @@ export function NewGoalPage() {
     },
   ];
 
-  const handleSkip = () => {
-    // console.log('skipped');
-  };
+  const handleSkip = () => {};
 
-  const handleComplete = () => {
-    // console.log('completed');
-  };
+  const handleComplete = () => {};
 
   return (
     <NewGoalFrame

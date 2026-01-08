@@ -36,6 +36,13 @@ export function NewGoalFrame({
   const currentProgressIndex = progressSteps.indexOf(currentStep.step);
   const isProgressShown = progressSteps.includes(currentStep.step);
 
+  const animationStyles = {
+    next: '-translate-x-full opacity-0',
+    prev: 'translate-x-full opacity-0',
+  } as const;
+
+  const currentAnimation = isExiting ? animationStyles[direction] : 'translate-x-0 opacity-100';
+
   const handleNext = () => {
     if (isExiting) return;
 
@@ -115,13 +122,7 @@ export function NewGoalFrame({
 
           {/* 콘텐츠 영역 */}
           <div className="relative mt-8 flex-1 overflow-hidden px-12">
-            <div
-              className={`h-full transition-all duration-300 ease-in-out ${
-                isExiting
-                  ? `${direction === 'next' ? '-translate-x-full' : 'translate-x-full'} opacity-0`
-                  : 'translate-x-0 opacity-100'
-              }`}
-            >
+            <div className={`h-full transition-all duration-300 ease-in-out ${currentAnimation}`}>
               <div className="flex h-full w-full">{currentStep.content}</div>
             </div>
           </div>

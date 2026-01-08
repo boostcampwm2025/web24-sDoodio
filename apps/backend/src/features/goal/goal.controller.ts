@@ -1,6 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
-import { readFile } from 'fs/promises';
-import { join } from 'path';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
 import { GoalTemplateListResponseSchema, type GoalTemplateListResponse } from '@web24/shared';
 
