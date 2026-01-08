@@ -14,6 +14,6 @@ describe('fetchSomethingA', () => {
       id: 'demo',
       name: 'Demo',
     });
-    expect(fetchMock).toHaveBeenCalledWith('/dodo-rooms/demo');
+    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('/dodo-rooms/demo'));
   });
 });

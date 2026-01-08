@@ -20,6 +20,7 @@
     "test:fe": "pnpm -F @web24/frontend test",
     "test:fe:run": "pnpm -F @web24/frontend test:run",
     "test:fe:e2e": "pnpm -F @web24/frontend test:e2e",
+    "test:fe:cov": "pnpm -F @web24/frontend test:cov",
     "test:be": "pnpm -F @web24/backend test",
     "lint": "concurrently \"pnpm run lint:fe\" \"pnpm run lint:be\"",
     "lint:fe": "pnpm -F @web24/frontend lint",
@@ -69,9 +70,12 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "husky": "^9.1.7",
     "lint-staged": "^15.2.11",
-    "prettier": "^3.4.2"
+    "prettier": "^3.4.2",
+    "typescript": "^5.9.3"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild"]
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }

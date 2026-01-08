@@ -33,6 +33,9 @@ jobs:
       - name: Run backend tests with coverage
         run: pnpm -F @web24/backend test:cov
 
+      - name: Run frontend tests with coverage
+        run: pnpm -F @web24/frontend test:cov
+
       # 소나큐브 스캔 실행
       - name: SonarQube Scan
         uses: sonarsource/sonarqube-scan-action@v5.0.0
