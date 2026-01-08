@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export interface NewGoalStep {
   step: number;
+  unskippable?: boolean; // true일 때 skip 버튼 미표시
   headerText: string;
   dialogue: string;
   content: React.ReactNode;
@@ -79,13 +80,15 @@ export function NewGoal({ steps, progressSteps, onSkip, onComplete }: NewGoalPro
             <h2 className="text-heading-1 text-label-normal font-bold">{currentStep.headerText}</h2>
 
             {/* Skip 버튼 */}
-            <button
-              onClick={handleSkip}
-              type="button"
-              className="text-headline-1 text-primary-weak hover:text-primary-strong font-bold transition-colors"
-            >
-              skip
-            </button>
+            {currentStep.unskippable ? null : (
+              <button
+                onClick={handleSkip}
+                type="button"
+                className="text-headline-1 text-primary-weak hover:text-primary-strong font-bold transition-colors"
+              >
+                skip
+              </button>
+            )}
           </div>
 
           {/* 콘텐츠 영역 */}
