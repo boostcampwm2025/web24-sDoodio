@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-export interface NewGoalStep {
+export interface NewGoalFrameStep {
   step: number;
   unskippable?: boolean; // true일 때 skip 버튼 미표시
   headerText: string;
@@ -9,19 +9,29 @@ export interface NewGoalStep {
   content: React.ReactNode;
 }
 
-export interface NewGoalProps {
-  steps: NewGoalStep[];
+export interface NewGoalFrameProps {
+  currStepIdx: number;
+  steps: NewGoalFrameStep[];
   progressSteps: number[]; // 진행률 표시에 포함할 스텝
+  onMove: (targetIdx: number) => void;
   onSkip: () => void;
   onComplete: () => void;
 }
 
-export function NewGoal({ steps, progressSteps, onSkip, onComplete }: NewGoalProps) {
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+export function NewGoalFrame({
+  currStepIdx,
+  steps,
+  progressSteps,
+  onMove,
+  onSkip,
+  onComplete,
+}: NewGoalFrameProps) {
   const [isExiting, setIsExiting] = useState(false);
+  const [direction, setDirection] = useState<'next' | 'prev'>('next');
 
-  const currentStep = steps[currentStepIndex];
-  const isLastStep = currentStepIndex === steps.length - 1;
+  const currentStep = steps[currStepIdx];
+  const isFirstStep = currStepIdx === 0;
+  const isLastStep = currStepIdx === steps.length - 1;
 
   const currentProgressIndex = progressSteps.indexOf(currentStep.step);
   const isProgressShown = progressSteps.includes(currentStep.step);
@@ -34,9 +44,21 @@ export function NewGoal({ steps, progressSteps, onSkip, onComplete }: NewGoalPro
       return;
     }
 
+    setDirection('next');
     setIsExiting(true);
     setTimeout(() => {
-      setCurrentStepIndex((prev) => prev + 1);
+      onMove(currStepIdx + 1);
+      setIsExiting(false);
+    }, 300);
+  };
+
+  const handlePrev = () => {
+    if (isExiting || isFirstStep) return;
+
+    setDirection('prev');
+    setIsExiting(true);
+    setTimeout(() => {
+      onMove(currStepIdx - 1);
       setIsExiting(false);
     }, 300);
   };
@@ -67,7 +89,7 @@ export function NewGoal({ steps, progressSteps, onSkip, onComplete }: NewGoalPro
 
           {/* 두두 */}
           <div className="mt-auto w-full max-w-75 flex-1">
-            <img src="./DodoSit.png" alt="앉은 두두" />
+            <img src="/DodoSit.png" alt="앉은 두두" />
           </div>
         </div>
 
@@ -95,28 +117,34 @@ export function NewGoal({ steps, progressSteps, onSkip, onComplete }: NewGoalPro
           <div className="relative mt-8 flex-1 overflow-hidden px-12">
             <div
               className={`h-full transition-all duration-300 ease-in-out ${
-                isExiting ? '-translate-x-full opacity-0' : 'translate-x-0 opacity-100'
+                isExiting
+                  ? `${direction === 'next' ? '-translate-x-full' : 'translate-x-full'} opacity-0`
+                  : 'translate-x-0 opacity-100'
               }`}
             >
               <div className="flex h-full w-full">{currentStep.content}</div>
             </div>
           </div>
 
-          <div className="flex flex-row justify-around">
-            <div className="flex items-center justify-end p-12 opacity-0">
-              <button
-                type="button"
-                disabled={isExiting}
-                className="group transition-transform active:scale-90 disabled:opacity-50"
-                aria-label="Previous Step"
-              >
-                <ChevronLeft className="text-label-normal h-10 w-10 stroke-[1.5px]" />
-              </button>
-            </div>
+          <div className="flex flex-row items-center justify-between px-12 py-8">
+            {/* 이전 버튼 */}
+            <button
+              onClick={handlePrev}
+              type="button"
+              disabled={isExiting || isFirstStep}
+              className={`group transition-all active:scale-90 ${
+                isFirstStep ? 'pointer-events-none opacity-0' : 'opacity-100'
+              }`}
+              aria-label="Previous Step"
+            >
+              <ChevronLeft className="text-label-normal h-10 w-10 stroke-[1.5px]" />
+            </button>
 
             {/* Progress Indicators */}
             <div
-              className={`flex items-center gap-4 ${isProgressShown ? 'opacity-100' : 'opacity-0'}`}
+              className={`flex items-center gap-4 transition-opacity ${
+                isProgressShown ? 'opacity-100' : 'opacity-0'
+              }`}
             >
               {progressSteps.map((stepNum, index) => (
                 <div key={stepNum} className="relative flex items-center justify-center">
@@ -133,17 +161,15 @@ export function NewGoal({ steps, progressSteps, onSkip, onComplete }: NewGoalPro
             </div>
 
             {/* 다음 버튼 */}
-            <div className="flex items-center justify-end p-12">
-              <button
-                onClick={handleNext}
-                type="button"
-                disabled={isExiting}
-                className="group transition-transform active:scale-90 disabled:opacity-50"
-                aria-label="Next Step"
-              >
-                <ChevronRight className="text-label-normal h-10 w-10 stroke-[1.5px]" />
-              </button>
-            </div>
+            <button
+              onClick={handleNext}
+              type="button"
+              disabled={isExiting}
+              className="group transition-transform active:scale-90 disabled:opacity-50"
+              aria-label="Next Step"
+            >
+              <ChevronRight className="text-label-normal h-10 w-10 stroke-[1.5px]" />
+            </button>
           </div>
         </div>
       </div>
