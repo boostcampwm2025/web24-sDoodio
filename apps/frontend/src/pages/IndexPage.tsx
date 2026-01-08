@@ -21,6 +21,17 @@ export const mockTodayBehaviorList: Behavior[] = [
   mockBehaviorCard,
 ];
 
+export const mockGoals: string[] = [
+  'ALL',
+  'hello',
+  'bye',
+  'good',
+  'very very good',
+  '건강한 생활',
+  'yesyeyseysey',
+  'djfkljdsklafjkl',
+];
+
 export function IndexPage() {
   const { quote, resetQuote } = useDodoChatStore();
 
@@ -36,7 +47,7 @@ export function IndexPage() {
       <Hero quote={quote} />
       {/* 테스트 */}
       <AIBehaviorContainer behavior={mockBehaviorCard} onToggle={() => {}} />
-      <TodayBahaviorList behaviors={mockTodayBehaviorList} onToggle={() => {}} />
+      <TodayBahaviorList goals={mockGoals} behaviors={mockTodayBehaviorList} onToggle={() => {}} />
       {/* <AICard />
       behavior 폴더
       comoponent
