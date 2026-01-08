@@ -1,13 +1,16 @@
-import type { GoalColor } from '@web24/shared';
+import type { BehaviorDifficulty, GoalColor } from '@web24/shared';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { NewGoalFrame, type NewGoalFrameStep } from '@/features/goal/components/NewGoalFrame';
 import { DODO_LINES } from '@/features/goal/constants/dodo';
 import { useGoalTemplates } from '@/features/goal/hooks/useGoalTemplates';
 import { TemplateSelection } from '@/features/goal/components/TemplateSelection';
 import { BehaviorSelection, type BehaviorItem } from '@/features/goal/components/BehaviorSelection';
 import { NewGoal } from '@/features/goal/components/NewGoal';
+import { createGoal } from '@/features/goal/apis/createGoal.api';
 
 export function NewGoalPage() {
+  const navigate = useNavigate();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
@@ -198,7 +201,33 @@ export function NewGoalPage() {
 
   const handleSkip = () => {};
 
-  const handleComplete = () => {};
+  const handleComplete = async () => {
+    const buildBehaviors = (difficulty: BehaviorDifficulty, behaviors: BehaviorItem[]) =>
+      behaviors
+        .map((behavior) => ({
+          title: behavior.title.trim(),
+          difficulty,
+        }))
+        .filter((behavior) => behavior.title.length > 0);
+
+    const behaviors = [
+      ...buildBehaviors('마음열기', openBehaviors),
+      ...buildBehaviors('시작하기', startBehaviors),
+      ...buildBehaviors('이어하기', continueBehaviors),
+      ...buildBehaviors('몰입하기', deepBehaviors),
+    ];
+
+    try {
+      await createGoal({
+        goalTitle: newGoalTitle.trim(),
+        goalColor: newGoalColor,
+        behaviors,
+      });
+      navigate('/', { replace: true });
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   return (
     <NewGoalFrame
