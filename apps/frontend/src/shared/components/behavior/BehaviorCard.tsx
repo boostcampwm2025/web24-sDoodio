@@ -1,6 +1,5 @@
-import { CheckCircle2 } from 'lucide-react';
-
 import type { Behavior, Difficulty } from '@/shared/components/behavior/BehaviorCard.types';
+import StickerCell from './StickerCell';
 
 interface BehaviorProps {
   behavior: Behavior;
@@ -34,7 +33,6 @@ export function BehaviorCard({ behavior, onToggle }: BehaviorProps) {
     >
       {/* 왼쪽 컬러 바 */}
       <div className={`absolute top-0 bottom-0 left-0 w-3.5 rounded-l-2xl ${behavior.goalColor}`} />
-
       <div className="flex-1 pl-3">
         <div className="mb-1 flex items-center gap-2">
           <span className="bg-bg-alternative text-label-disable rounded px-2 py-0.5 text-xs font-bold">
@@ -52,21 +50,15 @@ export function BehaviorCard({ behavior, onToggle }: BehaviorProps) {
           <DifficultyBadge level={behavior.difficulty} />
         </div>
       </div>
-
       {/* 토글 버튼 */}
-      <button
-        type="button"
-        aria-label={`${behavior.title} 완료 토글`}
-        aria-pressed={behavior.isChecked}
+      <StickerCell
+        isFilled={behavior.isChecked}
+        isClickable
         onClick={onToggle}
-        className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 transition-all duration-300 ${
-          behavior.isChecked
-            ? `${behavior.goalColor} text-bg-light border-transparent` // 완료됨: 목표 색상 배경
-            : 'border-primary-weak text-primary-normal group-hover:border-primary-strong group-hover:text-primary-strong' // 미완료
-        } `}
-      >
-        <CheckCircle2 size={20} strokeWidth={3} />
-      </button>
+        ariaLabel={`${behavior.title} 완료 토글`}
+        ariaPressed={behavior.isChecked}
+        stickerColor={behavior.goalColor}
+      />{' '}
     </div>
   );
 }

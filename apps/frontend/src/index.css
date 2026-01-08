@@ -180,6 +180,13 @@
     line-height: 1.273; /* 14px */
     letter-spacing: 0.0311em;
   }
+
+  .sticker-empty-border {
+    border-color: color-mix(in srgb, var(--sticker-color) 20%, transparent);
+  }
+  .sticker-empty-border:hover {
+    border-color: color-mix(in srgb, var(--sticker-color) 70%, transparent);
+  }
 }
 
 html,
