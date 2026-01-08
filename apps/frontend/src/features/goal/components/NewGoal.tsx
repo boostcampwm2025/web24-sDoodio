@@ -53,8 +53,8 @@ export function NewGoal({ steps, progressSteps, onSkip, onComplete }: NewGoalPro
           {/* 말풍선 */}
           {/* TODO: 타이핑 효과 넣기 */}
           <div className="relative mb-12 flex w-full flex-col items-center">
-            <div className="bg-bg-alternative relative flex min-h-50 w-full max-w-sm items-center justify-center rounded-4xl px-10 py-12 shadow-sm">
-              <p className="text-heading-2 text-label-normal text-center leading-relaxed font-bold break-keep">
+            <div className="bg-bg-alternative relative flex min-h-50 w-full max-w-sm items-center justify-center rounded-4xl shadow-sm">
+              <p className="text-heading-2 text-label-normal text-center leading-relaxed font-bold break-keep whitespace-pre-line">
                 {currentStep.dialogue}
               </p>
             </div>
