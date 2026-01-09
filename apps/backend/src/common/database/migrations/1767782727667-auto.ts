@@ -5,7 +5,7 @@ export class Auto1767782727667 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `CREATE TYPE "public"."behaviors_difficulty_enum" AS ENUM('마음열기', '시작하기', '이어가기', '몰입하기', 'AI')`,
+      `CREATE TYPE "public"."behaviors_difficulty_enum" AS ENUM('마음열기', '시작하기', '이어하기', '몰입하기', 'AI')`,
     );
     await queryRunner.query(
       `CREATE TABLE "behaviors" ("id" uuid NOT NULL DEFAULT uuidv7(), "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(), "deletedAt" TIMESTAMP WITH TIME ZONE, "title" character varying(30) NOT NULL, "difficulty" "public"."behaviors_difficulty_enum" NOT NULL, "goalId" uuid, CONSTRAINT "PK_dc34a2b981fe38b508ba9957255" PRIMARY KEY ("id"))`,
