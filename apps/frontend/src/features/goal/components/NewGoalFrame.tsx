@@ -51,15 +51,18 @@ export function NewGoalFrame({
   useEffect(() => {
     let timer: NodeJS.Timeout | undefined;
 
-    if (!isLastDialogue) {
-      timer = setTimeout(() => {
-        setDialogueFade(false);
+    const transitionToNextDialogue = () => {
+      setDialogueIdx((prev) => prev + 1);
+      setDialogueFade(true);
+    };
 
-        setTimeout(() => {
-          setDialogueIdx((prev) => prev + 1);
-          setDialogueFade(true);
-        }, 300);
-      }, 3000);
+    const startTransition = () => {
+      setDialogueFade(false);
+      setTimeout(transitionToNextDialogue, 300);
+    };
+
+    if (!isLastDialogue) {
+      timer = setTimeout(startTransition, 3000);
     }
 
     return () => {
