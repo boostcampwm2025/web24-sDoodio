@@ -29,7 +29,7 @@ export function NewGoalPage() {
       step: 1,
       headerText: '',
       unskippable: true,
-      dialogue: DODO_LINES.select.at(0) ?? '',
+      dialogue: DODO_LINES.select,
       content: (
         <TemplateSelection
           selectedTemplateId={selectedTemplateId}
@@ -71,7 +71,7 @@ export function NewGoalPage() {
     {
       step: 2,
       headerText: '목표 작성',
-      dialogue: DODO_LINES.goal.join('\n'),
+      dialogue: DODO_LINES.goal,
       content: (
         <NewGoal
           title={newGoalTitle}
@@ -85,7 +85,7 @@ export function NewGoalPage() {
       step: 3,
       headerText: '마음열기',
       unskippable: true,
-      dialogue: DODO_LINES.open.at(0) ?? '',
+      dialogue: DODO_LINES.open,
       content: (
         <BehaviorSelection
           behaviors={openBehaviors}
@@ -109,7 +109,7 @@ export function NewGoalPage() {
       step: 4,
       headerText: '시작하기',
       unskippable: true,
-      dialogue: DODO_LINES.start.at(0) ?? '',
+      dialogue: DODO_LINES.start,
       content: (
         <BehaviorSelection
           behaviors={startBehaviors}
@@ -133,7 +133,7 @@ export function NewGoalPage() {
       step: 5,
       headerText: '이어가기',
       unskippable: true,
-      dialogue: DODO_LINES.continue.at(0) ?? '',
+      dialogue: DODO_LINES.continue,
       content: (
         <BehaviorSelection
           behaviors={continueBehaviors}
@@ -157,7 +157,7 @@ export function NewGoalPage() {
       step: 6,
       headerText: '몰입하기',
       unskippable: true,
-      dialogue: DODO_LINES.start.at(0) ?? '',
+      dialogue: DODO_LINES.deep,
       content: (
         <BehaviorSelection
           behaviors={deepBehaviors}
@@ -213,7 +213,7 @@ export function NewGoalPage() {
     <NewGoalFrame
       currStepIdx={currentStepIndex}
       steps={newGoalFrameSteps}
-      progressSteps={[2, 3, 4, 5]}
+      progressSteps={[2, 3, 4, 5, 6]}
       onMove={(targetIdx) => setCurrentStepIndex(targetIdx)}
       onSkip={handleSkip}
       onComplete={handleComplete}

@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export interface NewGoalFrameStep {
   step: number;
   unskippable?: boolean; // true일 때 skip 버튼 미표시
   headerText: string;
-  dialogue: string;
+  dialogue: string[]; // string[]로 변경
   content: React.ReactNode;
 }
 
@@ -28,6 +28,9 @@ export function NewGoalFrame({
 }: NewGoalFrameProps) {
   const [isExiting, setIsExiting] = useState(false);
   const [direction, setDirection] = useState<'next' | 'prev'>('next');
+  const [dialogueIdx, setDialogueIdx] = useState(0);
+  const [dialogueFade, setDialogueFade] = useState(true);
+  const [resetTimer, setResetTimer] = useState(0);
 
   const currentStep = steps[currStepIdx];
   const isFirstStep = currStepIdx === 0;
@@ -35,6 +38,36 @@ export function NewGoalFrame({
 
   const currentProgressIndex = progressSteps.indexOf(currentStep.step);
   const isProgressShown = progressSteps.includes(currentStep.step);
+
+  const currentDialogue = currentStep.dialogue[dialogueIdx] || '';
+  const isLastDialogue = dialogueIdx >= currentStep.dialogue.length - 1;
+
+  useEffect(() => {
+    setDialogueIdx(0);
+    setDialogueFade(true);
+    setResetTimer((prev) => prev + 1);
+  }, [currStepIdx]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout | undefined;
+
+    if (!isLastDialogue) {
+      timer = setTimeout(() => {
+        setDialogueFade(false);
+
+        setTimeout(() => {
+          setDialogueIdx((prev) => prev + 1);
+          setDialogueFade(true);
+        }, 300);
+      }, 3000);
+    }
+
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+  }, [dialogueIdx, isLastDialogue, resetTimer]);
 
   const animationStyles = {
     next: '-translate-x-full opacity-0',
@@ -46,11 +79,13 @@ export function NewGoalFrame({
   const handleNext = () => {
     if (isExiting) return;
 
+    // 마지막 스텝이면 완료
     if (isLastStep) {
       onComplete?.();
       return;
     }
 
+    // 다음 스텝으로
     setDirection('next');
     setIsExiting(true);
     setTimeout(() => {
@@ -62,6 +97,7 @@ export function NewGoalFrame({
   const handlePrev = () => {
     if (isExiting || isFirstStep) return;
 
+    // 이전 스텝으로
     setDirection('prev');
     setIsExiting(true);
     setTimeout(() => {
@@ -83,8 +119,12 @@ export function NewGoalFrame({
           {/* TODO: 타이핑 효과 넣기 */}
           <div className="relative mb-2 flex w-full flex-col items-center md:mb-6 lg:mb-12">
             <div className="bg-bg-alternative relative flex min-h-16 w-full max-w-xs items-center justify-center rounded-3xl px-6 shadow-sm md:min-h-28 md:max-w-sm md:rounded-4xl lg:min-h-50">
-              <p className="text-label-normal text-body-1 md:text-headline-1 lg:text-heading-2 text-center leading-relaxed font-bold break-keep whitespace-pre-line">
-                {currentStep.dialogue}
+              <p
+                className={`text-label-normal text-body-1 md:text-headline-1 lg:text-heading-2 text-center leading-relaxed font-bold break-keep whitespace-pre-line transition-opacity duration-300 ${
+                  dialogueFade ? 'opacity-100' : 'opacity-0'
+                }`}
+              >
+                {currentDialogue}
               </p>
             </div>
             <div className="absolute -bottom-10 left-10 flex flex-col gap-1 md:-bottom-18 md:left-16 md:gap-2">

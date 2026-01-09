@@ -6,13 +6,13 @@ const steps: NewGoalFrameStep[] = [
   {
     step: 1,
     headerText: '첫 번째 단계',
-    dialogue: '대사 1',
+    dialogue: ['대사 1'],
     content: <div>콘텐츠 1</div>,
   },
   {
     step: 2,
     headerText: '두 번째 단계',
-    dialogue: '대사 2',
+    dialogue: ['대사 2'],
     content: <div>콘텐츠 2</div>,
     unskippable: true,
   },
