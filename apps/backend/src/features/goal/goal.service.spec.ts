@@ -44,7 +44,7 @@ describe('GoalService', () => {
   });
 
   it('목표와 행동을 저장하고 응답을 반환한다', async () => {
-    const user = { id: 'user-1', nickname: '테스트' };
+    const user = { id: 'user-1', nickname: '테스트유저' };
     const userRepository = { findOne: jest.fn().mockResolvedValue(user) };
 
     const goal = { title: request.goalTitle, color: request.goalColor, user };
@@ -102,7 +102,7 @@ describe('GoalService', () => {
         },
       ],
     });
-    expect(userRepository.findOne).toHaveBeenCalledWith({ where: { nickname: '테스트' } });
+    expect(userRepository.findOne).toHaveBeenCalledWith({ where: { nickname: '테스트유저' } });
     expect(goalRepository.create).toHaveBeenCalledWith({
       title: request.goalTitle,
       color: request.goalColor,

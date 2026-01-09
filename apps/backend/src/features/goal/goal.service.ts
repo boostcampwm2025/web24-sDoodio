@@ -20,7 +20,7 @@ export class GoalService {
   async createGoal(request: CreateGoalRequest): Promise<CreateGoalResponse> {
     return this.dataSource.transaction(async (manager) => {
       // MEMO: 임시로 테스트 사용자를 바탕으로 조회
-      const user = await manager.getRepository(User).findOne({ where: { nickname: '테스트' } });
+      const user = await manager.getRepository(User).findOne({ where: { nickname: '테스트유저' } });
 
       if (!user) {
         throw new NotFoundException('User not found');
