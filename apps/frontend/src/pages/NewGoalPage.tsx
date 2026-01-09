@@ -1,13 +1,13 @@
 import type { BehaviorDifficulty, GoalColor } from '@web24/shared';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { NewGoalFrame, type NewGoalFrameStep } from '@/features/goal/components/NewGoalFrame';
 import { DODO_LINES } from '@/features/goal/constants/dodo';
 import { useGoalTemplates } from '@/features/goal/hooks/useGoalTemplates';
 import { TemplateSelection } from '@/features/goal/components/TemplateSelection';
 import { BehaviorSelection, type BehaviorItem } from '@/features/goal/components/BehaviorSelection';
-import { NewGoal } from '@/features/goal/components/NewGoal';
 import { createGoal } from '@/features/goal/apis/createGoal.api';
+import { NewGoal } from '@/features/goal/components/NewGoal';
 
 export function NewGoalPage() {
   const navigate = useNavigate();
@@ -24,27 +24,6 @@ export function NewGoalPage() {
   const [continueBehaviors, setContinueBehaviors] = useState<BehaviorItem[]>([]);
   const [deepBehaviors, setDeepBehaviors] = useState<BehaviorItem[]>([]);
 
-  useEffect(() => {
-    if (currentStepIndex === 0 && newGoalTitle.length !== 0) {
-      setSelectedTemplateId(null);
-      setNewGoalColor('light-pink');
-      setNewGoalTitle('');
-      setOpenBehaviors([]);
-      setStartBehaviors([]);
-      setContinueBehaviors([]);
-      setDeepBehaviors([]);
-    }
-  }, [
-    templates,
-    currentStepIndex,
-    openBehaviors.length,
-    selectedTemplateId,
-    startBehaviors.length,
-    continueBehaviors.length,
-    deepBehaviors.length,
-    newGoalTitle.length,
-  ]);
-
   const newGoalFrameSteps: NewGoalFrameStep[] = [
     {
       step: 1,
@@ -60,6 +39,7 @@ export function NewGoalPage() {
             const templateIdx = templates.findIndex((template) => template.id === templateId);
             setSelectedTemplateId(templateId);
             const selectedTemplate = templateIdx === -1 ? null : templates.at(templateIdx);
+            setNewGoalTitle(selectedTemplate?.title ?? '');
             setOpenBehaviors(
               (selectedTemplate?.level.마음열기 ?? []).map((title) => ({
                 id: crypto.randomUUID(),
