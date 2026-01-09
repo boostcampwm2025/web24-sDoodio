@@ -9,11 +9,12 @@ jest.mock('node:fs/promises', () => ({
 
 describe('GoalController', () => {
   let controller: GoalController;
-  let goalService: { createGoal: jest.Mock };
+  let goalService: { createGoal: jest.Mock; getGoals: jest.Mock };
 
   beforeEach(async () => {
     goalService = {
       createGoal: jest.fn(),
+      getGoals: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -27,6 +28,32 @@ describe('GoalController', () => {
     }).compile();
 
     controller = module.get<GoalController>(GoalController);
+  });
+
+  it('전체 목표 목록을 반환한다', async () => {
+    const now = new Date('2026-01-01T00:00:00.000Z');
+
+    goalService.getGoals.mockResolvedValue([
+      {
+        id: '01890fba-7e6a-7b6b-9e5d-0f3c9b8b4c6d',
+        createdAt: now,
+        updatedAt: now,
+        title: '건강',
+        color: 'mint',
+      },
+    ]);
+
+    await expect(controller.getGoals()).resolves.toEqual([
+      {
+        id: '01890fba-7e6a-7b6b-9e5d-0f3c9b8b4c6d',
+        createdAt: now.toISOString(),
+        updatedAt: now.toISOString(),
+        title: '건강',
+        color: 'mint',
+      },
+    ]);
+
+    expect(goalService.getGoals).toHaveBeenCalledTimes(1);
   });
 
   it('템플릿 목록을 반환한다', async () => {

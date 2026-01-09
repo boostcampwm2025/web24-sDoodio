@@ -4,6 +4,7 @@ import { join } from 'node:path';
 
 import {
   CreateGoalRequestSchema,
+  GetGoalsResponse,
   GoalTemplateListResponseSchema,
   type CreateGoalRequest,
   type CreateGoalResponse,
@@ -15,6 +16,18 @@ import { GoalService } from './goal.service';
 @Controller('goals')
 export class GoalController {
   constructor(private readonly goalService: GoalService) {}
+
+  @Get()
+  async getGoals(): Promise<GetGoalsResponse> {
+    const goals = await this.goalService.getGoals();
+    return goals.map((goal) => ({
+      id: goal.id,
+      createdAt: goal.createdAt.toISOString(),
+      updatedAt: goal.updatedAt.toISOString(),
+      title: goal.title,
+      color: goal.color,
+    }));
+  }
 
   @Get('templates')
   async getTemplates(): Promise<GoalTemplateListResponse> {

@@ -47,3 +47,54 @@ export const CreateGoalResponseSchema = z.object({
 });
 
 export type CreateGoalResponse = z.infer<typeof CreateGoalResponseSchema>;
+
+export const GetGoalSummarySchema = z.object({
+  id: z.uuid(),
+  createdAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime(),
+  title: z.string().min(1).max(GOAL_TITLE_MAX_LENGTH),
+  color: z.enum(GOAL_COLORS),
+});
+
+export const GetGoalsResponseSchema = z.array(GetGoalSummarySchema);
+
+export type GetGoalSummary = z.infer<typeof GetGoalSummarySchema>;
+export type GetGoalsResponse = z.infer<typeof GetGoalsResponseSchema>;
+
+// Uncaught (in promise) ZodError: [
+//   {
+//     "origin": "string",
+//     "code": "invalid_format",
+//     "format": "uuid",
+//     "pattern": "/^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$/",
+//     "path": [
+//       0,
+//       "id"
+//     ],
+//     "message": "Invalid UUID"
+//   },
+//   {
+//     "origin": "string",
+//     "code": "invalid_format",
+//     "format": "uuid",
+//     "pattern": "/^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$/",
+//     "path": [
+//       1,
+//       "id"
+//     ],
+//     "message": "Invalid UUID"
+//   },
+//   {
+//     "origin": "string",
+//     "code": "invalid_format",
+//     "format": "uuid",
+//     "pattern": "/^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$/",
+//     "path": [
+//       2,
+//       "id"
+//     ],
+//     "message": "Invalid UUID"
+//   }
+// ]
+//     at fetchGoals (fetchGoals.api.ts:16:33)
+//     at async Promise.all (:5173/index 1)

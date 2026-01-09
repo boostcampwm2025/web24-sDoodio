@@ -5,12 +5,11 @@ import { AIBehaviorContainer } from '@/features/behavior/components/AIBehaviorCo
 import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
 import { TodayBahaviorList } from '@/features/behavior/components/TodayBehaviorList';
 import { fetchTodayBehaviors } from '@/features/behavior/apis/fetchBehaviors.api';
-
-// 임시 목표 리스트
-const mockGoals: string[] = ['ALL', '개발 서적', '드로잉 마스터', '건강한 생활'];
+import { fetchGoals } from '@/features/goal/apis/fetchGoals.api';
 
 export function IndexPage() {
   const [behaviors, setBehaviors] = useState<Behavior[]>([]);
+  const [goalTitles, setGoalTitles] = useState<string[]>([]);
   const { quote, resetQuote } = useDodoChatStore();
 
   const handleToggle = (id: string) => {
@@ -18,8 +17,9 @@ export function IndexPage() {
   };
 
   useEffect(() => {
-    fetchTodayBehaviors().then((data) => {
-      setBehaviors(data);
+    Promise.all([fetchTodayBehaviors(), fetchGoals()]).then(([behaviorsData, goalsData]) => {
+      setBehaviors(behaviorsData);
+      setGoalTitles(['ALL', ...goalsData.map((g) => g.title)]);
     });
   }, []);
 
@@ -46,7 +46,11 @@ export function IndexPage() {
       )}
 
       {/* 오늘의 행동 */}
-      <TodayBahaviorList goals={mockGoals} behaviors={behaviors.slice(1)} onToggle={handleToggle} />
+      <TodayBahaviorList
+        goals={goalTitles}
+        behaviors={behaviors.slice(1)}
+        onToggle={handleToggle}
+      />
     </div>
   );
 }

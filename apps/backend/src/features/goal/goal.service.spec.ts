@@ -17,6 +17,49 @@ describe('GoalService', () => {
     behaviors: [{ title: '물 한 컵 마시기', difficulty: '마음열기' }],
   };
 
+  it('목표 목록을 반환한다', async () => {
+    const user = { id: 'user-1', nickname: '테스트유저' };
+    const userRepository = { findOne: jest.fn().mockResolvedValue(user) };
+
+    const goals = [
+      { id: 'goal-1', title: '건강', color: 'mint', user },
+      { id: 'goal-2', title: '독서', color: 'beige', user },
+    ];
+    const goalRepository = { find: jest.fn().mockResolvedValue(goals) };
+
+    const dataSource = {
+      getRepository: jest.fn((entity: Function) => {
+        if (entity === User) return userRepository;
+        if (entity === Goal) return goalRepository;
+        return null;
+      }),
+    } as unknown as DataSource;
+
+    const service = new GoalService(dataSource);
+
+    await expect(service.getGoals()).resolves.toEqual(goals);
+    expect(userRepository.findOne).toHaveBeenCalledWith({ where: { nickname: '테스트유저' } });
+    expect(goalRepository.find).toHaveBeenCalledWith({ where: { user: { id: user.id } } });
+  });
+
+  it('유저가 없으면 getGoals가 NotFoundException을 던진다', async () => {
+    const userRepository = { findOne: jest.fn().mockResolvedValue(null) };
+    const goalRepository = { find: jest.fn() };
+
+    const dataSource = {
+      getRepository: jest.fn((entity: Function) => {
+        if (entity === User) return userRepository;
+        if (entity === Goal) return goalRepository;
+        return null;
+      }),
+    } as unknown as DataSource;
+
+    const service = new GoalService(dataSource);
+
+    await expect(service.getGoals()).rejects.toBeInstanceOf(NotFoundException);
+    expect(goalRepository.find).not.toHaveBeenCalled();
+  });
+
   it('유저가 없으면 NotFoundException을 던진다', async () => {
     const userRepository = { findOne: jest.fn().mockResolvedValue(null) };
     const goalRepository = { create: jest.fn(), save: jest.fn() };
