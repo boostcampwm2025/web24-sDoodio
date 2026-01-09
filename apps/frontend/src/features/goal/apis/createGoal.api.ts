@@ -4,10 +4,8 @@ import {
   type CreateGoalResponse,
 } from '@web24/shared';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
-
 export async function createGoal(request: CreateGoalRequest): Promise<CreateGoalResponse> {
-  const response = await fetch(`${API_BASE}/goals`, {
+  const response = await fetch(`api/goals`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
