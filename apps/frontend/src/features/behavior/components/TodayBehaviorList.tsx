@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { BehaviorCard } from '@/shared/components/behavior/BehaviorCard';
 import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
 import { Plus, CirclePlus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { SwiperTabs } from './SwiperTabs';
 
 interface BehaviorListProps {
@@ -12,6 +13,7 @@ interface BehaviorListProps {
 
 export function TodayBahaviorList({ goals, behaviors, onToggle }: BehaviorListProps) {
   const [activeGoal, setActiveGoal] = useState<string>('ALL');
+  const navigate = useNavigate();
 
   const filteredBehaviors = useMemo(() => {
     if (activeGoal === 'ALL') return behaviors;
@@ -36,6 +38,7 @@ export function TodayBahaviorList({ goals, behaviors, onToggle }: BehaviorListPr
         <button
           type="button"
           className="absolute top-1/2 right-0 flex h-8 w-8 -translate-y-1/2 items-center justify-center"
+          onClick={() => navigate('/goals/new')}
         >
           <CirclePlus className="text-label-disable" />
         </button>
