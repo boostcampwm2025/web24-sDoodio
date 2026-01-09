@@ -40,10 +40,10 @@ async function seed() {
   const behaviorsData = [
     { title: '물 1컵 마시기', difficulty: '마음열기', goalTitle: '건강한 생활' },
     { title: '스트레칭 5분', difficulty: '시작하기', goalTitle: '건강한 생활' },
-    { title: '선 긋기 연습', difficulty: '이어하기', goalTitle: '드로잉 마스터' },
+    { title: '선 긋기 연습', difficulty: '이어가기', goalTitle: '드로잉 마스터' },
     { title: '스케치 10분', difficulty: '몰입하기', goalTitle: '드로잉 마스터' },
     { title: '30분 독서', difficulty: '시작하기', goalTitle: '개발 서적' },
-    { title: '요약 노트 작성', difficulty: '이어하기', goalTitle: '개발 서적' },
+    { title: '요약 노트 작성', difficulty: '이어가기', goalTitle: '개발 서적' },
   ];
 
   for (const b of behaviorsData) {
