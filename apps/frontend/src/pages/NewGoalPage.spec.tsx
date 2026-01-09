@@ -198,7 +198,7 @@ describe('NewGoalPage', () => {
       behaviors: expect.arrayContaining([
         expect.objectContaining({ title: '물 한 컵 마시기', difficulty: '마음열기' }),
         expect.objectContaining({ title: '스트레칭 5분', difficulty: '시작하기' }),
-        expect.objectContaining({ title: '주 2회 운동', difficulty: '이어하기' }),
+        expect.objectContaining({ title: '주 2회 운동', difficulty: '이어가기' }),
         expect.objectContaining({ title: '헬스장 1시간', difficulty: '몰입하기' }),
       ]),
     });
