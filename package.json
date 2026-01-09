@@ -18,10 +18,12 @@
     "dev:be": "pnpm -F @web24/backend dev",
     "test": "concurrently \"pnpm run test:fe\" \"pnpm run test:be\"",
     "test:fe": "pnpm -F @web24/frontend test",
+    "test:cov": "concurrently \"pnpm run test:fe:cov\" \"pnpm run test:be:cov\"",
     "test:fe:run": "pnpm -F @web24/frontend test:run",
     "test:fe:e2e": "pnpm -F @web24/frontend test:e2e",
     "test:fe:cov": "pnpm -F @web24/frontend test:cov",
     "test:be": "pnpm -F @web24/backend test",
+    "test:be:cov": "pnpm -F @web24/backend test:cov",
     "lint": "concurrently \"pnpm run lint:fe\" \"pnpm run lint:be\"",
     "lint:fe": "pnpm -F @web24/frontend lint",
     "lint:be": "pnpm -F @web24/backend lint",
@@ -37,6 +39,7 @@
     "migration:revert": "pnpm -F @web24/backend migration:revert",
     "migration:revert:prod": "pnpm -F @web24/backend migration:revert:prod",
     "ci:local": "pnpm format:check && pnpm lint && pnpm build && pnpm typecheck && pnpm test",
+    "sonar": "pnpm test:cov && sonar-scanner",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -71,6 +74,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^15.2.11",
     "prettier": "^3.4.2",
+    "sonar-scanner": "^3.1.0",
     "typescript": "^5.9.3"
   },
   "pnpm": {
