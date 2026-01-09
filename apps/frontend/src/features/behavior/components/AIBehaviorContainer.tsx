@@ -3,7 +3,7 @@ import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
 
 interface BehaviorProps {
   behavior: Behavior;
-  onToggle: () => void;
+  onToggle: (id: string) => void;
 }
 
 export function AIBehaviorContainer({ behavior, onToggle }: BehaviorProps) {
@@ -22,7 +22,7 @@ export function AIBehaviorContainer({ behavior, onToggle }: BehaviorProps) {
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <BehaviorCard behavior={behavior} onToggle={onToggle} />
+          <BehaviorCard behavior={behavior} onToggle={() => onToggle(behavior.id)} />
         </div>
       </div>
     </div>

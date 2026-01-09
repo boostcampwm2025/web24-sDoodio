@@ -1,13 +1,25 @@
+import { useState, useMemo } from 'react';
 import { BehaviorCard } from '@/shared/components/behavior/BehaviorCard';
 import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
-import { Plus } from 'lucide-react';
+import { Plus, CirclePlus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { SwiperTabs } from './SwiperTabs';
 
 interface BehaviorListProps {
+  goals: string[];
   behaviors: Behavior[];
   onToggle: (id: string) => void;
 }
 
-export function TodayBahaviorList({ behaviors, onToggle }: BehaviorListProps) {
+export function TodayBahaviorList({ goals, behaviors, onToggle }: BehaviorListProps) {
+  const [activeGoal, setActiveGoal] = useState<string>('ALL');
+  const navigate = useNavigate();
+
+  const filteredBehaviors = useMemo(() => {
+    if (activeGoal === 'ALL') return behaviors;
+    return behaviors.filter((behavior) => behavior.goalTitle === activeGoal);
+  }, [behaviors, activeGoal]);
+
   return (
     <div className="mb-4 flex-col items-center justify-between px-4">
       <h3 className="mb-2 flex items-center gap-2 text-lg font-bold">
@@ -15,8 +27,26 @@ export function TodayBahaviorList({ behaviors, onToggle }: BehaviorListProps) {
         <span className="rounded-full px-2 py-0.5 text-xs font-bold">{behaviors.length}</span>
       </h3>
 
+      {/* 목표 필터 탭 스와이퍼 */}
+      <div className="relative mb-2 flex items-center">
+        {/* Tabs */}
+        <div className="flex-1 overflow-hidden pr-10">
+          <SwiperTabs tabs={goals} onChange={setActiveGoal} />
+        </div>
+
+        {/* + Button */}
+        <button
+          type="button"
+          className="absolute top-1/2 right-0 flex h-8 w-8 -translate-y-1/2 items-center justify-center"
+          onClick={() => navigate('/goals/new')}
+        >
+          <CirclePlus className="text-label-disable" />
+        </button>
+      </div>
+
+      {/* 행동 카드들 */}
       <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-        {behaviors.map((behavior: Behavior) => (
+        {filteredBehaviors.map((behavior: Behavior) => (
           <BehaviorCard
             key={behavior.id}
             behavior={behavior}

@@ -30,7 +30,8 @@
     "migration:run": "pnpm run typeorm migration:run",
     "migration:run:prod": "pnpm run typeorm:prod migration:run",
     "migration:revert": "pnpm run typeorm migration:revert",
-    "migration:revert:prod": "pnpm run typeorm:prod migration:revert"
+    "migration:revert:prod": "pnpm run typeorm:prod migration:revert",
+    "seed": "NODE_ENV=development ts-node -r tsconfig-paths/register src/common/database/seed.ts"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^8.4.0",
