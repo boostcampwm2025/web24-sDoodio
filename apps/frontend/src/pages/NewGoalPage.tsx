@@ -1,4 +1,4 @@
-import type { BehaviorDifficulty, GoalColor } from '@web24/shared';
+import { BEHAVIOR_DIFFICULTIES, type BehaviorDifficulty, type GoalColor } from '@web24/shared';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { NewGoalFrame, type NewGoalFrameStep } from '@/features/goal/components/NewGoalFrame';
@@ -83,7 +83,7 @@ export function NewGoalPage() {
     },
     {
       step: 3,
-      headerText: '마음열기',
+      headerText: BEHAVIOR_DIFFICULTIES[0],
       unskippable: true,
       dialogue: DODO_LINES.open,
       content: (
@@ -107,7 +107,7 @@ export function NewGoalPage() {
     },
     {
       step: 4,
-      headerText: '시작하기',
+      headerText: BEHAVIOR_DIFFICULTIES[1],
       unskippable: true,
       dialogue: DODO_LINES.start,
       content: (
@@ -131,7 +131,7 @@ export function NewGoalPage() {
     },
     {
       step: 5,
-      headerText: '이어가기',
+      headerText: BEHAVIOR_DIFFICULTIES[2],
       unskippable: true,
       dialogue: DODO_LINES.continue,
       content: (
@@ -155,7 +155,7 @@ export function NewGoalPage() {
     },
     {
       step: 6,
-      headerText: '몰입하기',
+      headerText: BEHAVIOR_DIFFICULTIES[3],
       unskippable: true,
       dialogue: DODO_LINES.deep,
       content: (
@@ -191,10 +191,10 @@ export function NewGoalPage() {
         .filter((behavior) => behavior.title.length > 0);
 
     const behaviors = [
-      ...buildBehaviors('마음열기', openBehaviors),
-      ...buildBehaviors('시작하기', startBehaviors),
-      ...buildBehaviors('이어하기', continueBehaviors),
-      ...buildBehaviors('몰입하기', deepBehaviors),
+      ...buildBehaviors(BEHAVIOR_DIFFICULTIES[0], openBehaviors),
+      ...buildBehaviors(BEHAVIOR_DIFFICULTIES[1], startBehaviors),
+      ...buildBehaviors(BEHAVIOR_DIFFICULTIES[2], continueBehaviors),
+      ...buildBehaviors(BEHAVIOR_DIFFICULTIES[3], deepBehaviors),
     ];
 
     try {
