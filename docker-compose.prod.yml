@@ -4,7 +4,7 @@ services:
     container_name: web24-frontend-prod
     restart: unless-stopped
     ports:
-      - "8082:80"
+      - '80:80'
     depends_on:
       - backend
 
@@ -13,7 +13,7 @@ services:
     container_name: web24-backend-prod
     restart: unless-stopped
     ports:
-      - "3002:3000"
+      - '3002:3000'
     environment:
       NODE_ENV: production
       PORT: 3000
