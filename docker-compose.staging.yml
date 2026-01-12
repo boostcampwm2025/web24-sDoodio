@@ -5,6 +5,8 @@ services:
     restart: unless-stopped
     ports:
       - "8081:80"
+    depends_on:
+      - backend
 
   backend:
     image: ghcr.io/boostcampwm2025/web24-sdoodio-backend:staging
