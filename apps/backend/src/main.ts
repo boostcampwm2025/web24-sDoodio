@@ -21,7 +21,7 @@ async function bootstrap() {
   app.useGlobalInterceptors(new LoggingInterceptor());
   app.useGlobalFilters(new HttpExceptionLoggingFilter());
 
-  SwaggerModule.setup('docs', app, openApiDocument as unknown as OpenAPIObject);
+  SwaggerModule.setup('docs', app, openApiDocument as OpenAPIObject);
 
   await app.listen(process.env.PORT ?? 3000);
 }

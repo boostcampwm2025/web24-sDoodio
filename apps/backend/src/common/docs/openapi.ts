@@ -1,9 +1,9 @@
 import { OpenAPIRegistry, OpenApiGeneratorV3 } from '@asteasolutions/zod-to-openapi';
 
-import { registerBehaviorApi } from './behavior.docs';
-import { registerGoalApi } from './goal.docs';
 import { registerSampleApi } from './sample.docs';
-import { registerUserApi } from './user.docs';
+import { registerBehaviorApi } from '../../features/behavior/behavior.docs';
+import { registerGoalApi } from '../../features/goal/goal.docs';
+import { registerUserApi } from '../../features/user/user.docs';
 
 const registry = new OpenAPIRegistry();
 
