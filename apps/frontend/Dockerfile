@@ -16,9 +16,9 @@ COPY packages/shared packages/shared
 RUN pnpm -F @web24/shared build
 RUN pnpm -F @web24/frontend build
 
-FROM nginx:1.27-alpine
+FROM nginxinc/nginx-unprivileged:1.27-alpine
 
 COPY apps/frontend/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/apps/frontend/dist /usr/share/nginx/html
 
-EXPOSE 80
+EXPOSE 8080

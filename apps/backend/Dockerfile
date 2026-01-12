@@ -22,13 +22,15 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-COPY --from=builder /app/node_modules /app/node_modules
-COPY --from=builder /app/packages/shared /app/packages/shared
-COPY --from=builder /app/apps/backend/package.json /app/apps/backend/package.json
-COPY --from=builder /app/apps/backend/dist /app/apps/backend/dist
+COPY --from=builder --chown=node:node /app/node_modules /app/node_modules
+COPY --from=builder --chown=node:node /app/packages/shared /app/packages/shared
+COPY --from=builder --chown=node:node /app/apps/backend/package.json /app/apps/backend/package.json
+COPY --from=builder --chown=node:node /app/apps/backend/dist /app/apps/backend/dist
 
 EXPOSE 3000
 
 WORKDIR /app/apps/backend
+
+USER node
 
 CMD ["node", "dist/main"]
