@@ -71,6 +71,7 @@ export default [
       'react/react-in-jsx-scope': 'off',
       'react/jsx-filename-extension': ['warn', { extensions: ['.jsx', '.tsx'] }],
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+      'react/require-default-props': 'off',
     },
   },
   {

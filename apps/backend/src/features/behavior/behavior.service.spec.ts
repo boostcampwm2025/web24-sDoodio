@@ -52,7 +52,7 @@ describe('BehaviorService', () => {
 
     const result = await service.getTodayBehaviors();
 
-    expect(randomInt).toHaveBeenCalledWith(3, 7);
+    expect(randomInt).toHaveBeenCalledWith(3, 13);
     expect(repository.createQueryBuilder).toHaveBeenCalledWith('behavior');
     expect(queryBuilder.leftJoinAndSelect).toHaveBeenCalledWith('behavior.goal', 'goal');
     expect(queryBuilder.orderBy).toHaveBeenCalledWith('RANDOM()');

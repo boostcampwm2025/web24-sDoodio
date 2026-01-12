@@ -13,13 +13,25 @@ vi.mock('@/stores/useDodoChatStore', () => ({
 vi.mock('@/features/behavior/apis/fetchBehaviors.api', () => ({
   fetchTodayBehaviors: vi.fn().mockResolvedValue([
     {
-      id: '1',
+      id: '55555555-5555-4555-8555-555555555555',
       title: '물 2L 마시기',
       goalTitle: '건강한 생활',
       goalColor: 'bg-goal-mint',
       isChecked: false,
       difficulty: '몰입하기',
       isRecommended: true,
+    },
+  ]),
+}));
+
+vi.mock('@/features/goal/apis/fetchGoals.api', () => ({
+  fetchGoals: vi.fn().mockResolvedValue([
+    {
+      id: 'goal-1',
+      title: '건강한 생활',
+      color: 'mint',
+      createdAt: '2026-01-08T12:29:52.365Z',
+      updatedAt: '2026-01-08T12:29:52.365Z',
     },
   ]),
 }));

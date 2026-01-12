@@ -13,7 +13,7 @@ export class BehaviorService {
 
   async getTodayBehaviors() {
     const MIN = 3;
-    const MAX = 6;
+    const MAX = 12;
     const count = randomInt(MIN, MAX + 1);
 
     const behaviors = await this.behaviorRepository

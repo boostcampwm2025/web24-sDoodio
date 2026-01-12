@@ -24,7 +24,7 @@ function DifficultyBadge({ level }: { level: Difficulty }) {
 
 export function BehaviorCard({ behavior, onToggle }: BehaviorProps) {
   const GOAL_COLOR_CLASS: Record<string, string> = {
-    'light-pink': 'bg-goal-light-pnk',
+    'light-pink': 'bg-goal-light-pink',
     pink: 'bg-goal-pink',
     yellow: 'bg-goal-yellow',
     sand: 'bg-goal-sand',
