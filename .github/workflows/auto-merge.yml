@@ -164,6 +164,26 @@ jobs:
                 console.log(`⚠️ 브랜치 삭제 실패 (이미 삭제되었을 수 있음): ${error.message}`);
               }
               
+              // 연결된 이슈 닫기
+              if (closingSet.size > 0) {
+                console.log('🔒 연결된 이슈 닫기 시도...');
+                for (const line of closingSet) {
+                  // "closes #1" 포맷에서 숫자만 추출
+                  const issueNumber = line.match(/#(\d+)/)[1];
+                  try {
+                    await github.rest.issues.update({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      issue_number: issueNumber,
+                      state: 'closed'
+                    });
+                    console.log(`✅ 이슈 # ${issueNumber} 닫기 성공`);
+                  } catch (err) {
+                    console.log(`⚠️ 이슈 # ${issueNumber} 닫기 실패: ${err.message}`);
+                  }
+                }
+              }
+              
             } catch (error) {
               console.log(`❌ PR 머지 실패: ${error.message}`);
             }
