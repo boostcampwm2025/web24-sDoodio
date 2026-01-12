@@ -1,0 +1,22 @@
+services:
+  frontend:
+    image: ghcr.io/boostcampwm2025/web24-sdoodio-frontend:staging
+    container_name: web24-frontend-staging
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+
+  backend:
+    image: ghcr.io/boostcampwm2025/web24-sdoodio-backend:staging
+    container_name: web24-backend-staging
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
