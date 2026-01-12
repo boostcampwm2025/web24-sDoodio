@@ -27,6 +27,8 @@ COPY --from=builder --chown=node:node /app/packages/shared /app/packages/shared
 COPY --from=builder --chown=node:node /app/apps/backend/package.json /app/apps/backend/package.json
 COPY --from=builder --chown=node:node /app/apps/backend/dist /app/apps/backend/dist
 
+RUN chmod -R a-w /app/node_modules /app/packages/shared /app/apps/backend
+
 EXPOSE 3000
 
 WORKDIR /app/apps/backend
