@@ -11,6 +11,7 @@ export class BehaviorService {
   constructor(
     @InjectRepository(Behavior)
     private readonly behaviorRepository: Repository<Behavior>,
+    @InjectRepository(TodayBehavior)
     private readonly todayBehaviorRepository: Repository<TodayBehavior>,
   ) {}
 
