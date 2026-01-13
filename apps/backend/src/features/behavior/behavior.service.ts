@@ -56,28 +56,43 @@ export class BehaviorService {
     const DEFAULT_TODAY_BEHAVIOR_RATIO = 0.8;
     const DEFAULT_WEIGHT = 5;
 
-    const totalBehaviorScore = behaviors
-      .filter((behavior) => behavior.difficulty !== 'AI')
-      .reduce((sum, behavior) => sum + LEVEL_SCORE[behavior.difficulty], 0);
+    const nonAiBehaviors = behaviors.filter((behavior) => behavior.difficulty !== 'AI');
 
+    const totalBehaviorScore = nonAiBehaviors.reduce(
+      (sum, behavior) => sum + LEVEL_SCORE[behavior.difficulty],
+      0,
+    );
+    // MEMO:
     // let todayBehaviorRatio = null;
-    // todayBehaviorRatio을 구하는 로직
+    // todayBehaviorRatio을 구하는 로직을 추가
+    // todayBehaviorRatio가 null 이 아니라면 아래 줄에서 DEFAULT_TODAY_BEHAVIOR_RATIO 가 아니라 todayBehaviorRatio 사용
     const totalTodayBehaviorScore = Math.round(totalBehaviorScore * DEFAULT_TODAY_BEHAVIOR_RATIO);
 
-    const weightsMap = behaviors
-      .filter((behavior) => behavior.difficulty !== 'AI')
-      .reduce((acc, behavior) => acc.set(behavior, DEFAULT_WEIGHT), new Map<Behavior, number>());
-
+    const weightsMap = nonAiBehaviors.reduce(
+      (acc, behavior) => acc.set(behavior, DEFAULT_WEIGHT),
+      new Map<Behavior, number>(),
+    );
+    // MEMO:
     // 가중치를 최신화할 것들을 구하는 로직
-    // 구한다음에 weightsMap의 key, value 업데이트
+    // 구한 다음에 weightsMap의 key, value 업데이트
 
     const selected: Behavior[] = [];
     let currTodayBehaviorScore = 0;
     while (weightsMap.size > 0 && currTodayBehaviorScore < totalTodayBehaviorScore) {
-      const candidates: Behavior[] = [...weightsMap].flatMap(([k, v]) => Array(v).fill(k));
-      const index = Math.floor(Math.random() * candidates.length);
-      const pickedBehavior = candidates[index];
+      const totalWeight = [...weightsMap.values()].reduce((sum, w) => sum + w, 0);
+      const randomThreshold = Math.random() * totalWeight;
+      let cumulativeWeight = 0;
 
+      const entries = Array.from(weightsMap.entries());
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const pickedEntry = entries.find(([_, weight]) => {
+        cumulativeWeight += weight;
+        return randomThreshold < cumulativeWeight;
+      });
+
+      if (!pickedEntry) break;
+
+      const [pickedBehavior] = pickedEntry;
       const nextTodayBehaviorScore: number =
         currTodayBehaviorScore + LEVEL_SCORE[pickedBehavior.difficulty];
       if (nextTodayBehaviorScore <= totalTodayBehaviorScore) {
