@@ -34,7 +34,7 @@ describe('BehaviorCard', () => {
           id: 'behavior-2',
           title: '스트레칭',
           goalTitle: '운동',
-          goalColor: 'green',
+          goalColor: 'pink',
           isChecked: false,
           difficulty: '시작하기',
           isRecommended: false,

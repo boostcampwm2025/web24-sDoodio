@@ -12,3 +12,13 @@ export const GOAL_COLORS = [
 ] as const;
 
 export type GoalColor = (typeof GOAL_COLORS)[number];
+
+export interface Goal {
+  id: string;
+  title: string;
+  color: GoalColor;
+}
+
+export interface GoalSummary extends Goal {
+  behaviorCount: number;
+}

@@ -1,6 +1,4 @@
-import type { GoalColor } from '@web24/shared';
-
-export type Difficulty = '마음열기' | '시작하기' | '이어가기' | '몰입하기';
+import type { BehaviorDifficulty, GoalColor } from '@web24/shared';
 
 export interface Behavior {
   id: string;
@@ -8,6 +6,6 @@ export interface Behavior {
   goalTitle: string;
   goalColor: GoalColor;
   isChecked: boolean;
-  difficulty: Difficulty;
+  difficulty: BehaviorDifficulty;
   isRecommended: boolean;
 }

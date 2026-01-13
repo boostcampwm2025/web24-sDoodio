@@ -15,3 +15,9 @@ export type TodayBehaviorStatus = (typeof TODAY_BEHAVIOR_STATUS)[number];
 export const TODAY_BEHAVIOR_ORIGIN = ['user', 'recommendation'] as const;
 
 export type TodayBehaviorOrigin = (typeof TODAY_BEHAVIOR_ORIGIN)[number];
+
+export interface Behavior {
+  id: string;
+  title: string;
+  difficulty: BehaviorDifficulty;
+}

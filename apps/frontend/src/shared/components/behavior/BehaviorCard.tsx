@@ -1,21 +1,11 @@
-import type { Behavior, Difficulty } from '@/shared/components/behavior/BehaviorCard.types';
+import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
 import { GOAL_COLOR_STYLES } from '@/shared/constants/goalColor';
-import { DIFFICULTY_COLOR_STYLES } from '@/shared/constants/difficultyColor';
 import StickerCell from './StickerCell';
+import { DifficultyBadge } from './DifficultyBadge';
 
 interface BehaviorProps {
   behavior: Behavior;
   onToggle: () => void;
-}
-
-function DifficultyBadge({ level }: { level: Difficulty }) {
-  return (
-    <span
-      className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${DIFFICULTY_COLOR_STYLES[level].bg} ${DIFFICULTY_COLOR_STYLES[level].txt} border border-current/10`}
-    >
-      {level}
-    </span>
-  );
 }
 
 export function BehaviorCard({ behavior, onToggle }: BehaviorProps) {
