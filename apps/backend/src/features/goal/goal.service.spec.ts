@@ -22,8 +22,8 @@ describe('GoalService', () => {
     const userRepository = { findOne: jest.fn().mockResolvedValue(user) };
 
     const goals = [
-      { id: 'goal-1', title: '건강', color: 'mint', user },
-      { id: 'goal-2', title: '독서', color: 'beige', user },
+      { id: 'goal-1', title: '건강', color: 'mint', user, behaviorCount: 0 },
+      { id: 'goal-2', title: '독서', color: 'beige', user, behaviorCount: 0 },
     ];
     const goalRepository = { find: jest.fn().mockResolvedValue(goals) };
 
@@ -39,7 +39,11 @@ describe('GoalService', () => {
 
     await expect(service.getGoals()).resolves.toEqual(goals);
     expect(userRepository.findOne).toHaveBeenCalledWith({ where: { nickname: '테스트유저' } });
-    expect(goalRepository.find).toHaveBeenCalledWith({ where: { user: { id: user.id } } });
+    expect(goalRepository.find).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { user: { id: user.id } },
+      }),
+    );
   });
 
   it('유저가 없으면 getGoals가 NotFoundException을 던진다', async () => {

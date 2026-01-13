@@ -16,6 +16,7 @@ describe('fetchGoals', () => {
         color: 'beige',
         createdAt: '2026-01-08T12:29:52.365Z',
         updatedAt: '2026-01-08T12:29:52.365Z',
+        behaviorCount: 3,
       },
     ];
 

@@ -12,6 +12,5 @@ export async function fetchGoalBehaviors(goalId: string): Promise<Behavior[]> {
     throw new Error('Failed to fetch behaviors');
   }
 
-  // TODO: Add schema validation
   return res.json();
 }

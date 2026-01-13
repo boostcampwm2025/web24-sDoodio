@@ -32,7 +32,6 @@ export class GoalController {
 
   @Get(':id/behaviors')
   async getGoalBehaviors(@Param('id') id: string) {
-    // TODO: Response Schema Definition needed in shared
     const behaviors = await this.goalService.getGoalBehaviors(id);
     return behaviors.map((b) => ({
       id: b.id,
