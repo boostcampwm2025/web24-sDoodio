@@ -54,6 +54,7 @@ export const GetGoalSummarySchema = z.object({
   updatedAt: z.iso.datetime(),
   title: z.string().min(1).max(GOAL_TITLE_MAX_LENGTH),
   color: z.enum(GOAL_COLORS),
+  behaviorCount: z.number().int().nonnegative(),
 });
 
 export const GetGoalsResponseSchema = z.array(GetGoalSummarySchema);
