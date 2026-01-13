@@ -4,7 +4,8 @@ WORKDIR /app
 
 RUN corepack enable
 
-https://github.com/boostcampwm2025/web24-sDoodio.gitCOPY apps/frontend/package.json apps/frontend/package.json
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
+COPY apps/frontend/package.json apps/frontend/package.json
 COPY packages/shared/package.json packages/shared/package.json
 
 RUN pnpm install --frozen-lockfile
