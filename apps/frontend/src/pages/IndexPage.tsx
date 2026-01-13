@@ -17,12 +17,16 @@ export function IndexPage() {
     const targetBehavior = behaviors.find((bs) => bs.id === id);
     if (!targetBehavior) return;
 
-    setBehaviors((bs) => bs.map((b) => (b.id === id ? { ...b, isChecked: !b.isChecked } : b)));
+    const toggleBehaviorIsChecked = (behaviorId: string) => {
+      setBehaviors((bs) =>
+        bs.map((b) => (b.id === behaviorId ? { ...b, isChecked: !b.isChecked } : b)),
+      );
+    };
+
+    toggleBehaviorIsChecked(id);
 
     const nextStatus = targetBehavior.isChecked ? 'pending' : 'completed';
-    updateTodayBehaviorStatus(id, nextStatus).catch(() =>
-      setBehaviors((bs) => bs.map((b) => (b.id === id ? { ...b, isChecked: !b.isChecked } : b))),
-    );
+    updateTodayBehaviorStatus(id, nextStatus).catch(() => toggleBehaviorIsChecked(id));
   };
 
   useEffect(() => {
