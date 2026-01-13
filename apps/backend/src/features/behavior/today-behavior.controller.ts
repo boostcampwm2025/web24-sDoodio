@@ -4,7 +4,7 @@ import {
   PatchTodayBehaviorStatusRequestSchema,
   PatchTodayBehaviorStatusResponse,
 } from '@web24/shared';
-import { ZodValidationPipe } from 'src/common/pipes/zod-validation.pipe';
+import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { BehaviorService } from './behavior.service';
 
 @Controller('today-behaviors')
