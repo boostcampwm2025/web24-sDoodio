@@ -18,6 +18,7 @@ export type TodayBehaviorOrigin = (typeof TODAY_BEHAVIOR_ORIGIN)[number];
 
 export interface Behavior {
   id: string;
+  goalId?: string;
   title: string;
   difficulty: BehaviorDifficulty;
 }

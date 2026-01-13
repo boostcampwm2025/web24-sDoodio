@@ -1,21 +1,25 @@
 import { GOAL_COLOR_STYLES } from '@/shared/constants/goalColor';
 import type { GoalSummary, Behavior } from '@web24/shared';
 import { ChevronsUp, ChevronsDown, Trash2 } from 'lucide-react';
-import { useState } from 'react';
 import { ICON_SIZE } from '@/shared/constants/icon';
 import { DifficultyBadge } from '@/shared/components/behavior/DifficultyBadge';
+import { useGoalBehaviors } from '../hooks/useGoalBehaviors';
 
 interface GoalCardProps {
   goal: GoalSummary;
   behaviors?: Behavior[];
+  isOpen: boolean;
+  onToggle: () => void;
 }
 
-export function GoalCard({ goal, behaviors }: GoalCardProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function GoalCard({ goal, behaviors: propsBehaviors, isOpen, onToggle }: GoalCardProps) {
+  const { behaviors: fetchedBehaviors } = useGoalBehaviors(goal.id, isOpen && !propsBehaviors);
+
+  const behaviors = propsBehaviors || fetchedBehaviors;
 
   return (
     <div
-      className={`relative flex flex-col rounded-3xl px-7 py-5 transition-all duration-500 ${GOAL_COLOR_STYLES[goal.color].bg} shadow-sm`}
+      className={`relative mb-4 flex break-inside-avoid flex-col rounded-3xl px-7 py-5 transition-all duration-500 ${GOAL_COLOR_STYLES[goal.color].bg} shadow-sm`}
     >
       {/* 카드 헤더 */}
       <div className="flex flex-row justify-between">
@@ -33,7 +37,7 @@ export function GoalCard({ goal, behaviors }: GoalCardProps) {
           {behaviors?.map((behavior) => (
             <div
               key={behavior.id}
-              className="bg-bg-alternative flex w-full flex-row justify-between gap-3 rounded-xl p-3 shadow-md"
+              className="bg-bg-alternative flex w-full flex-row items-center justify-between gap-3 rounded-xl p-3 shadow-md"
             >
               <p className="text-headline-2 font-semibold">{behavior.title}</p>
               <DifficultyBadge level={behavior.difficulty} />
@@ -56,7 +60,7 @@ export function GoalCard({ goal, behaviors }: GoalCardProps) {
       <button
         type="button"
         className="mt-2 flex w-full justify-center opacity-80 transition-transform hover:animate-bounce hover:opacity-100"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={onToggle}
       >
         {isOpen ? <ChevronsUp size={ICON_SIZE.md} /> : <ChevronsDown size={ICON_SIZE.md} />}
       </button>
