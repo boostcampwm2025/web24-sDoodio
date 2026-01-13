@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 
+// MEMO: 성공 응답 통일
 @Catch()
 export class HttpExceptionLoggingFilter implements ExceptionFilter {
   private readonly logger = new Logger('HTTP');
