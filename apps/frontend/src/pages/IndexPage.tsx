@@ -13,15 +13,15 @@ export function IndexPage() {
   const [goalTitles, setGoalTitles] = useState<string[]>([]);
   const { quote, resetQuote } = useDodoChatStore();
 
+  const toggleBehaviorIsChecked = (behaviorId: string) => {
+    setBehaviors((bs) =>
+      bs.map((b) => (b.id === behaviorId ? { ...b, isChecked: !b.isChecked } : b)),
+    );
+  };
+
   const handleToggle = (id: string) => {
     const targetBehavior = behaviors.find((bs) => bs.id === id);
     if (!targetBehavior) return;
-
-    const toggleBehaviorIsChecked = (behaviorId: string) => {
-      setBehaviors((bs) =>
-        bs.map((b) => (b.id === behaviorId ? { ...b, isChecked: !b.isChecked } : b)),
-      );
-    };
 
     toggleBehaviorIsChecked(id);
 
