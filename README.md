@@ -12,6 +12,8 @@
 아주 작은 행동이라도 **“했다”는 경험을 차곡차곡 쌓을 수 있도록 돕는** 행동 기록 서비스입니다.  
 날짜 연속 체크나 목표 달성률 대신, 행동이 **누적되는 경험 자체**에 집중합니다.
 
+---
+
 ## 👥 팀원 소개
 
 > 프로젝트는 FE/BE 구분 없이 협업하여 진행했으며,  
@@ -60,6 +62,7 @@
 ![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=for-the-badge&logo=vitest&logoColor=white)
 ![React Testing Library](https://img.shields.io/badge/React_Testing_Library-E33332?style=for-the-badge&logo=testing-library&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-2EAD33?style=for-the-badge&logo=playwright&logoColor=white)
+![Zod](https://img.shields.io/badge/Zod-3E67B1?style=for-the-badge&logo=zod&logoColor=white)
 
 ### Backend
 
@@ -75,6 +78,8 @@
 ![Naver Cloud Platform](https://img.shields.io/badge/Naver_Cloud_Platform-03C75A?style=for-the-badge&logo=naver&logoColor=white)
 ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
 ![GitHub Actions](https://img.shields.io/badge/github%20actions-%232671E5.svg?style=for-the-badge&logo=githubactions&logoColor=white)
+![Nginx](https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white)
+![SonarQube](https://img.shields.io/badge/SonarQube-4E9BCD?style=for-the-badge&logo=SonarQube&logoColor=white)
 
 ### Package Manager
 
@@ -144,7 +149,7 @@ pnpm dev
 - `pnpm dev:be` (Backend)
 - `pnpm dev:shared` (Shared)
 
-### 3. 기타 명령어
+### 4. 기타 명령어
 
 ```bash
 # 전체 빌드
@@ -185,3 +190,12 @@ DB_USER=your_db_username
 DB_PASS=your_db_password
 DB_NAME=your_db_name
 ```
+
+---
+
+## 📝 관련 문서 링크
+
+- [프로젝트 기획서](https://github.com/boostcampwm2025/web24-sDoodio/wiki/%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8-%EA%B8%B0%ED%9A%8D%EC%84%9C)
+- [Wiki](https://github.com/boostcampwm2025/web14-B4/wiki) : 회의록 관리
+- [Github Project](https://github.com/orgs/boostcampwm2025/projects/248) : 백로그 관리
+- [Figma](https://www.figma.com/board/KqIFdt238rXGkAsR9u2Uiq/%E1%84%87%E1%85%AE%E1%84%89%E1%85%B3%E1%84%90%E1%85%B3%E1%84%8F%E1%85%A2%E1%86%B7%E1%84%91%E1%85%B3---%E1%84%90%E1%85%A6%E1%84%8B%E1%85%A9%E1%84%8B%E1%85%B4-%E1%84%89%E1%85%B3%E1%84%91%E1%85%B3%E1%84%85%E1%85%B5%E1%86%AB%E1%84%90%E1%85%B3-%E1%84%90%E1%85%A6%E1%86%B7%E1%84%91%E1%85%B3%E1%86%AF%E1%84%85%E1%85%B5%E1%86%BA?node-id=0-1&p=f&t=UnaLlFlbZVc2UvsU-0) : 회의 중 기록을 위한 화이트보드
