@@ -22,10 +22,13 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-COPY --from=builder --chown=node:node --chmod=0555 /app/node_modules /app/node_modules
-COPY --from=builder --chown=node:node --chmod=0555 /app/packages/shared /app/packages/shared
-COPY --from=builder --chown=node:node --chmod=0444 /app/apps/backend/package.json /app/apps/backend/package.json
-COPY --from=builder --chown=node:node --chmod=0555 /app/apps/backend/dist /app/apps/backend/dist
+COPY --from=builder /app/node_modules /app/node_modules
+COPY --from=builder /app/packages/shared /app/packages/shared
+COPY --from=builder /app/apps/backend /app/apps/backend
+
+# Ensure directories are accessible when running as non-root.
+RUN chown -R node:node /app/node_modules /app/packages/shared /app/apps/backend \
+  && chmod -R u=rwX,go=rX /app/node_modules /app/packages/shared /app/apps/backend
 
 EXPOSE 3000
 
