@@ -80,8 +80,8 @@ jobs:
             export DB_PASS="${{ secrets.STAGING_DB_PASS }}"
             export DB_NAME="${{ secrets.STAGING_DB_NAME }}"
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
-            docker compose -f docker-compose.staging.yml pull
-            docker compose -f docker-compose.staging.yml up -d
+            docker compose -f infra/staging/docker-compose.staging.yml pull
+            docker compose -f infra/staging/docker-compose.staging.yml up -d
 
   deploy-production:
     if: github.ref == 'refs/heads/main'
@@ -109,5 +109,5 @@ jobs:
             export DB_PASS="${{ secrets.PROD_DB_PASS }}"
             export DB_NAME="${{ secrets.PROD_DB_NAME }}"
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
-            docker compose -f docker-compose.prod.yml pull
-            docker compose -f docker-compose.prod.yml up -d
+            docker compose -f infra/prod/docker-compose.prod.yml pull
+            docker compose -f infra/prod/docker-compose.prod.yml up -d
