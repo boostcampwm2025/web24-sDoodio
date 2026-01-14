@@ -5,6 +5,7 @@ import {
   CreateGoalResponseSchema,
   GoalTemplateListResponseSchema,
   GetGoalBehaviorsResponseSchema,
+  GetGoalStampsResponseSchema,
 } from '@web24/shared';
 
 export function registerGoalApi(registry: OpenAPIRegistry) {
@@ -18,6 +19,10 @@ export function registerGoalApi(registry: OpenAPIRegistry) {
   const getGoalBehaviorsResponse = registry.register(
     'GetGoalBehaviorsResponse',
     GetGoalBehaviorsResponseSchema,
+  );
+  const getGoalStampsResponse = registry.register(
+    'GetGoalStampsResponse',
+    GetGoalStampsResponseSchema,
   );
 
   registry.registerPath({
@@ -83,6 +88,21 @@ export function registerGoalApi(registry: OpenAPIRegistry) {
         content: {
           'application/json': {
             schema: getGoalBehaviorsResponse,
+          },
+        },
+      },
+    },
+  });
+
+  registry.registerPath({
+    method: 'get',
+    path: '/goals/{id}/stamps',
+    responses: {
+      200: {
+        description: 'List of stamps for a goal',
+        content: {
+          'application/json': {
+            schema: getGoalStampsResponse,
           },
         },
       },
