@@ -146,7 +146,12 @@ describe('BehaviorService', () => {
     const todayRepository = {
       find: jest.fn().mockResolvedValue([]),
       create: jest.fn((value) => value),
-      save: jest.fn(),
+      save: jest.fn().mockResolvedValue([
+        {
+          id: 'b-1',
+          behavior: behaviors[0],
+        },
+      ]),
     };
     const userRepository = { findOne: jest.fn().mockResolvedValue(user) };
     const behaviorRepository = { find: jest.fn().mockResolvedValue(behaviors) };
