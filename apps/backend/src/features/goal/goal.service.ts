@@ -53,13 +53,15 @@ export class GoalService {
   }
 
   async getGoalStamps(goalId: string): Promise<TodayBehavior[]> {
-    const behaviors = await this.dataSource.getRepository(Behavior).find({
-      where: { goal: { id: goalId } },
-      relations: ['todayBehaviors', 'todayBehaviors.behavior'],
+    return this.dataSource.getRepository(TodayBehavior).find({
+      where: {
+        behavior: {
+          goal: { id: goalId },
+        },
+        status: 'completed',
+      },
+      relations: ['behavior'],
     });
-
-    const todayBehaviors = behaviors.flatMap((b) => b.todayBehaviors ?? []);
-    return todayBehaviors.filter((tb) => tb.status === 'completed');
   }
 
   async createGoal(request: CreateGoalRequest): Promise<CreateGoalResponse> {
