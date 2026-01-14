@@ -60,14 +60,14 @@ export class BehaviorService {
         }),
       );
 
-      await manager.getRepository(TodayBehavior).save(toSave);
+      const newTodayBehaviors = await manager.getRepository(TodayBehavior).save(toSave);
 
-      return extractedTodayBehavior.map((b) => ({
+      return newTodayBehaviors.map((b) => ({
         id: b.id,
-        title: b.title,
-        goalTitle: b.goal.title,
-        goalColor: b.goal.color,
-        difficulty: b.difficulty,
+        title: b.behavior.title,
+        goalTitle: b.behavior.goal.title,
+        goalColor: b.behavior.goal.color,
+        difficulty: b.behavior.difficulty,
         isChecked: false,
         isRecommended: false,
       }));
