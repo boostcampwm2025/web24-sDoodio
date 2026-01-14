@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import {
   BEHAVIOR_DIFFICULTIES,
   BEHAVIOR_TITLE_MAX_LENGTH,
@@ -6,6 +6,7 @@ import {
 } from '@web24/shared';
 import { BaseIdCreatedUpdatedDeletedEntity } from '../../common/entities/base.entity';
 import { Goal } from '../goal/goal.entity';
+import { TodayBehavior } from './today-behavior.entity';
 
 @Entity({ name: 'behaviors' })
 export class Behavior extends BaseIdCreatedUpdatedDeletedEntity {
@@ -20,4 +21,7 @@ export class Behavior extends BaseIdCreatedUpdatedDeletedEntity {
 
   @Column({ type: 'enum', enum: BEHAVIOR_DIFFICULTIES })
   difficulty!: BehaviorDifficulty;
+
+  @OneToMany(() => TodayBehavior, (tb) => tb.behavior)
+  todayBehaviors!: TodayBehavior[];
 }

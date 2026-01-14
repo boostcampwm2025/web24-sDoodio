@@ -5,9 +5,10 @@ import { User } from '../user/user.entity';
 import { GoalController } from './goal.controller';
 import { Goal } from './goal.entity';
 import { GoalService } from './goal.service';
+import { TodayBehavior } from '../behavior/today-behavior.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Goal, Behavior, User])],
+  imports: [TypeOrmModule.forFeature([Goal, Behavior, TodayBehavior, User])],
   controllers: [GoalController],
   providers: [GoalService],
 })

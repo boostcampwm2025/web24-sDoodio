@@ -40,6 +40,15 @@ export class GoalController {
     }));
   }
 
+  @Get(':id/stamps')
+  async getGoalStamps(@Param('id', ParseUUIDPipe) id: string) {
+    const goalStamps = await this.goalService.getGoalStamps(id);
+    return goalStamps.map((gs) => ({
+      id: gs.id,
+      difficulty: gs.behavior.difficulty,
+    }));
+  }
+
   @Get('templates')
   async getTemplates(): Promise<GoalTemplateListResponse> {
     const filePath = join(process.cwd(), 'src/features/goal/goal-templates.ndjson');

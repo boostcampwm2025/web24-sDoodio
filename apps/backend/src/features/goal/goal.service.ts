@@ -9,6 +9,7 @@ import { DataSource } from 'typeorm';
 import { Behavior } from '../behavior/behavior.entity';
 import { User } from '../user/user.entity';
 import { Goal } from './goal.entity';
+import { TodayBehavior } from '../behavior/today-behavior.entity';
 
 @Injectable()
 export class GoalService {
@@ -49,6 +50,16 @@ export class GoalService {
     }
 
     return goal.behaviors || [];
+  }
+
+  async getGoalStamps(goalId: string): Promise<TodayBehavior[]> {
+    const behaviors = await this.dataSource.getRepository(Behavior).find({
+      where: { goal: { id: goalId } },
+      relations: ['todayBehaviors', 'todayBehaviors.behavior'],
+    });
+
+    const todayBehaviors = behaviors.flatMap((b) => b.todayBehaviors ?? []);
+    return todayBehaviors.filter((tb) => tb.status === 'completed');
   }
 
   async createGoal(request: CreateGoalRequest): Promise<CreateGoalResponse> {
