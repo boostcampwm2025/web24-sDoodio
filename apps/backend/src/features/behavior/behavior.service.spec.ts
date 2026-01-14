@@ -1,3 +1,4 @@
+import { In, Not } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getDataSourceToken, getRepositoryToken } from '@nestjs/typeorm';
@@ -74,6 +75,120 @@ describe('BehaviorService', () => {
     await expect(
       service.updateTodayBehaviorStatus('tb-404', 'completed' as TodayBehaviorStatus),
     ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('getTodayBehaviors가 기존 오늘 행동이 있으면 매핑해서 반환한다', async () => {
+    const user = { id: 'user-1', nickname: '테스트유저' };
+    const existing = [
+      {
+        id: 'tb-1',
+        status: 'completed',
+        behavior: {
+          title: '물 1컵 마시기',
+          difficulty: '마음열기',
+          goal: { title: '건강한 생활', color: 'mint' },
+        },
+        user,
+      },
+    ] as TodayBehavior[];
+
+    const userRepository = { findOne: jest.fn().mockResolvedValue(user) };
+    const todayRepository = { find: jest.fn().mockResolvedValue(existing) };
+    const behaviorRepository = { find: jest.fn() };
+    const manager = {
+      getRepository: (entity: unknown) => {
+        if (entity === (Behavior as unknown)) return behaviorRepository;
+        if (entity === (TodayBehavior as unknown)) return todayRepository;
+        return userRepository;
+      },
+    };
+
+    dataSource.transaction.mockImplementation(async (work: (m: typeof manager) => unknown) =>
+      work(manager),
+    );
+
+    const result = await service.getTodayBehaviors();
+
+    expect(userRepository.findOne).toHaveBeenCalledWith({ where: { nickname: '테스트유저' } });
+    expect(todayRepository.find).toHaveBeenCalledWith({
+      where: {
+        date: expect.any(String),
+        user: { id: user.id },
+        status: Not(In(['skipped', 'ignored'])),
+      },
+      relations: { behavior: { goal: true }, user: true },
+    });
+    expect(behaviorRepository.find).not.toHaveBeenCalled();
+    expect(result).toEqual([
+      {
+        id: 'tb-1',
+        title: '물 1컵 마시기',
+        goalTitle: '건강한 생활',
+        goalColor: 'mint',
+        difficulty: '마음열기',
+        isChecked: true,
+        isRecommended: false,
+      },
+    ]);
+  });
+
+  it('getTodayBehaviors가 기존 오늘 행동이 없으면 추출 후 저장하고 반환한다', async () => {
+    const user = { id: 'user-1', nickname: '테스트유저' };
+    const behaviors = [
+      {
+        id: 'b-1',
+        title: '물 1컵 마시기',
+        difficulty: '마음열기',
+        goal: { title: '건강한 생활', color: 'mint' },
+      },
+    ] as Behavior[];
+
+    const todayRepository = {
+      find: jest.fn().mockResolvedValue([]),
+      create: jest.fn((value) => value),
+      save: jest.fn(),
+    };
+    const userRepository = { findOne: jest.fn().mockResolvedValue(user) };
+    const behaviorRepository = { find: jest.fn().mockResolvedValue(behaviors) };
+    const manager = {
+      getRepository: (entity: unknown) => {
+        if (entity === (Behavior as unknown)) return behaviorRepository;
+        if (entity === (TodayBehavior as unknown)) return todayRepository;
+        return userRepository;
+      },
+    };
+
+    dataSource.transaction.mockImplementation(async (work: (m: typeof manager) => unknown) =>
+      work(manager),
+    );
+    const extractSpy = jest.spyOn(service, 'extractTodayBehaviors').mockReturnValue(behaviors);
+
+    const result = await service.getTodayBehaviors();
+
+    expect(userRepository.findOne).toHaveBeenCalledWith({ where: { nickname: '테스트유저' } });
+    expect(todayRepository.find).toHaveBeenCalledWith({
+      where: {
+        date: expect.any(String),
+        user: { id: user.id },
+        status: Not(In(['skipped', 'ignored'])),
+      },
+      relations: { behavior: { goal: true }, user: true },
+    });
+    expect(behaviorRepository.find).toHaveBeenCalledWith({ relations: { goal: true } });
+    expect(extractSpy).toHaveBeenCalledWith(behaviors);
+    expect(todayRepository.save).toHaveBeenCalledTimes(1);
+    expect(result).toEqual([
+      {
+        id: 'b-1',
+        title: '물 1컵 마시기',
+        goalTitle: '건강한 생활',
+        goalColor: 'mint',
+        difficulty: '마음열기',
+        isChecked: false,
+        isRecommended: false,
+      },
+    ]);
+    extractSpy.mockRestore();
   });
 
   describe('extractTodayBehaviors', () => {

@@ -4,10 +4,10 @@ import { BehaviorService } from './behavior.service';
 
 describe('TodayBehaviorController', () => {
   let controller: TodayBehaviorController;
-  let service: { updateTodayBehaviorStatus: jest.Mock };
+  let service: { updateTodayBehaviorStatus: jest.Mock; getTodayBehaviors: jest.Mock };
 
   beforeEach(async () => {
-    service = { updateTodayBehaviorStatus: jest.fn() };
+    service = { updateTodayBehaviorStatus: jest.fn(), getTodayBehaviors: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [TodayBehaviorController],
@@ -19,6 +19,16 @@ describe('TodayBehaviorController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  it('getTodayBehaviors가 서비스 결과를 반환한다', async () => {
+    const mock = [{ id: '1' }];
+    service.getTodayBehaviors.mockResolvedValue(mock);
+
+    const result = await controller.getTodayBehaviors();
+
+    expect(service.getTodayBehaviors).toHaveBeenCalledTimes(1);
+    expect(result).toBe(mock);
   });
 
   it('updateTodayBehaviorStatus가 서비스 결과를 반환한다', async () => {
