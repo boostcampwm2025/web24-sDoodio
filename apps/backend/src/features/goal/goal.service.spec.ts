@@ -64,6 +64,46 @@ describe('GoalService', () => {
     expect(goalRepository.find).not.toHaveBeenCalled();
   });
 
+  it('goalId로 완료된 TodayBehavior 목록만 반환한다', async () => {
+    const mockBehaviors = [
+      {
+        id: 'b1',
+        todayBehaviors: [
+          { id: 'tb1', status: 'completed', behavior: { id: 'b1' } },
+          { id: 'tb2', status: 'pending', behavior: { id: 'b1' } },
+        ],
+      },
+      {
+        id: 'b2',
+        todayBehaviors: [{ id: 'tb3', status: 'completed', behavior: { id: 'b2' } }],
+      },
+    ];
+
+    const behaviorRepository = {
+      find: jest.fn().mockResolvedValue(mockBehaviors),
+    };
+
+    const dataSource = {
+      getRepository: jest.fn((entity: Function) => {
+        if (entity === Behavior) return behaviorRepository;
+        return null;
+      }),
+    } as unknown as DataSource;
+
+    const service = new GoalService(dataSource);
+
+    await expect(service.getGoalStamps('goal-abc')).resolves.toEqual([
+      { id: 'tb1', status: 'completed', behavior: { id: 'b1' } },
+      { id: 'tb3', status: 'completed', behavior: { id: 'b2' } },
+    ]);
+
+    expect(dataSource.getRepository).toHaveBeenCalledWith(Behavior);
+    expect(behaviorRepository.find).toHaveBeenCalledWith({
+      where: { goal: { id: 'goal-abc' } },
+      relations: ['todayBehaviors', 'todayBehaviors.behavior'],
+    });
+  });
+
   it('유저가 없으면 NotFoundException을 던진다', async () => {
     const userRepository = { findOne: jest.fn().mockResolvedValue(null) };
     const goalRepository = { create: jest.fn(), save: jest.fn() };

@@ -13,6 +13,7 @@ describe('GoalController', () => {
     createGoal: jest.Mock;
     getGoals: jest.Mock;
     getGoalBehaviors: jest.Mock;
+    getGoalStamps: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -20,6 +21,7 @@ describe('GoalController', () => {
       createGoal: jest.fn(),
       getGoals: jest.fn(),
       getGoalBehaviors: jest.fn(),
+      getGoalStamps: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -59,6 +61,23 @@ describe('GoalController', () => {
     ]);
 
     expect(goalService.getGoals).toHaveBeenCalledTimes(1);
+  });
+
+  it('id로 목표 스탬프 목록을 반환한다', async () => {
+    const mockStamps = [
+      { id: 's1', behavior: { difficulty: '몰입하기' } },
+      { id: 's2', behavior: { difficulty: '시작하기' } },
+    ];
+
+    goalService.getGoalStamps.mockResolvedValue(mockStamps);
+
+    await expect(controller.getGoalStamps('goal-abc')).resolves.toEqual([
+      { id: 's1', difficulty: '몰입하기' },
+      { id: 's2', difficulty: '시작하기' },
+    ]);
+
+    expect(goalService.getGoalStamps).toHaveBeenCalledWith('goal-abc');
+    expect(goalService.getGoalStamps).toHaveBeenCalledTimes(1);
   });
 
   it('템플릿 목록을 반환한다', async () => {

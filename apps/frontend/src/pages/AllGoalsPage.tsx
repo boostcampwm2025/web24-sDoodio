@@ -171,6 +171,7 @@ export function AllGoalsPage() {
                 behaviors={behaviorsByGoal?.[goal.id]}
                 isOpen={expandedGoalIds.has(goal.id)}
                 onToggle={() => handleToggleGoal(goal.id)}
+                onNavigate={() => navigate(`/goals/${goal.id}`)}
               />
             ))}
           </div>

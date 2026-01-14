@@ -20,6 +20,7 @@ function Stamp({ difficulty, isDodo, onSelect }: StampProps) {
   return (
     <button
       type="button"
+      aria-label={isDodo ? 'dodo-stamp' : 'stamp'}
       onClick={onSelect}
       className={`flex h-12 w-12 items-center justify-center rounded-full ${bg} scale-100 rotate-[-5deg] transform transition-transform duration-400 ease-out hover:scale-125 hover:rotate-12`}
     >
@@ -50,7 +51,7 @@ export function GoalStampBoard({ stamps }: GoalStampBoardProps) {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const sendClickEvent = (_index: number) => {
-    // TODO: 시도 API 전송
+    // 시도 API 전송
   };
 
   useEffect(() => {

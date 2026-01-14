@@ -17,7 +17,7 @@ export function GoalDetailPage() {
   const [stamps, setStamps] = useState<GoalStamp[]>([]);
 
   useEffect(() => {
-    // TODO: goalId가 null이면 에러페이지로 이동로직 추가
+    // goalId가 null이면 에러페이지로 이동로직 추가
     fetchGoalStamps(goalId!).then((s) => {
       setStamps(s);
     });
