@@ -1,7 +1,7 @@
 import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
 
 export async function fetchTodayBehaviors(): Promise<Behavior[]> {
-  const res = await fetch('/api/behaviors', {
+  const res = await fetch('/api/today-behaviors', {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

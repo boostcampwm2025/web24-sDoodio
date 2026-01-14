@@ -1,4 +1,4 @@
-import { Body, Controller, Param, ParseUUIDPipe, Patch } from '@nestjs/common';
+import { Get, Body, Controller, Param, ParseUUIDPipe, Patch } from '@nestjs/common';
 import {
   type PatchTodayBehaviorStatusRequest,
   PatchTodayBehaviorStatusRequestSchema,
@@ -10,6 +10,11 @@ import { BehaviorService } from './behavior.service';
 @Controller('today-behaviors')
 export class TodayBehaviorController {
   constructor(private readonly behaviorService: BehaviorService) {}
+
+  @Get()
+  async getTodayBehaviors() {
+    return this.behaviorService.getTodayBehaviors();
+  }
 
   @Patch(':id/status')
   async updateTodayBehaviorStatus(

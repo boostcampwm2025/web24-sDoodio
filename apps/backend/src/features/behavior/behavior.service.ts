@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
-import { randomInt } from 'node:crypto';
+import { DataSource, In, Not, Repository } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { TodayBehaviorStatus } from '@web24/shared';
+import { getKstDayKey } from '../../common/utils/time.utils';
 import { Behavior } from './behavior.entity';
 import { TodayBehavior } from './today-behavior.entity';
+import { User } from '../user/user.entity';
 
 @Injectable()
 export class BehaviorService {
@@ -13,29 +14,64 @@ export class BehaviorService {
     private readonly behaviorRepository: Repository<Behavior>,
     @InjectRepository(TodayBehavior)
     private readonly todayBehaviorRepository: Repository<TodayBehavior>,
+    @InjectDataSource()
+    private readonly dataSource: DataSource,
   ) {}
 
   async getTodayBehaviors() {
-    const MIN = 3;
-    const MAX = 12;
-    const count = randomInt(MIN, MAX + 1);
+    return this.dataSource.transaction(async (manager) => {
+      const todayDate = getKstDayKey();
 
-    const behaviors = await this.behaviorRepository
-      .createQueryBuilder('behavior')
-      .leftJoinAndSelect('behavior.goal', 'goal')
-      .orderBy('RANDOM()')
-      .limit(count)
-      .getMany();
+      const user = await manager.getRepository(User).findOne({ where: { nickname: '테스트유저' } });
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
 
-    return behaviors.map((b) => ({
-      id: b.id,
-      title: b.title,
-      goalTitle: b.goal.title,
-      goalColor: b.goal.color,
-      difficulty: b.difficulty,
-      isChecked: false,
-      isRecommended: false,
-    }));
+      const existingTodayBehavior = await manager.getRepository(TodayBehavior).find({
+        where: { date: todayDate, user: { id: user.id }, status: Not(In(['skipped', 'ignored'])) },
+        relations: { behavior: { goal: true }, user: true },
+      });
+
+      if (existingTodayBehavior.length > 0) {
+        return existingTodayBehavior.map((b) => ({
+          id: b.id,
+          title: b.behavior.title,
+          goalTitle: b.behavior.goal.title,
+          goalColor: b.behavior.goal.color,
+          difficulty: b.behavior.difficulty,
+          isChecked: b.status === 'completed',
+          isRecommended: false, // AI 추천 여부
+        }));
+      }
+
+      const behaviors = await manager.getRepository(Behavior).find({
+        relations: { goal: true },
+      });
+
+      const extractedTodayBehavior = this.extractTodayBehaviors(behaviors);
+
+      const toSave = extractedTodayBehavior.map((behavior) =>
+        manager.getRepository(TodayBehavior).create({
+          date: todayDate,
+          status: 'pending',
+          origin: 'system',
+          user,
+          behavior,
+        }),
+      );
+
+      await manager.getRepository(TodayBehavior).save(toSave);
+
+      return extractedTodayBehavior.map((b) => ({
+        id: b.id,
+        title: b.title,
+        goalTitle: b.goal.title,
+        goalColor: b.goal.color,
+        difficulty: b.difficulty,
+        isChecked: false,
+        isRecommended: false,
+      }));
+    });
   }
 
   async updateTodayBehaviorStatus(id: string, status: TodayBehaviorStatus) {
