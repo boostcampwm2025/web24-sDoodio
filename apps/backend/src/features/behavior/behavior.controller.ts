@@ -10,4 +10,9 @@ export class BehaviorController {
   async getTodayBehaviors() {
     return this.behaviorService.getTodayBehaviors();
   }
+
+  @Get('all')
+  async getAllBehaviors() {
+    return this.behaviorService.getAllBehaviors();
+  }
 }

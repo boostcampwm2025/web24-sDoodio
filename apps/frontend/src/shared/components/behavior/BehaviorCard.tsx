@@ -1,42 +1,15 @@
-import type { Behavior, Difficulty } from '@/shared/components/behavior/BehaviorCard.types';
+import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
+import { GOAL_COLOR_STYLES } from '@/shared/constants/goalColor';
 import StickerCell from './StickerCell';
+import { DifficultyBadge } from './DifficultyBadge';
 
 interface BehaviorProps {
   behavior: Behavior;
   onToggle: () => void;
 }
 
-function DifficultyBadge({ level }: { level: Difficulty }) {
-  const styles = {
-    마음열기: 'bg-difficulty-1 text-bg-light',
-    시작하기: 'bg-difficulty-2 text-bg-light',
-    이어가기: 'bg-difficulty-3 text-bg-light',
-    몰입하기: 'bg-difficulty-4 text-bg-light',
-  };
-  return (
-    <span
-      className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${styles[level]} border border-current/10`}
-    >
-      {level}
-    </span>
-  );
-}
-
 export function BehaviorCard({ behavior, onToggle }: BehaviorProps) {
-  const GOAL_COLOR_CLASS: Record<string, string> = {
-    'light-pink': 'bg-goal-light-pink',
-    pink: 'bg-goal-pink',
-    yellow: 'bg-goal-yellow',
-    sand: 'bg-goal-sand',
-    mint: 'bg-goal-mint',
-    blue: 'bg-goal-blue',
-    'gray-mint': 'bg-goal-gray-mint',
-    'warm-gray': 'bg-goal-warm-gray',
-    beige: 'bg-goal-beige',
-    lavender: 'bg-goal-lavender',
-  };
-
-  const bgColor = GOAL_COLOR_CLASS[behavior.goalColor] ?? 'bg-goal-beige';
+  const bgColor = GOAL_COLOR_STYLES[behavior.goalColor].bg;
 
   return (
     <div

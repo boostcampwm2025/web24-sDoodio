@@ -1,6 +1,7 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import { z } from 'zod';
 import {
+  GetAllBehaviorsResponseSchema,
   GetTodayBehaviorsResponseSchema,
   PatchTodayBehaviorStatusRequestSchema,
   PatchTodayBehaviorStatusResponseSchema,
@@ -18,6 +19,10 @@ export function registerBehaviorApi(registry: OpenAPIRegistry) {
   const patchTodayBehaviorStatusResponse = registry.register(
     'PatchTodayBehaviorStatusResponse',
     PatchTodayBehaviorStatusResponseSchema,
+  );
+  const getAllBehaviorsResponse = registry.register(
+    'GetAllBehaviorsResponse',
+    GetAllBehaviorsResponseSchema,
   );
   const errorResponse = registry.register(
     'ErrorResponse',
@@ -71,6 +76,21 @@ export function registerBehaviorApi(registry: OpenAPIRegistry) {
         content: {
           'application/json': {
             schema: errorResponse,
+          },
+        },
+      },
+    },
+  });
+
+  registry.registerPath({
+    method: 'get',
+    path: '/behaviors/all',
+    responses: {
+      200: {
+        description: 'List of all behaviors',
+        content: {
+          'application/json': {
+            schema: getAllBehaviorsResponse,
           },
         },
       },

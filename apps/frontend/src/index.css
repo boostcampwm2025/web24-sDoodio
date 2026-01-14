@@ -181,11 +181,23 @@
     letter-spacing: 0.0311em;
   }
 
-  .sticker-empty-border {
-    border-color: color-mix(in srgb, var(--sticker-color) 20%, transparent);
+  /* Custom Scrollbar Styles */
+  .scrollbar-pretty::-webkit-scrollbar {
+    width: 10px;
   }
-  .sticker-empty-border:hover {
-    border-color: color-mix(in srgb, var(--sticker-color) 70%, transparent);
+  .scrollbar-pretty::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-pretty::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    border-radius: 10px;
+  }
+  .scrollbar-pretty::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.2);
+    border: 2px solid transparent;
+    background-clip: padding-box;
   }
 }
 

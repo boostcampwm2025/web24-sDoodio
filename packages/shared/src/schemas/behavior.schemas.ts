@@ -1,4 +1,8 @@
-import { BEHAVIOR_DIFFICULTIES, TODAY_BEHAVIOR_STATUS } from '../types/behavior.types';
+import {
+  BEHAVIOR_DIFFICULTIES,
+  TODAY_BEHAVIOR_STATUS,
+  type Behavior,
+} from '../types/behavior.types';
 import { GOAL_COLORS } from '../types/goal.types';
 import { z } from '../zod';
 
@@ -13,6 +17,19 @@ export const TodayBehaviorSchema = z.object({
 });
 
 export type TodayBehavior = z.infer<typeof TodayBehaviorSchema>;
+
+export const BehaviorSchema = z.object({
+  id: z.uuid({ version: 'v7' }),
+  goalId: z.uuid({ version: 'v7' }).optional(),
+  title: z.string().min(1),
+  difficulty: z.enum(BEHAVIOR_DIFFICULTIES),
+});
+
+export const GetAllBehaviorsResponseSchema = z.array(BehaviorSchema);
+export type GetAllBehaviorsResponse = Behavior[];
+
+export const GetGoalBehaviorsResponseSchema = z.array(BehaviorSchema);
+export type GetGoalBehaviorsResponse = Behavior[];
 
 export const GetTodayBehaviorsResponseSchema = z.array(TodayBehaviorSchema);
 export type GetTodayBehaviorsResponse = z.infer<typeof GetTodayBehaviorsResponseSchema>;

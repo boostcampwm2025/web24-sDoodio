@@ -16,7 +16,7 @@ vi.mock('@/features/behavior/apis/fetchBehaviors.api', () => ({
       id: '55555555-5555-4555-8555-555555555555',
       title: '물 2L 마시기',
       goalTitle: '건강한 생활',
-      goalColor: 'bg-goal-mint',
+      goalColor: 'mint',
       isChecked: false,
       difficulty: '몰입하기',
       isRecommended: true,

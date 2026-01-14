@@ -17,7 +17,7 @@ export class GoalService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async getGoals(): Promise<Goal[]> {
+  async getGoals(): Promise<(Goal & { behaviorCount: number })[]> {
     // MEMO: 임시로 테스트 사용자를 바탕으로 조회
     const user = await this.dataSource
       .getRepository(User)
@@ -27,9 +27,28 @@ export class GoalService {
       throw new NotFoundException('User not found');
     }
 
-    return this.dataSource.getRepository(Goal).find({
+    const goals = await this.dataSource.getRepository(Goal).find({
       where: { user: { id: user.id } },
+      relations: ['behaviors'],
     });
+
+    return goals.map((goal) => ({
+      ...goal,
+      behaviorCount: goal.behaviors ? goal.behaviors.length : 0,
+    }));
+  }
+
+  async getGoalBehaviors(goalId: string): Promise<Behavior[]> {
+    const goal = await this.dataSource.getRepository(Goal).findOne({
+      where: { id: goalId },
+      relations: ['behaviors'],
+    });
+
+    if (!goal) {
+      throw new NotFoundException('Goal not found');
+    }
+
+    return goal.behaviors || [];
   }
 
   async createGoal(request: CreateGoalRequest): Promise<CreateGoalResponse> {

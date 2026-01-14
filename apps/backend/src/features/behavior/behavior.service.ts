@@ -104,4 +104,17 @@ export class BehaviorService {
 
     return selected;
   }
+
+  async getAllBehaviors() {
+    const behaviors = await this.behaviorRepository.find({
+      relations: ['goal'],
+    });
+
+    return behaviors.map((b) => ({
+      id: b.id,
+      goalId: b.goal?.id,
+      title: b.title,
+      difficulty: b.difficulty,
+    }));
+  }
 }

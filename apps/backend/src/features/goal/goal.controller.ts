@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UsePipes } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, UsePipes } from '@nestjs/common';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -26,6 +26,17 @@ export class GoalController {
       updatedAt: goal.updatedAt.toISOString(),
       title: goal.title,
       color: goal.color,
+      behaviorCount: goal.behaviorCount,
+    }));
+  }
+
+  @Get(':id/behaviors')
+  async getGoalBehaviors(@Param('id', ParseUUIDPipe) id: string) {
+    const behaviors = await this.goalService.getGoalBehaviors(id);
+    return behaviors.map((b) => ({
+      id: b.id,
+      title: b.title,
+      difficulty: b.difficulty,
     }));
   }
 

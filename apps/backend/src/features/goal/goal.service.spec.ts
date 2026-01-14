@@ -22,8 +22,8 @@ describe('GoalService', () => {
     const userRepository = { findOne: jest.fn().mockResolvedValue(user) };
 
     const goals = [
-      { id: 'goal-1', title: '건강', color: 'mint', user },
-      { id: 'goal-2', title: '독서', color: 'beige', user },
+      { id: 'goal-1', title: '건강', color: 'mint', user, behaviorCount: 0 },
+      { id: 'goal-2', title: '독서', color: 'beige', user, behaviorCount: 0 },
     ];
     const goalRepository = { find: jest.fn().mockResolvedValue(goals) };
 
@@ -39,7 +39,11 @@ describe('GoalService', () => {
 
     await expect(service.getGoals()).resolves.toEqual(goals);
     expect(userRepository.findOne).toHaveBeenCalledWith({ where: { nickname: '테스트유저' } });
-    expect(goalRepository.find).toHaveBeenCalledWith({ where: { user: { id: user.id } } });
+    expect(goalRepository.find).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { user: { id: user.id } },
+      }),
+    );
   });
 
   it('유저가 없으면 getGoals가 NotFoundException을 던진다', async () => {
@@ -158,5 +162,51 @@ describe('GoalService', () => {
       goal: savedGoal,
     });
     expect(behaviorRepository.save).toHaveBeenCalledWith([behavior]);
+  });
+
+  it('목표의 행동 목록을 반환한다', async () => {
+    const goalId = 'goal-1';
+    const behaviors = [
+      { id: 'b1', title: 'b1', difficulty: 'easy' },
+      { id: 'b2', title: 'b2', difficulty: 'hard' },
+    ];
+    const goal = { id: goalId, behaviors };
+
+    const goalRepository = {
+      findOne: jest.fn().mockResolvedValue(goal),
+    };
+
+    const dataSource = {
+      getRepository: jest.fn((entity: Function) => {
+        if (entity === Goal) return goalRepository;
+        return null;
+      }),
+    } as unknown as DataSource;
+
+    const service = new GoalService(dataSource);
+
+    await expect(service.getGoalBehaviors(goalId)).resolves.toEqual(behaviors);
+    expect(goalRepository.findOne).toHaveBeenCalledWith({
+      where: { id: goalId },
+      relations: ['behaviors'],
+    });
+  });
+
+  it('존재하지 않는 목표의 행동 목록 조회 시 NotFoundException을 던진다', async () => {
+    const goalId = 'goal-1';
+    const goalRepository = {
+      findOne: jest.fn().mockResolvedValue(null),
+    };
+
+    const dataSource = {
+      getRepository: jest.fn((entity: Function) => {
+        if (entity === Goal) return goalRepository;
+        return null;
+      }),
+    } as unknown as DataSource;
+
+    const service = new GoalService(dataSource);
+
+    await expect(service.getGoalBehaviors(goalId)).rejects.toBeInstanceOf(NotFoundException);
   });
 });

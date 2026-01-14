@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { NewGoalPage } from './NewGoalPage';
 
@@ -218,8 +218,10 @@ describe('NewGoalPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '다음' }));
     fireEvent.click(screen.getByRole('button', { name: '다음' }));
 
-    await fireEvent.click(screen.getByRole('button', { name: '완료' }));
+    fireEvent.click(screen.getByRole('button', { name: '완료' }));
 
-    expect(navigateMock).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(navigateMock).not.toHaveBeenCalled();
+    });
   });
 });
