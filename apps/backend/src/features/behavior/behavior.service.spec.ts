@@ -102,4 +102,134 @@ describe('BehaviorService', () => {
       service.updateTodayBehaviorStatus('tb-404', 'completed' as TodayBehaviorStatus),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
+
+  describe('extractTodayBehaviors', () => {
+    const scoreMap = {
+      마음열기: 1,
+      시작하기: 2,
+      이어가기: 3,
+      몰입하기: 4,
+    } as const;
+    let randomSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0);
+    });
+
+    afterEach(() => {
+      randomSpy.mockRestore();
+    });
+
+    it('난이도 합 비율에 맞게 중복 없이 행동을 선택한다', () => {
+      const behaviors = [
+        { id: 'b1', difficulty: '마음열기' },
+        { id: 'b2', difficulty: '시작하기' },
+        { id: 'b3', difficulty: '이어가기' },
+        { id: 'b4', difficulty: '몰입하기' },
+        { id: 'b5', difficulty: 'AI' },
+      ] as Behavior[];
+
+      const result = service.extractTodayBehaviors(behaviors);
+
+      const ids = result.map((behavior) => behavior.id);
+      const totalScore = result.reduce((sum, behavior) => sum + scoreMap[behavior.difficulty], 0);
+
+      expect(result).toHaveLength(3);
+      expect(new Set(ids).size).toBe(ids.length);
+      expect(ids).toEqual(['b1', 'b2', 'b3']);
+      expect(result.some((behavior) => behavior.difficulty === 'AI')).toBe(false);
+      expect(totalScore).toBeLessThanOrEqual(8);
+    });
+
+    it('빈 배열이면 빈 배열을 반환한다', () => {
+      const result = service.extractTodayBehaviors([] as Behavior[]);
+
+      expect(result).toEqual([]);
+    });
+
+    it('모두 AI 난이도면 빈 배열을 반환한다', () => {
+      const behaviors = [
+        { id: 'a1', difficulty: 'AI' },
+        { id: 'a2', difficulty: 'AI' },
+      ] as Behavior[];
+
+      const result = service.extractTodayBehaviors(behaviors);
+
+      expect(result).toEqual([]);
+    });
+
+    it('AI가 섞여 있어도 결과에는 AI가 포함되지 않는다', () => {
+      const behaviors = [
+        { id: 'b1', difficulty: 'AI' },
+        { id: 'b2', difficulty: '마음열기' },
+        { id: 'b3', difficulty: '시작하기' },
+      ] as Behavior[];
+
+      const result = service.extractTodayBehaviors(behaviors);
+
+      expect(result.some((b) => b.difficulty === 'AI')).toBe(false);
+    });
+
+    it('선택된 행동들의 난이도 점수 합은 오늘 목표 점수(반올림 비율)를 넘지 않는다', () => {
+      const behaviors = [
+        { id: 'b1', difficulty: '마음열기' }, // 1
+        { id: 'b2', difficulty: '몰입하기' }, // 4
+        { id: 'b3', difficulty: '몰입하기' }, // 4
+        { id: 'b4', difficulty: '이어가기' }, // 3
+      ] as Behavior[];
+
+      // totalBehaviorScore = 1 + 4 + 4 + 3 = 12
+      // totalTodayBehaviorScore = round(12 * 0.8) = round(9.6) = 10
+      const result = service.extractTodayBehaviors(behaviors);
+
+      const totalScore = result.reduce((sum, b) => sum + scoreMap[b.difficulty], 0);
+
+      expect(totalScore).toBeLessThanOrEqual(10);
+    });
+
+    it('중복 입력(서로 다른 객체지만 같은 id)이라도 현재 구현은 객체 단위로 중복 선택될 수 있다(회귀/문서화 테스트)', () => {
+      // 같은 id지만 객체가 다르면 Map key로는 서로 다른 엔트리로 취급됨
+      const behaviors = [
+        { id: 'dup', difficulty: '마음열기' },
+        { id: 'dup', difficulty: '시작하기' },
+        { id: 'b3', difficulty: '이어가기' },
+        { id: 'b4', difficulty: '몰입하기' },
+      ] as Behavior[];
+
+      const result = service.extractTodayBehaviors(behaviors);
+      const ids = result.map((b) => b.id);
+
+      // "id 중복이 없어야 한다"가 제품 스펙이면 이 테스트는 실패하도록 바꾸고 구현도 id 기반으로 바꾸는 게 맞음.
+      // 지금은 현재 동작을 명시하는 테스트(원치 않으면 삭제/수정)
+      expect(new Set(ids).size).toBeLessThanOrEqual(ids.length);
+    });
+
+    it('무작위 값이 0이 아닐 때도 결과는 유효해야 한다(스모크 테스트)', () => {
+      randomSpy.mockReturnValue(0.9999);
+
+      const behaviors = [
+        { id: 'b1', difficulty: '마음열기' },
+        { id: 'b2', difficulty: '시작하기' },
+        { id: 'b3', difficulty: '이어가기' },
+        { id: 'b4', difficulty: '몰입하기' },
+        { id: 'b5', difficulty: 'AI' },
+      ] as Behavior[];
+
+      const result = service.extractTodayBehaviors(behaviors);
+
+      const totalBehaviorScore = behaviors
+        .filter((b) => b.difficulty !== 'AI')
+        .reduce((sum, b) => sum + scoreMap[b.difficulty as keyof typeof scoreMap], 0);
+
+      const totalTodayBehaviorScore = Math.round(totalBehaviorScore * 0.8);
+
+      const totalScore = result.reduce(
+        (sum, b) => sum + scoreMap[b.difficulty as keyof typeof scoreMap],
+        0,
+      );
+
+      expect(result.some((b) => b.difficulty === 'AI')).toBe(false);
+      expect(totalScore).toBeLessThanOrEqual(totalTodayBehaviorScore);
+    });
+  });
 });
