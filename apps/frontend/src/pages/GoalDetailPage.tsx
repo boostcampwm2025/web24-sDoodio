@@ -17,8 +17,10 @@ export function GoalDetailPage() {
   const [stamps, setStamps] = useState<GoalStamp[]>([]);
 
   useEffect(() => {
-    // goalId가 null이면 에러페이지로 이동로직 추가
-    fetchGoalStamps(goalId!).then((s) => {
+    // MEMO: goalId가 null이면 에러페이지로 이동로직 추가
+    if (!goalId) return;
+
+    fetchGoalStamps(goalId).then((s) => {
       setStamps(s);
     });
   }, [goalId]);
