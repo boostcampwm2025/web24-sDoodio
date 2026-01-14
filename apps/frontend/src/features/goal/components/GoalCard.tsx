@@ -27,11 +27,12 @@ export function GoalCard({ goal, behaviors: propsBehaviors, isOpen, onToggle }: 
           <h3 className="text-heading-1 font-bold">{goal.title}</h3>
           <span>{goal.behaviorCount}개의 행동</span>
         </div>
+        {/* 삭제 기능 추가 필요 */}
         <Trash2 size={ICON_SIZE.sm} />
       </div>
       {/* 카드 바디 */}
       <div
-        className={`overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? 'max-h-250 py-6 opacity-100' : 'max-h-0 opacity-0'} `}
+        className={`scrollbar-pretty transition-all duration-500 ease-in-out md:overflow-hidden md:overflow-y-auto ${isOpen ? 'py-6 opacity-100 md:max-h-250' : 'max-h-0 opacity-0'} `}
       >
         <div className="flex flex-col items-center gap-4">
           {behaviors?.map((behavior) => (
@@ -44,7 +45,7 @@ export function GoalCard({ goal, behaviors: propsBehaviors, isOpen, onToggle }: 
             </div>
           ))}
           {(!behaviors || behaviors.length === 0) && (
-            <div className="bg-bg-alternative/60 text-we/60 text-label-disable flex w-full flex-row items-center justify-center gap-3 rounded-xl border border-dashed border-white/10 py-4 text-center text-sm">
+            <div className="bg-bg-alternative/60 text-label-disable flex w-full flex-row items-center justify-center gap-3 rounded-xl border border-dashed border-white/10 py-4 text-center text-sm">
               <img
                 src="/DodoFace.png"
                 alt="두두 놀란 얼굴"
