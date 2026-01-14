@@ -11,7 +11,10 @@ jest.mock('crypto', () => ({ randomInt: jest.fn() }));
 
 describe('BehaviorService', () => {
   let service: BehaviorService;
-  let repository: { createQueryBuilder: jest.Mock };
+  let repository: {
+    createQueryBuilder: jest.Mock;
+    find: jest.Mock;
+  };
   let todayBehaviorRepository: { update: jest.Mock };
   let queryBuilder: {
     leftJoinAndSelect: jest.Mock;
@@ -29,6 +32,7 @@ describe('BehaviorService', () => {
     };
     repository = {
       createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
+      find: jest.fn(),
     };
     todayBehaviorRepository = { update: jest.fn() };
 
@@ -231,5 +235,32 @@ describe('BehaviorService', () => {
       expect(result.some((b) => b.difficulty === 'AI')).toBe(false);
       expect(totalScore).toBeLessThanOrEqual(totalTodayBehaviorScore);
     });
+  });
+
+  it('전체 행동 목록을 반환한다', async () => {
+    const behaviors = [
+      {
+        id: 'b1',
+        title: 'b1',
+        difficulty: 'easy',
+        goal: { id: 'g1' },
+      },
+    ];
+    repository.find.mockResolvedValue(behaviors);
+
+    const result = await service.getAllBehaviors();
+
+    expect(repository.find).toHaveBeenCalledWith({
+      relations: ['goal'],
+    });
+
+    expect(result).toEqual([
+      {
+        id: 'b1',
+        goalId: 'g1',
+        title: 'b1',
+        difficulty: 'easy',
+      },
+    ]);
   });
 });

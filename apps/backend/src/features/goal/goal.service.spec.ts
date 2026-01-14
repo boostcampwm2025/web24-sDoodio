@@ -163,4 +163,50 @@ describe('GoalService', () => {
     });
     expect(behaviorRepository.save).toHaveBeenCalledWith([behavior]);
   });
+
+  it('목표의 행동 목록을 반환한다', async () => {
+    const goalId = 'goal-1';
+    const behaviors = [
+      { id: 'b1', title: 'b1', difficulty: 'easy' },
+      { id: 'b2', title: 'b2', difficulty: 'hard' },
+    ];
+    const goal = { id: goalId, behaviors };
+
+    const goalRepository = {
+      findOne: jest.fn().mockResolvedValue(goal),
+    };
+
+    const dataSource = {
+      getRepository: jest.fn((entity: Function) => {
+        if (entity === Goal) return goalRepository;
+        return null;
+      }),
+    } as unknown as DataSource;
+
+    const service = new GoalService(dataSource);
+
+    await expect(service.getGoalBehaviors(goalId)).resolves.toEqual(behaviors);
+    expect(goalRepository.findOne).toHaveBeenCalledWith({
+      where: { id: goalId },
+      relations: ['behaviors'],
+    });
+  });
+
+  it('존재하지 않는 목표의 행동 목록 조회 시 NotFoundException을 던진다', async () => {
+    const goalId = 'goal-1';
+    const goalRepository = {
+      findOne: jest.fn().mockResolvedValue(null),
+    };
+
+    const dataSource = {
+      getRepository: jest.fn((entity: Function) => {
+        if (entity === Goal) return goalRepository;
+        return null;
+      }),
+    } as unknown as DataSource;
+
+    const service = new GoalService(dataSource);
+
+    await expect(service.getGoalBehaviors(goalId)).rejects.toBeInstanceOf(NotFoundException);
+  });
 });
