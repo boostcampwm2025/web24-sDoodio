@@ -6,14 +6,27 @@ import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
 import { TodayBahaviorList } from '@/features/behavior/components/TodayBehaviorList';
 import { fetchTodayBehaviors } from '@/features/behavior/apis/fetchBehaviors.api';
 import { fetchGoals } from '@/features/goal/apis/fetchGoals.api';
+import { updateTodayBehaviorStatus } from '@/features/behavior/apis/updateTodayBehaviorStatus.api';
 
 export function IndexPage() {
   const [behaviors, setBehaviors] = useState<Behavior[]>([]);
   const [goalTitles, setGoalTitles] = useState<string[]>([]);
   const { quote, resetQuote } = useDodoChatStore();
 
+  const toggleBehaviorIsChecked = (behaviorId: string) => {
+    setBehaviors((bs) =>
+      bs.map((b) => (b.id === behaviorId ? { ...b, isChecked: !b.isChecked } : b)),
+    );
+  };
+
   const handleToggle = (id: string) => {
-    setBehaviors((bs) => bs.map((b) => (b.id === id ? { ...b, isChecked: !b.isChecked } : b)));
+    const targetBehavior = behaviors.find((bs) => bs.id === id);
+    if (!targetBehavior) return;
+
+    toggleBehaviorIsChecked(id);
+
+    const nextStatus = targetBehavior.isChecked ? 'pending' : 'completed';
+    updateTodayBehaviorStatus(id, nextStatus).catch(() => toggleBehaviorIsChecked(id));
   };
 
   useEffect(() => {

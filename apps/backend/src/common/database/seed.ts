@@ -4,6 +4,7 @@ import { AppDataSource } from './data-source';
 import { User } from '../../features/user/user.entity';
 import { Goal } from '../../features/goal/goal.entity';
 import { Behavior } from '../../features/behavior/behavior.entity';
+import { TodayBehavior } from '../../features/behavior/today-behavior.entity';
 
 async function seed() {
   await AppDataSource.initialize();
@@ -11,6 +12,7 @@ async function seed() {
   const userRepo = AppDataSource.getRepository(User);
   const goalRepo = AppDataSource.getRepository(Goal);
   const behaviorRepo = AppDataSource.getRepository(Behavior);
+  const todayBehaviorRepo = AppDataSource.getRepository(TodayBehavior);
 
   const nickname = '테스트유저';
   let user = await userRepo.findOne({ where: { nickname } });
@@ -60,6 +62,45 @@ async function seed() {
           goal,
         }),
       );
+    }
+  }
+
+  const todayDate = new Date().toISOString().slice(0, 10);
+  const todayBehaviorsData = [
+    { title: '물 1컵 마시기', goalTitle: '건강한 생활', status: 'completed', origin: 'user' },
+    { title: '스트레칭 5분', goalTitle: '건강한 생활', status: 'pending', origin: 'user' },
+    { title: '선 긋기 연습', goalTitle: '드로잉 마스터', status: 'skipped', origin: 'user' },
+  ] as const;
+
+  for (const tb of todayBehaviorsData) {
+    const goal = goals[tb.goalTitle];
+    if (goal) {
+      const behavior = await behaviorRepo.findOne({
+        where: { title: tb.title, goal: { id: goal.id } },
+        relations: { goal: true },
+      });
+
+      if (behavior) {
+        const exists = await todayBehaviorRepo.findOne({
+          where: {
+            date: todayDate,
+            user: { id: user.id },
+            behavior: { id: behavior.id },
+          },
+          relations: { user: true, behavior: true },
+        });
+        if (!exists) {
+          await todayBehaviorRepo.save(
+            todayBehaviorRepo.create({
+              date: todayDate,
+              status: tb.status,
+              origin: tb.origin,
+              user,
+              behavior,
+            }),
+          );
+        }
+      }
     }
   }
 

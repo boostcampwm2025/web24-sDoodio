@@ -1,14 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomInt } from 'node:crypto';
+import { TodayBehaviorStatus } from '@web24/shared';
 import { Behavior } from './behavior.entity';
+import { TodayBehavior } from './today-behavior.entity';
 
 @Injectable()
 export class BehaviorService {
   constructor(
     @InjectRepository(Behavior)
     private readonly behaviorRepository: Repository<Behavior>,
+    @InjectRepository(TodayBehavior)
+    private readonly todayBehaviorRepository: Repository<TodayBehavior>,
   ) {}
 
   async getTodayBehaviors() {
@@ -32,5 +36,13 @@ export class BehaviorService {
       isChecked: false,
       isRecommended: false,
     }));
+  }
+
+  async updateTodayBehaviorStatus(id: string, status: TodayBehaviorStatus) {
+    const result = await this.todayBehaviorRepository.update({ id }, { status });
+    if (result.affected === 0) {
+      throw new NotFoundException('TodayBehavior not found');
+    }
+    return { id, status };
   }
 }

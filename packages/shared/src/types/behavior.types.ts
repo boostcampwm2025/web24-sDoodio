@@ -7,3 +7,11 @@ export const BEHAVIOR_DIFFICULTIES = [
 ] as const;
 
 export type BehaviorDifficulty = (typeof BEHAVIOR_DIFFICULTIES)[number];
+
+export const TODAY_BEHAVIOR_STATUS = ['pending', 'completed', 'skipped', 'ignored'] as const;
+
+export type TodayBehaviorStatus = (typeof TODAY_BEHAVIOR_STATUS)[number];
+
+export const TODAY_BEHAVIOR_ORIGIN = ['user', 'recommendation'] as const;
+
+export type TodayBehaviorOrigin = (typeof TODAY_BEHAVIOR_ORIGIN)[number];

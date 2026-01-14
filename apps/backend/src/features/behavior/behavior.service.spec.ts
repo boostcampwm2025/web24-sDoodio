@@ -1,14 +1,18 @@
+import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { randomInt } from 'crypto';
+import { TodayBehaviorStatus } from '@web24/shared';
 import { BehaviorService } from './behavior.service';
 import { Behavior } from './behavior.entity';
+import { TodayBehavior } from './today-behavior.entity';
 
 jest.mock('crypto', () => ({ randomInt: jest.fn() }));
 
 describe('BehaviorService', () => {
   let service: BehaviorService;
   let repository: { createQueryBuilder: jest.Mock };
+  let todayBehaviorRepository: { update: jest.Mock };
   let queryBuilder: {
     leftJoinAndSelect: jest.Mock;
     orderBy: jest.Mock;
@@ -26,9 +30,14 @@ describe('BehaviorService', () => {
     repository = {
       createQueryBuilder: jest.fn().mockReturnValue(queryBuilder),
     };
+    todayBehaviorRepository = { update: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [BehaviorService, { provide: getRepositoryToken(Behavior), useValue: repository }],
+      providers: [
+        BehaviorService,
+        { provide: getRepositoryToken(Behavior), useValue: repository },
+        { provide: getRepositoryToken(TodayBehavior), useValue: todayBehaviorRepository },
+      ],
     }).compile();
 
     service = module.get<BehaviorService>(BehaviorService);
@@ -69,5 +78,28 @@ describe('BehaviorService', () => {
         isRecommended: false,
       },
     ]);
+  });
+
+  it('today behavior 상태를 업데이트한다', async () => {
+    todayBehaviorRepository.update.mockResolvedValue({ affected: 1 });
+
+    const result = await service.updateTodayBehaviorStatus(
+      'tb-1',
+      'completed' as TodayBehaviorStatus,
+    );
+
+    expect(todayBehaviorRepository.update).toHaveBeenCalledWith(
+      { id: 'tb-1' },
+      { status: 'completed' },
+    );
+    expect(result).toEqual({ id: 'tb-1', status: 'completed' });
+  });
+
+  it('대상이 없으면 NotFoundException을 던진다', async () => {
+    todayBehaviorRepository.update.mockResolvedValue({ affected: 0 });
+
+    await expect(
+      service.updateTodayBehaviorStatus('tb-404', 'completed' as TodayBehaviorStatus),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 });
