@@ -10,9 +10,9 @@ describe('fetchAllBehaviors', () => {
   it('모든 행동 목록을 성공적으로 가져온다', async () => {
     const mockBehaviors: Behavior[] = [
       {
-        id: 'b1',
+        id: '01941234-1234-7123-8123-123456789abc',
         title: '물 2L 마시기',
-        goalId: 'g1',
+        goalId: '01941234-1234-7123-8123-123456789abc',
         difficulty: '몰입하기',
       },
     ];

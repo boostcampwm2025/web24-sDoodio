@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { useGoals } from '@/features/goal/hooks/useGoals';
 import { useAllBehaviors } from '@/features/goal/hooks/useAllBehaviors';
+import { useGoalBehaviors } from '@/features/goal/hooks/useGoalBehaviors';
 import { AllGoalsPage } from './AllGoalsPage';
 
 const navigateMock = vi.fn();
@@ -15,11 +16,19 @@ vi.mock('react-router-dom', async () => {
 });
 
 vi.mock('@/features/goal/hooks/useGoals');
+vi.mock('@/features/goal/hooks/useGoals');
 vi.mock('@/features/goal/hooks/useAllBehaviors');
+vi.mock('@/features/goal/hooks/useGoalBehaviors', () => ({
+  useGoalBehaviors: vi.fn(),
+}));
 
 describe('AllGoalsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    (useGoalBehaviors as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
+      behaviors: [],
+      isLoading: false,
+    });
   });
 
   it('목표 로딩 중일 때 로딩 문구를 보여준다', () => {
@@ -125,7 +134,7 @@ describe('AllGoalsPage', () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: '목표 추가' }));
+    fireEvent.click(screen.getByRole('button', { name: /목표 추가/ }));
 
     expect(navigateMock).toHaveBeenCalledWith('/goals/new');
   });
