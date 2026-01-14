@@ -38,11 +38,11 @@ export function GoalStampBoard({ stamps }: GoalStampBoardProps) {
 
   const getNewDodoIndex = () => {
     const MAX_ATTEMPT = 100;
-    let index = Math.floor(Math.random() * stamps.length);
+    let index = crypto.getRandomValues(new Uint32Array(1))[0] % stamps.length;
 
     let attempt = 0;
     while (index === dodoIndex && attempt < MAX_ATTEMPT) {
-      index = Math.floor(Math.random() * stamps.length);
+      index = crypto.getRandomValues(new Uint32Array(1))[0] % stamps.length;
       attempt += 1;
     }
 
