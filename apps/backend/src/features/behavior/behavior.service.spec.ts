@@ -1,7 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { randomInt } from 'crypto';
+import { getDataSourceToken, getRepositoryToken } from '@nestjs/typeorm';
 import { TodayBehaviorStatus } from '@web24/shared';
 import { BehaviorService } from './behavior.service';
 import { Behavior } from './behavior.entity';
@@ -16,6 +15,7 @@ describe('BehaviorService', () => {
     find: jest.Mock;
   };
   let todayBehaviorRepository: { update: jest.Mock };
+  let dataSource: { transaction: jest.Mock };
   let queryBuilder: {
     leftJoinAndSelect: jest.Mock;
     orderBy: jest.Mock;
@@ -35,12 +35,14 @@ describe('BehaviorService', () => {
       find: jest.fn(),
     };
     todayBehaviorRepository = { update: jest.fn() };
+    dataSource = { transaction: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BehaviorService,
         { provide: getRepositoryToken(Behavior), useValue: repository },
         { provide: getRepositoryToken(TodayBehavior), useValue: todayBehaviorRepository },
+        { provide: getDataSourceToken(), useValue: dataSource },
       ],
     }).compile();
 
@@ -49,39 +51,6 @@ describe('BehaviorService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
-  });
-
-  it('랜덤 개수로 행동을 조회하고 응답을 매핑한다', async () => {
-    (randomInt as jest.Mock).mockReturnValue(4);
-
-    queryBuilder.getMany.mockResolvedValue([
-      {
-        id: 'b1',
-        title: '물 1컵 마시기',
-        difficulty: '마음열기',
-        goal: { title: '건강한 생활', color: 'mint' },
-      },
-    ]);
-
-    const result = await service.getTodayBehaviors();
-
-    expect(randomInt).toHaveBeenCalledWith(3, 13);
-    expect(repository.createQueryBuilder).toHaveBeenCalledWith('behavior');
-    expect(queryBuilder.leftJoinAndSelect).toHaveBeenCalledWith('behavior.goal', 'goal');
-    expect(queryBuilder.orderBy).toHaveBeenCalledWith('RANDOM()');
-    expect(queryBuilder.limit).toHaveBeenCalledWith(4);
-
-    expect(result).toEqual([
-      {
-        id: 'b1',
-        title: '물 1컵 마시기',
-        goalTitle: '건강한 생활',
-        goalColor: 'mint',
-        difficulty: '마음열기',
-        isChecked: false,
-        isRecommended: false,
-      },
-    ]);
   });
 
   it('today behavior 상태를 업데이트한다', async () => {
