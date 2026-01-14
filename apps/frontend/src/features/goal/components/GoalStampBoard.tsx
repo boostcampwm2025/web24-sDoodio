@@ -34,19 +34,18 @@ function Stamp({ difficulty, isDodo, onSelect }: StampProps) {
 }
 
 export function GoalStampBoard({ stamps }: GoalStampBoardProps) {
+  const MIN_LENGTH_TO_ACTIVE_DODO_GAME = 1;
   const [dodoIndex, setDodoIndex] = useState<number | null>(null);
 
   const getNewDodoIndex = () => {
-    const MAX_ATTEMPT = 100;
-    let index = crypto.getRandomValues(new Uint32Array(1))[0] % stamps.length;
+    if (stamps.length <= MIN_LENGTH_TO_ACTIVE_DODO_GAME) return null;
 
-    let attempt = 0;
-    while (index === dodoIndex && attempt < MAX_ATTEMPT) {
-      index = crypto.getRandomValues(new Uint32Array(1))[0] % stamps.length;
-      attempt += 1;
-    }
+    let newIndex: number;
+    do {
+      newIndex = crypto.getRandomValues(new Uint32Array(1))[0] % stamps.length;
+    } while (newIndex === dodoIndex);
 
-    return index;
+    return newIndex;
   };
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -55,9 +54,13 @@ export function GoalStampBoard({ stamps }: GoalStampBoardProps) {
   };
 
   useEffect(() => {
-    const newDodoIndex = getNewDodoIndex();
+    if (stamps.length <= MIN_LENGTH_TO_ACTIVE_DODO_GAME) {
+      setDodoIndex(null);
+      return;
+    }
+    const newDodoIndex = Math.floor(Math.random() * stamps.length);
     setDodoIndex(newDodoIndex);
-  }, []);
+  }, [stamps.length]);
 
   return (
     <div className="bg-bg-light border-primary-strong grid max-h-[60vh] w-full grid-cols-[repeat(auto-fit,minmax(56px,1fr))] gap-2 overflow-y-scroll rounded-2xl p-4">
