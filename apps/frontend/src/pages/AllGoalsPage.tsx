@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BREAKPOINTS } from '@/shared/constants/breakpoints';
 import type { Behavior } from '@web24/shared';
 import { ChevronsDown, ChevronsUp, Plus } from 'lucide-react';
@@ -17,20 +17,17 @@ export function AllGoalsPage() {
   const [isAllExpanded, setIsAllExpanded] = useState(false);
 
   const { allBehaviors, isLoading: isBehaviorsLoading } = useAllBehaviors(isAllExpanded);
-  const behaviorsByGoal = useMemo(
-    () =>
-      allBehaviors?.reduce(
-        (acc, behavior) => {
-          const { goalId } = behavior as any;
-          if (goalId) {
-            if (!acc[goalId]) acc[goalId] = [];
-            acc[goalId].push(behavior);
-          }
-          return acc;
-        },
-        {} as Record<string, Behavior[]>,
-      ),
-    [allBehaviors],
+
+  const behaviorsByGoal = allBehaviors?.reduce(
+    (acc: Record<string, Behavior[]>, behavior: Behavior) => {
+      const { goalId } = behavior;
+      if (goalId) {
+        if (!acc[goalId]) acc[goalId] = [];
+        acc[goalId].push(behavior);
+      }
+      return acc;
+    },
+    {} as Record<string, Behavior[]>,
   );
 
   // 화면 크기에 따른 열 개수 계산
@@ -52,14 +49,10 @@ export function AllGoalsPage() {
 
   const totalGoals = goals?.length;
 
-  const distributedGoals = useMemo(
-    () =>
-      Array.from({ length: columns }, (_, i) => ({
-        id: `column-${i}`,
-        goals: goals?.filter((_value, index) => index % columns === i) || [],
-      })),
-    [goals, columns],
-  );
+  const distributedGoals = Array.from({ length: columns }, (_, i) => ({
+    id: `column-${i}`,
+    goals: goals?.filter((_value, index) => index % columns === i) || [],
+  }));
 
   const toggleExpandAll = () => {
     if (isAllExpanded) {
@@ -73,7 +66,7 @@ export function AllGoalsPage() {
     }
   };
 
-  const handleToggleGoal = useCallback((id: string) => {
+  const handleToggleGoal = (id: string) => {
     setExpandedGoalIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -84,7 +77,7 @@ export function AllGoalsPage() {
       }
       return next;
     });
-  }, []);
+  };
 
   if (isGoalsLoading) {
     return (

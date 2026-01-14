@@ -112,7 +112,7 @@ export class BehaviorService {
 
     return behaviors.map((b) => ({
       id: b.id,
-      goalId: b.goal.id,
+      goalId: b.goal?.id,
       title: b.title,
       difficulty: b.difficulty,
     }));

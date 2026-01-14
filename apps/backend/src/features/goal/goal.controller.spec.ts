@@ -124,12 +124,14 @@ describe('GoalController', () => {
   });
 
   it('목표의 행동 목록을 반환한다', async () => {
-    const behaviors = [{ id: 'b1', title: 'b1', difficulty: 'easy', extra: 'ignored' }];
+    const goalId = '01890fba-7e6a-7b6b-9e5d-0f3c9b8b4c6d';
+    const behaviorId = '01890fba-7e6a-7b6c-9e5d-0f3c9b8b4c6e';
+    const behaviors = [{ id: behaviorId, title: 'b1', difficulty: 'easy', extra: 'ignored' }];
     goalService.getGoalBehaviors.mockResolvedValue(behaviors);
 
-    await expect(controller.getGoalBehaviors('goal-1')).resolves.toEqual([
-      { id: 'b1', title: 'b1', difficulty: 'easy' },
+    await expect(controller.getGoalBehaviors(goalId)).resolves.toEqual([
+      { id: behaviorId, title: 'b1', difficulty: 'easy' },
     ]);
-    expect(goalService.getGoalBehaviors).toHaveBeenCalledWith('goal-1');
+    expect(goalService.getGoalBehaviors).toHaveBeenCalledWith(goalId);
   });
 });
