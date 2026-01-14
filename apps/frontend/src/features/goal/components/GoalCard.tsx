@@ -2,6 +2,7 @@ import { GOAL_COLOR_STYLES } from '@/shared/constants/goalColor';
 import type { GoalSummary, Behavior } from '@web24/shared';
 import { ChevronsUp, ChevronsDown, Trash2 } from 'lucide-react';
 import { ICON_SIZE } from '@/shared/constants/icon';
+import { useNavigate } from 'react-router-dom';
 import { DifficultyBadge } from '@/shared/components/behavior/DifficultyBadge';
 import { useGoalBehaviors } from '../hooks/useGoalBehaviors';
 
@@ -14,12 +15,20 @@ interface GoalCardProps {
 
 export function GoalCard({ goal, behaviors: propsBehaviors, isOpen, onToggle }: GoalCardProps) {
   const { behaviors: fetchedBehaviors } = useGoalBehaviors(goal.id, isOpen && !propsBehaviors);
-
+  const navigate = useNavigate();
   const behaviors = propsBehaviors || fetchedBehaviors;
 
   return (
     <div
+      role="link"
+      tabIndex={0}
       className={`relative mb-4 flex break-inside-avoid flex-col rounded-3xl px-7 py-5 transition-all duration-500 ${GOAL_COLOR_STYLES[goal.color].bg} shadow-sm`}
+      onClick={() => navigate(`/goals/${goal.id}`)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          navigate(`/goals/${goal.id}`);
+        }
+      }}
     >
       {/* 카드 헤더 */}
       <div className="flex flex-row justify-between">
@@ -61,7 +70,10 @@ export function GoalCard({ goal, behaviors: propsBehaviors, isOpen, onToggle }: 
       <button
         type="button"
         className="mt-2 flex w-full justify-center opacity-80 transition-transform hover:animate-bounce hover:opacity-100"
-        onClick={onToggle}
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggle();
+        }}
       >
         {isOpen ? <ChevronsUp size={ICON_SIZE.md} /> : <ChevronsDown size={ICON_SIZE.md} />}
       </button>
