@@ -50,6 +50,17 @@ export function AllGoalsPage() {
     return () => window.removeEventListener('resize', updateColumns);
   }, []);
 
+  const totalGoals = goals?.length;
+
+  const distributedGoals = useMemo(
+    () =>
+      Array.from({ length: columns }, (_, i) => ({
+        id: `column-${i}`,
+        goals: goals?.filter((_value, index) => index % columns === i) || [],
+      })),
+    [goals, columns],
+  );
+
   const toggleExpandAll = () => {
     if (isAllExpanded) {
       setIsAllExpanded(false);
@@ -83,11 +94,33 @@ export function AllGoalsPage() {
     );
   }
 
-  const totalGoals = goals?.length;
-
-  const distributedGoals = Array.from({ length: columns }, (_, i) =>
-    goals?.filter((_value, index) => index % columns === i),
-  );
+  if (!goals || goals.length === 0) {
+    return (
+      <div className="flex h-full min-h-[50vh] flex-col items-center justify-center gap-6">
+        <div className="bg-bg-alternative/60 flex flex-col items-center justify-center gap-4 rounded-3xl p-10 text-center">
+          <img
+            src="/DodoFace.png"
+            alt="두두 놀란 얼굴"
+            height={ICON_SIZE['3xl']}
+            width={ICON_SIZE['3xl']}
+            className="opacity-80"
+          />
+          <div className="flex flex-col gap-2">
+            <p className="text-heading-2 font-bold">아직 등록된 목표가 없어요</p>
+            <p className="text-label-alternative font-semibold">새로운 목표를 만들어볼까요?</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/goals/new')}
+            className="bg-primary text-bg-base hover:bg-primary/90 mt-2 flex flex-row items-center gap-2 rounded-full px-6 py-3 font-semibold transition-colors"
+          >
+            <Plus size={ICON_SIZE.md} />
+            <span>목표 추가하기</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-4 sm:p-6 lg:p-8">
@@ -136,12 +169,9 @@ export function AllGoalsPage() {
 
       {/* 목표 카드 리스트 */}
       <div className="flex items-start gap-6">
-        {distributedGoals.map((goalsInColumn) => (
-          <div
-            key={goalsInColumn?.map((v) => v.id).join('-')}
-            className="flex w-full min-w-0 flex-1 flex-col gap-6"
-          >
-            {goalsInColumn?.map((goal) => (
+        {distributedGoals.map((column) => (
+          <div key={column.id} className="flex w-full min-w-0 flex-1 flex-col gap-6">
+            {column.goals.map((goal) => (
               <GoalCard
                 key={goal.id}
                 goal={goal}

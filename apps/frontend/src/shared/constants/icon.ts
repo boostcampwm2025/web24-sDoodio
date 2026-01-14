@@ -5,4 +5,5 @@ export const ICON_SIZE = {
   lg: 28,
   xl: 35,
   '2xl': 40,
+  '3xl': 80,
 };
