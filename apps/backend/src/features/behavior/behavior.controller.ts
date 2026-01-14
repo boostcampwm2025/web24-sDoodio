@@ -1,7 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { BehaviorService } from './behavior.service';
 
-@Controller('behavior') // MEMO: s 추가하기, 추가한 후 프론트 엔드포인트, OPEN API 문서 경로 변경하기
+@Controller('behaviors') // MEMO: s 추가하기, 추가한 후 프론트 엔드포인트, OPEN API 문서 경로 변경하기
 export class BehaviorController {
   constructor(private readonly behaviorService: BehaviorService) {}
 

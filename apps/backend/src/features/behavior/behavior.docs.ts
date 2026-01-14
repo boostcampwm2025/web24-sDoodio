@@ -36,7 +36,7 @@ export function registerBehaviorApi(registry: OpenAPIRegistry) {
 
   registry.registerPath({
     method: 'get',
-    path: '/behavior',
+    path: '/behaviors',
     responses: {
       200: {
         description: "Today's behaviors",
