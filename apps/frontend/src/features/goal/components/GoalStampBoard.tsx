@@ -58,7 +58,7 @@ export function GoalStampBoard({ stamps }: GoalStampBoardProps) {
       setDodoIndex(null);
       return;
     }
-    const newDodoIndex = Math.floor(Math.random() * stamps.length);
+    const newDodoIndex = crypto.getRandomValues(new Uint32Array(1))[0] % stamps.length;
     setDodoIndex(newDodoIndex);
   }, [stamps.length]);
 
