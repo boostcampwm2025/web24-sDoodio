@@ -35,9 +35,7 @@ describe('AIBehaviorContainer', () => {
   });
 
   it('isMaking 상태일 때 MakingIndicator를 보여준다', () => {
-    render(
-      <AIBehaviorContainer behaviors={[]} onToggle={vi.fn()} isLoading={false} isMaking />,
-    );
+    render(<AIBehaviorContainer behaviors={[]} onToggle={vi.fn()} isLoading={false} isMaking />);
     expect(screen.getByText('두두가 주머니를 뒤지는 중...')).toBeInTheDocument();
     expect(screen.getByAltText('두두 얼굴')).toBeInTheDocument();
   });
