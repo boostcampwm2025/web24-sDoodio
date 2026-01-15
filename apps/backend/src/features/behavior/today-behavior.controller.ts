@@ -28,7 +28,7 @@ export class TodayBehaviorController {
 
   @Post('/ai')
   async createAIBehaviors(): Promise<PostAIBehaviorResponse> {
-    return this.behaviorService.createAIBhaviors();
+    return this.behaviorService.createAIBehaviors();
   }
 
   @Patch('/ai/:id/status')

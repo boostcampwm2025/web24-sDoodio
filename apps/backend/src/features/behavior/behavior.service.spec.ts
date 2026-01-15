@@ -416,7 +416,7 @@ describe('BehaviorService', () => {
     });
   });
 
-  describe('createAIBhaviors', () => {
+  describe('createAIBehaviors', () => {
     it('AI 행동을 생성하고 매핑해서 반환한다', async () => {
       const user = { id: 'user-1', nickname: '테스트유저' };
       const bestGoal = {
@@ -455,7 +455,7 @@ describe('BehaviorService', () => {
       );
       aiService.getAIBehaviorTitles.mockResolvedValue(['AI 행동1', 'AI 행동2']);
 
-      const result = await service.createAIBhaviors();
+      const result = await service.createAIBehaviors();
 
       expect(userRepository.findOne).toHaveBeenCalledWith({ where: { nickname: '테스트유저' } });
       expect(todayRepository.find).toHaveBeenCalledWith({

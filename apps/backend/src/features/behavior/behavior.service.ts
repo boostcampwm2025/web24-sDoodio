@@ -186,7 +186,7 @@ export class BehaviorService {
     });
   }
 
-  async createAIBhaviors() {
+  async createAIBehaviors() {
     const now = new Date();
     const weekBefore = new Date(now);
     weekBefore.setDate(now.getDate() - 7);
@@ -221,7 +221,7 @@ export class BehaviorService {
           id,
           completed,
           total,
-          rate: completed / total,
+          rate: total > 0 ? completed / total : 0,
         }))
         .sort((a, b) => {
           // 1순위: 완료율 내림차순
@@ -232,11 +232,22 @@ export class BehaviorService {
           return b.total - a.total;
         });
 
-      const bestGoal = await manager.getRepository(Goal).findOne({
-        where: { id: sortedGoals[0].id }, // 가장 첫 번째 요소가 최고점
-        relations: { behaviors: true },
-      });
-      if (!bestGoal) throw new NotFoundException('Goal');
+      let bestGoal: Goal | null = null;
+
+      if (sortedGoals.length > 0) {
+        bestGoal = await manager.getRepository(Goal).findOne({
+          where: { id: sortedGoals[0].id },
+          relations: { behaviors: true },
+        });
+      } else {
+        bestGoal = await manager.getRepository(Goal).findOne({
+          where: { user: { id: user.id } },
+          order: { createdAt: 'DESC' },
+          relations: { behaviors: true },
+        });
+      }
+
+      if (!bestGoal) return [];
 
       const aiBehaviorTitles = await this.aiService.getAIBehaviorTitles(bestGoal);
 

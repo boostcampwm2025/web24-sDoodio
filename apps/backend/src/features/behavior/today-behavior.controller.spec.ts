@@ -8,7 +8,7 @@ describe('TodayBehaviorController', () => {
     updateTodayBehaviorStatus: jest.Mock;
     getTodayBehaviors: jest.Mock;
     getAIBehaviors: jest.Mock;
-    createAIBhaviors: jest.Mock;
+    createAIBehaviors: jest.Mock;
     updateAIBehaviorStatus: jest.Mock;
   };
 
@@ -17,7 +17,7 @@ describe('TodayBehaviorController', () => {
       updateTodayBehaviorStatus: jest.fn(),
       getTodayBehaviors: jest.fn(),
       getAIBehaviors: jest.fn(),
-      createAIBhaviors: jest.fn(),
+      createAIBehaviors: jest.fn(),
       updateAIBehaviorStatus: jest.fn(),
     };
 
@@ -76,11 +76,11 @@ describe('TodayBehaviorController', () => {
   describe('createAIBehaviors', () => {
     it('서비스 결과를 반환한다', async () => {
       const mock = [{ id: 'ai-1' }];
-      service.createAIBhaviors.mockResolvedValue(mock);
+      service.createAIBehaviors.mockResolvedValue(mock);
 
       const result = await controller.createAIBehaviors();
 
-      expect(service.createAIBhaviors).toHaveBeenCalledTimes(1);
+      expect(service.createAIBehaviors).toHaveBeenCalledTimes(1);
       expect(result).toBe(mock);
     });
   });

@@ -47,7 +47,7 @@ export const PatchTodayBehaviorStatusResponseSchema = z.object({
   status: z.enum(TODAY_BEHAVIOR_STATUS),
 });
 export type PatchTodayBehaviorStatusResponse = z.infer<
-  typeof PatchTodayBehaviorStatusRequestSchema
+  typeof PatchTodayBehaviorStatusResponseSchema
 >;
 
 export const GetAIBehaviorResponseSchema = z.array(AIBehaviorSchema);

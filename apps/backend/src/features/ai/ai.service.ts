@@ -128,10 +128,28 @@ JSON 외의 설명, 문장, 코드블록, 주석은 **절대 출력하지 마**.
 
     const responseJson = (await response.json()) as ClovaChatResponse;
 
-    const aiResult = responseJson.result.message.content.replaceAll('`', '').replaceAll('json', '');
-    const aiResultObject = JSON.parse(aiResult) as AIBehaviorRecommendation;
-    logger.log(`Response of Clova API:: ${aiResult}`);
+    const { content } = responseJson.result.message;
+    const startIndex = content.indexOf('{');
+    const endIndex = content.lastIndexOf('}');
 
-    return [aiResultObject.몰입하기];
+    if (startIndex === -1 || endIndex === -1 || startIndex >= endIndex) {
+      logger.error(`Failed to find JSON object in Clova API response: ${content}`);
+      throw new Error('Failed to parse JSON from Clova API response');
+    }
+
+    const jsonStr = content.substring(startIndex, endIndex + 1);
+
+    try {
+      const aiResultObject = JSON.parse(jsonStr) as AIBehaviorRecommendation;
+      logger.log(`Response of Clova API:: ${jsonStr}`);
+      return [aiResultObject.몰입하기];
+    } catch (error) {
+      if (error instanceof Error) {
+        logger.error(`Failed to parse JSON: ${error.message}`, error.stack, jsonStr);
+      } else {
+        logger.error('Failed to parse JSON: Unknown error', String(error), jsonStr);
+      }
+      throw new Error('AI 응답 JSON 파싱에 실패했습니다.');
+    }
   }
 }

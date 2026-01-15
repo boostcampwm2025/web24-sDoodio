@@ -27,6 +27,12 @@ export function IndexPage() {
     );
   };
 
+  const toggleAIBehaviorIsChecked = (behaviorId: string) => {
+    setAIBehaviors((bs) =>
+      bs.map((b) => (b.id === behaviorId ? { ...b, isChecked: !b.isChecked } : b)),
+    );
+  };
+
   const handleBehaviorToggle = (id: string) => {
     const targetBehavior = behaviors.find((bs) => bs.id === id);
     if (!targetBehavior) return;
@@ -40,12 +46,6 @@ export function IndexPage() {
   const handleAIBehaviorToggle = (id: string) => {
     const targetBehavior = aiBehaviors.find((bs) => bs.id === id);
     if (!targetBehavior) return;
-
-    const toggleAIBehaviorIsChecked = (behaviorId: string) => {
-      setAIBehaviors((bs) =>
-        bs.map((b) => (b.id === behaviorId ? { ...b, isChecked: !b.isChecked } : b)),
-      );
-    };
 
     toggleAIBehaviorIsChecked(id);
 
