@@ -51,3 +51,6 @@ export type PatchTodayBehaviorStatusResponse = z.infer<
 
 export const GetAIBehaviorResponseSchema = z.array(AIBehaviorSchema);
 export type GetAIBehaviorResponse = z.infer<typeof GetAIBehaviorResponseSchema>;
+
+export const PostAIBehaviorResponseSchema = z.array(AIBehaviorSchema);
+export type PostAIBehaviorResponse = z.infer<typeof PostAIBehaviorResponseSchema>;

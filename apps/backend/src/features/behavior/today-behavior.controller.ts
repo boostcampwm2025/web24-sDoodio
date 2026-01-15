@@ -1,9 +1,10 @@
-import { Get, Body, Controller, Param, ParseUUIDPipe, Patch } from '@nestjs/common';
+import { Get, Body, Controller, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
 import {
   type GetAIBehaviorResponse,
   type PatchTodayBehaviorStatusRequest,
   PatchTodayBehaviorStatusRequestSchema,
   PatchTodayBehaviorStatusResponse,
+  type PostAIBehaviorResponse,
 } from '@web24/shared';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { BehaviorService } from './behavior.service';
@@ -20,6 +21,11 @@ export class TodayBehaviorController {
   @Get('/ai')
   async getTodayAIBehaviors(): Promise<GetAIBehaviorResponse> {
     return this.behaviorService.getAIBehaviors();
+  }
+
+  @Post('/ai')
+  async createAIBehaviors(): Promise<PostAIBehaviorResponse> {
+    return this.behaviorService.createAIBhaviors();
   }
 
   @Patch(':id/status')

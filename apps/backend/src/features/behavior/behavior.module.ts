@@ -7,10 +7,11 @@ import { Behavior } from './behavior.entity';
 import { Goal } from '../goal/goal.entity';
 import { TodayBehavior } from './today-behavior.entity';
 import { AIBehavior } from './ai-behavior.entity';
+import { AIService } from '../ai/ai.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Behavior, Goal, TodayBehavior, AIBehavior])],
   controllers: [BehaviorController, TodayBehaviorController],
-  providers: [BehaviorService],
+  providers: [BehaviorService, AIService],
 })
 export class BehaviorModule {}
