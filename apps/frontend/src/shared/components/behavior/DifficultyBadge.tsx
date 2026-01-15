@@ -17,7 +17,8 @@ export function DifficultyBadge({
   className = '',
 }: DifficultyBadgeProps) {
   const interactiveClass = onClick ? 'cursor-pointer transition hover:opacity-100' : '';
-  const selectedClass = (onClick ? selected : true) ? 'opacity-100' : 'opacity-60';
+  const isActive = onClick ? selected : true;
+  const selectedClass = isActive ? 'opacity-100' : 'opacity-60';
 
   const badgeClass = [
     'flex shrink-0 items-center gap-1 rounded-full',
