@@ -1,5 +1,6 @@
 import { Get, Body, Controller, Param, ParseUUIDPipe, Patch } from '@nestjs/common';
 import {
+  type GetAIBehaviorResponse,
   type PatchTodayBehaviorStatusRequest,
   PatchTodayBehaviorStatusRequestSchema,
   PatchTodayBehaviorStatusResponse,
@@ -14,6 +15,11 @@ export class TodayBehaviorController {
   @Get()
   async getTodayBehaviors() {
     return this.behaviorService.getTodayBehaviors();
+  }
+
+  @Get('/ai')
+  async getTodayAIBehaviors(): Promise<GetAIBehaviorResponse> {
+    return this.behaviorService.getAIBehaviors();
   }
 
   @Patch(':id/status')

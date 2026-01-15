@@ -16,6 +16,8 @@ export const TodayBehaviorSchema = z.object({
   isRecommended: z.boolean(),
 });
 
+export const AIBehaviorSchema = TodayBehaviorSchema;
+
 export type TodayBehavior = z.infer<typeof TodayBehaviorSchema>;
 
 export const BehaviorSchema = z.object({
@@ -46,3 +48,6 @@ export const PatchTodayBehaviorStatusResponseSchema = z.object({
 export type PatchTodayBehaviorStatusResponse = z.infer<
   typeof PatchTodayBehaviorStatusRequestSchema
 >;
+
+export const GetAIBehaviorResponseSchema = z.array(AIBehaviorSchema);
+export type GetAIBehaviorResponse = z.infer<typeof GetAIBehaviorResponseSchema>;

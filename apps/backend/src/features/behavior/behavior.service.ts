@@ -1,11 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DataSource, In, Not, Repository } from 'typeorm';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { TodayBehaviorStatus } from '@web24/shared';
+import { BEHAVIOR_DIFFICULTIES, TodayBehaviorStatus } from '@web24/shared';
 import { getKstDayKey } from '../../common/utils/time.utils';
 import { Behavior } from './behavior.entity';
 import { TodayBehavior } from './today-behavior.entity';
 import { User } from '../user/user.entity';
+import { AIBehavior } from './ai-behavior.entity';
 
 @Injectable()
 export class BehaviorService {
@@ -152,5 +153,31 @@ export class BehaviorService {
       title: b.title,
       difficulty: b.difficulty,
     }));
+  }
+
+  async getAIBehaviors() {
+    return this.dataSource.transaction(async (manager) => {
+      const todayDate = getKstDayKey();
+
+      const user = await manager.getRepository(User).findOne({ where: { nickname: '테스트유저' } });
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      const aiBehaviors = await manager.getRepository(AIBehavior).find({
+        where: { date: todayDate, user: { id: user.id } },
+        relations: { goal: true },
+      });
+
+      return aiBehaviors.map((b) => ({
+        id: b.id,
+        title: b.title,
+        goalTitle: b.goal.title,
+        goalColor: b.goal.color,
+        difficulty: BEHAVIOR_DIFFICULTIES[4],
+        isChecked: b.status === 'completed',
+        isRecommended: true,
+      }));
+    });
   }
 }
