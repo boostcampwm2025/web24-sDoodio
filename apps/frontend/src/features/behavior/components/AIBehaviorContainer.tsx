@@ -3,7 +3,7 @@ import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
 import { ICON_SIZE } from '@/shared/constants/icon';
 
 interface AIBehaviorContainerProps {
-  behavior: Behavior;
+  behaviors: Behavior[];
   onToggle: (id: string) => void;
   isLoading: boolean;
   isMaking: boolean;
@@ -19,16 +19,18 @@ function MakingIndicator() {
 }
 
 export function AIBehaviorContainer({
-  behavior,
+  behaviors,
   onToggle,
   isLoading = true,
   isMaking = false,
 }: AIBehaviorContainerProps) {
   const containerClassName =
     'animate-in fade-in slide-in-from-top-4 border-primary-weak/60 bg-primary-weak/30 relative mb-10 overflow-hidden rounded-4xl border p-6 duration-500 min-h-55';
-  if (isLoading) {
+
+  if ((behaviors.length === 0 || isLoading) && !isMaking) {
     return <div className={containerClassName} />;
   }
+
   return (
     <div className={containerClassName}>
       {isMaking ? (
@@ -49,7 +51,13 @@ export function AIBehaviorContainer({
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <BehaviorCard behavior={behavior} onToggle={() => onToggle(behavior.id)} />
+            {behaviors.map((behavior) => (
+              <BehaviorCard
+                key={behavior.id}
+                behavior={behavior}
+                onToggle={() => onToggle(behavior.id)}
+              />
+            ))}
           </div>
         </div>
       )}

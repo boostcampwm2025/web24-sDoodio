@@ -7,11 +7,19 @@ import { TodayBahaviorList } from '@/features/behavior/components/TodayBehaviorL
 import { fetchTodayBehaviors } from '@/features/behavior/apis/fetchBehaviors.api';
 import { fetchGoals } from '@/features/goal/apis/fetchGoals.api';
 import { updateTodayBehaviorStatus } from '@/features/behavior/apis/updateTodayBehaviorStatus.api';
+import { useAIBehaviors } from '@/features/behavior/hooks/useAIBehaviors';
+import { updateAIBehaviorStatus } from '@/features/behavior/apis/updateAIBehaviorStatus.api';
 
 export function IndexPage() {
   const [behaviors, setBehaviors] = useState<Behavior[]>([]);
   const [goalTitles, setGoalTitles] = useState<string[]>([]);
   const { quote, resetQuote } = useDodoChatStore();
+  const {
+    behaviors: aiBehaviors,
+    setBehaviors: setAIBehaviors,
+    isLoading,
+    isMaking,
+  } = useAIBehaviors();
 
   const toggleBehaviorIsChecked = (behaviorId: string) => {
     setBehaviors((bs) =>
@@ -19,7 +27,7 @@ export function IndexPage() {
     );
   };
 
-  const handleToggle = (id: string) => {
+  const handleBehaviorToggle = (id: string) => {
     const targetBehavior = behaviors.find((bs) => bs.id === id);
     if (!targetBehavior) return;
 
@@ -27,6 +35,22 @@ export function IndexPage() {
 
     const nextStatus = targetBehavior.isChecked ? 'pending' : 'completed';
     updateTodayBehaviorStatus(id, nextStatus).catch(() => toggleBehaviorIsChecked(id));
+  };
+
+  const handleAIBehaviorToggle = (id: string) => {
+    const targetBehavior = aiBehaviors.find((bs) => bs.id === id);
+    if (!targetBehavior) return;
+
+    const toggleAIBehaviorIsChecked = (behaviorId: string) => {
+      setAIBehaviors((bs) =>
+        bs.map((b) => (b.id === behaviorId ? { ...b, isChecked: !b.isChecked } : b)),
+      );
+    };
+
+    toggleAIBehaviorIsChecked(id);
+
+    const nextStatus = targetBehavior.isChecked ? 'pending' : 'completed';
+    updateAIBehaviorStatus(id, nextStatus).catch(() => toggleAIBehaviorIsChecked(id));
   };
 
   useEffect(() => {
@@ -43,27 +67,21 @@ export function IndexPage() {
     [resetQuote],
   );
 
-  const aiBehavior = behaviors[0];
-
   return (
     <div className="bg-bg-normal mx-auto flex max-w-5xl flex-col pt-2">
       {/* 두두의 말 */}
       <Hero quote={quote} />
 
       {/* AI 추천 행동 */}
-      {aiBehavior && (
-        <AIBehaviorContainer
-          behavior={behaviors[0]}
-          onToggle={() => handleToggle(behaviors[0].id)}
-        />
-      )}
+      <AIBehaviorContainer
+        behaviors={aiBehaviors}
+        isLoading={isLoading}
+        isMaking={isMaking}
+        onToggle={handleAIBehaviorToggle}
+      />
 
       {/* 오늘의 행동 */}
-      <TodayBahaviorList
-        goals={goalTitles}
-        behaviors={behaviors.slice(1)}
-        onToggle={handleToggle}
-      />
+      <TodayBahaviorList goals={goalTitles} behaviors={behaviors} onToggle={handleBehaviorToggle} />
     </div>
   );
 }
