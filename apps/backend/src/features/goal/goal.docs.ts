@@ -1,6 +1,7 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import {
   GetGoalsResponseSchema,
+  GetGoalResponseSchema,
   CreateGoalRequestSchema,
   CreateGoalResponseSchema,
   GoalTemplateListResponseSchema,
@@ -12,6 +13,7 @@ export function registerGoalApi(registry: OpenAPIRegistry) {
   const getGoalsResponse = registry.register('GetGoalsResponse', GetGoalsResponseSchema);
   const createGoalRequest = registry.register('CreateGoalRequest', CreateGoalRequestSchema);
   const createGoalResponse = registry.register('CreateGoalResponse', CreateGoalResponseSchema);
+  const getGoalResponse = registry.register('GetGoalResponse', GetGoalResponseSchema);
   const getGoalTemplatesResponse = registry.register(
     'GetGoalTemplatesResponse',
     GoalTemplateListResponseSchema,
@@ -73,6 +75,21 @@ export function registerGoalApi(registry: OpenAPIRegistry) {
         content: {
           'application/json': {
             schema: getGoalTemplatesResponse,
+          },
+        },
+      },
+    },
+  });
+
+  registry.registerPath({
+    method: 'get',
+    path: '/goals/{id}',
+    responses: {
+      200: {
+        description: 'Goal detail',
+        content: {
+          'application/json': {
+            schema: getGoalResponse,
           },
         },
       },
