@@ -6,13 +6,19 @@ import 'swiper/css/free-mode';
 interface SwiperTabsProps {
   tabs: string[];
   onChange: (id: string) => void;
+  slideOffsetAfter?: number;
 }
 
-export function SwiperTabs({ tabs, onChange }: SwiperTabsProps) {
+export function SwiperTabs({ tabs, onChange, slideOffsetAfter }: SwiperTabsProps) {
   const [active, setActive] = useState(0);
 
   return (
-    <Swiper slidesPerView="auto" spaceBetween={24} className="relative pb-2">
+    <Swiper
+      slidesPerView="auto"
+      spaceBetween={24}
+      className="relative pb-2"
+      slidesOffsetAfter={slideOffsetAfter}
+    >
       {tabs.map((label, idx) => (
         <SwiperSlide key={label} className="w-auto!">
           <button

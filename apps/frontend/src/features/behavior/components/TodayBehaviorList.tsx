@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { BehaviorCard } from '@/shared/components/behavior/BehaviorCard';
 import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
-import { Plus, CirclePlus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { SwiperTabs } from './SwiperTabs';
 
@@ -28,19 +28,23 @@ export function TodayBahaviorList({ goals, behaviors, onToggle }: BehaviorListPr
       </h3>
 
       {/* 목표 필터 탭 스와이퍼 */}
-      <div className="relative mb-2 flex items-center">
+      <div className="relative mb-2 flex items-center justify-around gap-2">
         {/* Tabs */}
-        <div className="flex-1 overflow-hidden pr-10">
-          <SwiperTabs tabs={goals} onChange={setActiveGoal} />
+        <div className="relative flex-1 overflow-hidden">
+          {/* slideOffsetAfter : 슬라이더 맨 오른쪽 여백으로 오른쪽 그라데이션 오버레이의 너비랑 맞춤 */}
+          <SwiperTabs tabs={goals} onChange={setActiveGoal} slideOffsetAfter={48} />
+          {/* 오른쪽 그라데이션 오버레이 */}
+          <div className="from-bg-normal via-bg-normal/80 pointer-events-none absolute top-0 right-0 z-10 h-full w-12 bg-linear-to-l to-transparent" />
         </div>
 
         {/* + Button */}
         <button
           type="button"
-          className="absolute top-1/2 right-0 flex h-8 w-8 -translate-y-1/2 items-center justify-center"
+          className="flex shrink-0 items-center justify-center gap-1 pb-1"
           onClick={() => navigate('/goals/new')}
         >
-          <CirclePlus className="text-label-disable" />
+          <Plus className="text-label-disable h-5 w-5" />
+          <span className="text-label-disable text-sm font-semibold">목표</span>
         </button>
       </div>
 
