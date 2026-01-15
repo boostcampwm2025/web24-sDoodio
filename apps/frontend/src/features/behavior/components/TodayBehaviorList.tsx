@@ -28,7 +28,7 @@ export function TodayBahaviorList({ goals, behaviors, onToggle }: BehaviorListPr
       </h3>
 
       {/* 목표 필터 탭 스와이퍼 */}
-      <div className="relative mb-2 flex items-center justify-around gap-2">
+      <div className="relative mb-2 flex items-center gap-2">
         {/* Tabs */}
         <div className="relative flex-1 overflow-hidden">
           {/* slideOffsetAfter : 슬라이더 맨 오른쪽 여백으로 오른쪽 그라데이션 오버레이의 너비랑 맞춤 */}
