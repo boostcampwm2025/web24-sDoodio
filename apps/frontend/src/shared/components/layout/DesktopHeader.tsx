@@ -15,12 +15,16 @@ function DesktopHeader() {
     >
       <div className="flex h-full w-full max-w-5xl items-center justify-between px-8">
         {/* 로고 */}
-        <div className="flex items-center gap-2">
+        <button
+          type="button"
+          className="flex cursor-pointer items-center gap-2"
+          onClick={() => navigate('/')}
+        >
           <div className="bg-primary-strong text-bg-light flex h-8 w-8 items-center justify-center rounded-lg font-bold">
             DW
           </div>
           <span className="text-heading-2 text-label-normal font-bold tracking-tight">뚜웰</span>
-        </div>
+        </button>
 
         {/* 메뉴 */}
         <nav className="flex items-center gap-12">
