@@ -83,7 +83,7 @@ describe('GoalCard', () => {
 
     render(<GoalCard goal={mockGoal} isOpen={false} onToggle={onToggleMock} />);
 
-    fireEvent.click(screen.getByRole('button'));
+    fireEvent.click(screen.getByRole('button', { name: /펼치기|접기/ }));
 
     expect(onToggleMock).toHaveBeenCalled();
   });

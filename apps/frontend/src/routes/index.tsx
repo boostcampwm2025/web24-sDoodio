@@ -11,7 +11,10 @@ export function AppRoutes() {
       <Route element={<NewGoalPage />} path="/goals/new" />
       <Route element={<AllGoalsPage />} path="/all-goals" />
       <Route element={<GoalDetailPage />} path="/goals/:goalId" />
-      <Route element={<div className="text-label-disable">Not Found</div>} path="*" />
+      <Route
+        element={<div className="text-label-disable text-center">구현 예정입니다</div>}
+        path="*"
+      />
     </Routes>
   );
 }

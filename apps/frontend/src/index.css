@@ -211,3 +211,7 @@ body {
   color: var(--color-label-normal);
   font-family: var(--font-sans);
 }
+
+.toast-position {
+  bottom: 5rem !important;
+}

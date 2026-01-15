@@ -3,6 +3,7 @@ import type { GoalSummary, Behavior } from '@web24/shared';
 import { ChevronsUp, ChevronsDown, Trash2 } from 'lucide-react';
 import { ICON_SIZE } from '@/shared/constants/icon';
 import { DifficultyBadge } from '@/shared/components/behavior/DifficultyBadge';
+import { toast } from 'react-toastify';
 import { useGoalBehaviors } from '../hooks/useGoalBehaviors';
 
 interface GoalCardProps {
@@ -42,7 +43,15 @@ export function GoalCard({
           <span>{goal.behaviorCount}개의 행동</span>
         </div>
         {/* 삭제 기능 추가 필요 */}
-        <Trash2 size={ICON_SIZE.sm} />
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            toast('구현 예정입니다.');
+          }}
+        >
+          <Trash2 size={ICON_SIZE.sm} />
+        </button>
       </div>
       {/* 카드 바디 */}
       <div
@@ -73,6 +82,7 @@ export function GoalCard({
       </div>
       {/* 펼치기/접기 버튼 */}
       <button
+        aria-label={isOpen ? '접기' : '펼치기'}
         type="button"
         className="mt-2 flex w-full justify-center opacity-80 transition-transform hover:animate-bounce hover:opacity-100"
         onClick={(e) => {

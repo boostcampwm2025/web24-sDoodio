@@ -2,6 +2,7 @@ import { useScroll } from '@/shared/hooks/useScroll';
 import { Bell } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { MENU_ITEMS } from '@/shared/constants/menu';
+import { toast } from 'react-toastify';
 
 function DesktopHeader() {
   const navigate = useNavigate();
@@ -46,13 +47,22 @@ function DesktopHeader() {
           <button
             className="text-label-disable hover:text-label-normal relative p-2 transition-colors"
             type="button"
+            onClick={() => {
+              toast('구현 예정입니다.');
+            }}
           >
             <Bell size={20} />
             <span className="bg-goal-2 border-bg-light absolute top-2 right-2 h-1.5 w-1.5 rounded-full border" />
           </button>
-          <div className="hover:border-primary-strong text-label-2 text-label-alternative bg-bg-light border-primary-weak flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border font-bold transition-all">
+          <button
+            className="hover:border-primary-strong text-label-2 text-label-alternative bg-bg-light border-primary-weak flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border font-bold transition-all"
+            type="button"
+            onClick={() => {
+              toast('구현 예정입니다.');
+            }}
+          >
             U
-          </div>
+          </button>
         </div>
       </div>
     </header>
