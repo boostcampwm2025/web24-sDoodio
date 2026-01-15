@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import {
   CreateGoalRequestSchema,
   GetGoalsResponse,
+  type GetGoalResponse,
   GoalTemplateListResponseSchema,
   type CreateGoalRequest,
   type CreateGoalResponse,
@@ -28,6 +29,16 @@ export class GoalController {
       color: goal.color,
       behaviorCount: goal.behaviorCount,
     }));
+  }
+
+  @Get(':id')
+  async getGoal(@Param('id', ParseUUIDPipe) id: string): Promise<GetGoalResponse> {
+    const goal = await this.goalService.getGoal(id);
+    return {
+      id: goal.id,
+      title: goal.title,
+      color: goal.color,
+    };
   }
 
   @Get(':id/behaviors')

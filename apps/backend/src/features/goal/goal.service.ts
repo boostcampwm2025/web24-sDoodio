@@ -1,11 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectDataSource } from '@nestjs/typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 import {
   CreateGoalResponseSchema,
   type CreateGoalRequest,
   type CreateGoalResponse,
 } from '@web24/shared';
-import { DataSource } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Behavior } from '../behavior/behavior.entity';
 import { User } from '../user/user.entity';
 import { Goal } from './goal.entity';
@@ -14,21 +14,23 @@ import { TodayBehavior } from '../behavior/today-behavior.entity';
 @Injectable()
 export class GoalService {
   constructor(
-    @InjectDataSource()
-    private readonly dataSource: DataSource,
+    @InjectRepository(Goal)
+    private readonly goalRepository: Repository<Goal>,
+    @InjectRepository(TodayBehavior)
+    private readonly todayBehaviorRepository: Repository<TodayBehavior>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
 
   async getGoals(): Promise<(Goal & { behaviorCount: number })[]> {
     // MEMO: 임시로 테스트 사용자를 바탕으로 조회
-    const user = await this.dataSource
-      .getRepository(User)
-      .findOne({ where: { nickname: '테스트유저' } });
+    const user = await this.userRepository.findOne({ where: { nickname: '테스트유저' } });
 
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    const goals = await this.dataSource.getRepository(Goal).find({
+    const goals = await this.goalRepository.find({
       where: { user: { id: user.id } },
       relations: ['behaviors'],
     });
@@ -39,8 +41,20 @@ export class GoalService {
     }));
   }
 
+  async getGoal(goalId: string): Promise<Goal> {
+    const goal = await this.goalRepository.findOne({
+      where: { id: goalId },
+    });
+
+    if (!goal) {
+      throw new NotFoundException('Goal not found');
+    }
+
+    return goal;
+  }
+
   async getGoalBehaviors(goalId: string): Promise<Behavior[]> {
-    const goal = await this.dataSource.getRepository(Goal).findOne({
+    const goal = await this.goalRepository.findOne({
       where: { id: goalId },
       relations: ['behaviors'],
     });
@@ -53,7 +67,7 @@ export class GoalService {
   }
 
   async getGoalStamps(goalId: string): Promise<TodayBehavior[]> {
-    return this.dataSource.getRepository(TodayBehavior).find({
+    return this.todayBehaviorRepository.find({
       where: {
         behavior: {
           goal: { id: goalId },
@@ -65,7 +79,7 @@ export class GoalService {
   }
 
   async createGoal(request: CreateGoalRequest): Promise<CreateGoalResponse> {
-    return this.dataSource.transaction(async (manager) => {
+    return this.goalRepository.manager.transaction(async (manager) => {
       // MEMO: 임시로 테스트 사용자를 바탕으로 조회
       const user = await manager.getRepository(User).findOne({ where: { nickname: '테스트유저' } });
 
