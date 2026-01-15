@@ -12,7 +12,7 @@ export const TODAY_BEHAVIOR_STATUS = ['pending', 'completed', 'skipped', 'ignore
 
 export type TodayBehaviorStatus = (typeof TODAY_BEHAVIOR_STATUS)[number];
 
-export const TODAY_BEHAVIOR_ORIGIN = ['user', 'recommendation'] as const;
+export const TODAY_BEHAVIOR_ORIGIN = ['user', 'system'] as const;
 
 export type TodayBehaviorOrigin = (typeof TODAY_BEHAVIOR_ORIGIN)[number];
 

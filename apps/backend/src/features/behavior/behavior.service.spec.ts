@@ -1,7 +1,7 @@
+import { In, Not } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { randomInt } from 'crypto';
+import { getDataSourceToken, getRepositoryToken } from '@nestjs/typeorm';
 import { TodayBehaviorStatus } from '@web24/shared';
 import { BehaviorService } from './behavior.service';
 import { Behavior } from './behavior.entity';
@@ -16,6 +16,7 @@ describe('BehaviorService', () => {
     find: jest.Mock;
   };
   let todayBehaviorRepository: { update: jest.Mock };
+  let dataSource: { transaction: jest.Mock };
   let queryBuilder: {
     leftJoinAndSelect: jest.Mock;
     orderBy: jest.Mock;
@@ -35,12 +36,14 @@ describe('BehaviorService', () => {
       find: jest.fn(),
     };
     todayBehaviorRepository = { update: jest.fn() };
+    dataSource = { transaction: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         BehaviorService,
         { provide: getRepositoryToken(Behavior), useValue: repository },
         { provide: getRepositoryToken(TodayBehavior), useValue: todayBehaviorRepository },
+        { provide: getDataSourceToken(), useValue: dataSource },
       ],
     }).compile();
 
@@ -49,39 +52,6 @@ describe('BehaviorService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
-  });
-
-  it('랜덤 개수로 행동을 조회하고 응답을 매핑한다', async () => {
-    (randomInt as jest.Mock).mockReturnValue(4);
-
-    queryBuilder.getMany.mockResolvedValue([
-      {
-        id: 'b1',
-        title: '물 1컵 마시기',
-        difficulty: '마음열기',
-        goal: { title: '건강한 생활', color: 'mint' },
-      },
-    ]);
-
-    const result = await service.getTodayBehaviors();
-
-    expect(randomInt).toHaveBeenCalledWith(3, 13);
-    expect(repository.createQueryBuilder).toHaveBeenCalledWith('behavior');
-    expect(queryBuilder.leftJoinAndSelect).toHaveBeenCalledWith('behavior.goal', 'goal');
-    expect(queryBuilder.orderBy).toHaveBeenCalledWith('RANDOM()');
-    expect(queryBuilder.limit).toHaveBeenCalledWith(4);
-
-    expect(result).toEqual([
-      {
-        id: 'b1',
-        title: '물 1컵 마시기',
-        goalTitle: '건강한 생활',
-        goalColor: 'mint',
-        difficulty: '마음열기',
-        isChecked: false,
-        isRecommended: false,
-      },
-    ]);
   });
 
   it('today behavior 상태를 업데이트한다', async () => {
@@ -105,6 +75,125 @@ describe('BehaviorService', () => {
     await expect(
       service.updateTodayBehaviorStatus('tb-404', 'completed' as TodayBehaviorStatus),
     ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('getTodayBehaviors가 기존 오늘 행동이 있으면 매핑해서 반환한다', async () => {
+    const user = { id: 'user-1', nickname: '테스트유저' };
+    const existing = [
+      {
+        id: 'tb-1',
+        status: 'completed',
+        behavior: {
+          title: '물 1컵 마시기',
+          difficulty: '마음열기',
+          goal: { title: '건강한 생활', color: 'mint' },
+        },
+        user,
+      },
+    ] as TodayBehavior[];
+
+    const userRepository = { findOne: jest.fn().mockResolvedValue(user) };
+    const todayRepository = { find: jest.fn().mockResolvedValue(existing) };
+    const behaviorRepository = { find: jest.fn() };
+    const manager = {
+      getRepository: (entity: unknown) => {
+        if (entity === (Behavior as unknown)) return behaviorRepository;
+        if (entity === (TodayBehavior as unknown)) return todayRepository;
+        return userRepository;
+      },
+    };
+
+    dataSource.transaction.mockImplementation(async (work: (m: typeof manager) => unknown) =>
+      work(manager),
+    );
+
+    const result = await service.getTodayBehaviors();
+
+    expect(userRepository.findOne).toHaveBeenCalledWith({ where: { nickname: '테스트유저' } });
+    expect(todayRepository.find).toHaveBeenCalledWith({
+      where: {
+        date: expect.any(String),
+        user: { id: user.id },
+        status: Not(In(['skipped', 'ignored'])),
+      },
+      relations: { behavior: { goal: true }, user: true },
+    });
+    expect(behaviorRepository.find).not.toHaveBeenCalled();
+    expect(result).toEqual([
+      {
+        id: 'tb-1',
+        title: '물 1컵 마시기',
+        goalTitle: '건강한 생활',
+        goalColor: 'mint',
+        difficulty: '마음열기',
+        isChecked: true,
+        isRecommended: false,
+      },
+    ]);
+  });
+
+  it('getTodayBehaviors가 기존 오늘 행동이 없으면 추출 후 저장하고 반환한다', async () => {
+    const user = { id: 'user-1', nickname: '테스트유저' };
+    const behaviors = [
+      {
+        id: 'b-1',
+        title: '물 1컵 마시기',
+        difficulty: '마음열기',
+        goal: { title: '건강한 생활', color: 'mint' },
+      },
+    ] as Behavior[];
+
+    const todayRepository = {
+      find: jest.fn().mockResolvedValue([]),
+      create: jest.fn((value) => value),
+      save: jest.fn().mockResolvedValue([
+        {
+          id: 'b-1',
+          behavior: behaviors[0],
+        },
+      ]),
+    };
+    const userRepository = { findOne: jest.fn().mockResolvedValue(user) };
+    const behaviorRepository = { find: jest.fn().mockResolvedValue(behaviors) };
+    const manager = {
+      getRepository: (entity: unknown) => {
+        if (entity === (Behavior as unknown)) return behaviorRepository;
+        if (entity === (TodayBehavior as unknown)) return todayRepository;
+        return userRepository;
+      },
+    };
+
+    dataSource.transaction.mockImplementation(async (work: (m: typeof manager) => unknown) =>
+      work(manager),
+    );
+    const extractSpy = jest.spyOn(service, 'extractTodayBehaviors').mockReturnValue(behaviors);
+
+    const result = await service.getTodayBehaviors();
+
+    expect(userRepository.findOne).toHaveBeenCalledWith({ where: { nickname: '테스트유저' } });
+    expect(todayRepository.find).toHaveBeenCalledWith({
+      where: {
+        date: expect.any(String),
+        user: { id: user.id },
+        status: Not(In(['skipped', 'ignored'])),
+      },
+      relations: { behavior: { goal: true }, user: true },
+    });
+    expect(behaviorRepository.find).toHaveBeenCalledWith({ relations: { goal: true } });
+    expect(extractSpy).toHaveBeenCalledWith(behaviors);
+    expect(todayRepository.save).toHaveBeenCalledTimes(1);
+    expect(result).toEqual([
+      {
+        id: 'b-1',
+        title: '물 1컵 마시기',
+        goalTitle: '건강한 생활',
+        goalColor: 'mint',
+        difficulty: '마음열기',
+        isChecked: false,
+        isRecommended: false,
+      },
+    ]);
+    extractSpy.mockRestore();
   });
 
   describe('extractTodayBehaviors', () => {

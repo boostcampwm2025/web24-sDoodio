@@ -1,7 +1,7 @@
 import { GetAllBehaviorsResponseSchema, type Behavior } from '@web24/shared';
 
 export async function fetchAllBehaviors(): Promise<Behavior[]> {
-  const res = await fetch('/api/behavior/all', {
+  const res = await fetch('/api/behaviors/all', {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

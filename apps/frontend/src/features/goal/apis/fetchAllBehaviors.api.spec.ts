@@ -24,7 +24,7 @@ describe('fetchAllBehaviors', () => {
 
     const result = await fetchAllBehaviors();
 
-    expect(fetch).toHaveBeenCalledWith('/api/behavior/all', {
+    expect(fetch).toHaveBeenCalledWith('/api/behaviors/all', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

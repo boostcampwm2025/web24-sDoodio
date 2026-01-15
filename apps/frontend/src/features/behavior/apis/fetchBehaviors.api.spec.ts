@@ -41,7 +41,7 @@ describe('fetchTodayBehaviors', () => {
 
     const result = await fetchTodayBehaviors();
     expect(result).toEqual(mockBehaviors);
-    expect(fetch).toHaveBeenCalledWith('/api/behavior', expect.any(Object));
+    expect(fetch).toHaveBeenCalledWith('/api/today-behaviors', expect.any(Object));
   });
 
   it('throws error on fetch failure', async () => {

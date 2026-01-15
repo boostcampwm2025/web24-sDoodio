@@ -36,10 +36,11 @@ export function registerBehaviorApi(registry: OpenAPIRegistry) {
 
   registry.registerPath({
     method: 'get',
-    path: '/behavior',
+    path: '/today-behaviors',
     responses: {
       200: {
-        description: "Today's behaviors",
+        description:
+          '해당 날짜(새벽 4시 기준으로 변경)에 pending, completed 된 오늘 행동이 없으면 생성하고 반환, 있으면 기존 오늘 행동을 반환',
         content: {
           'application/json': {
             schema: getTodayBehaviorsResponse,
