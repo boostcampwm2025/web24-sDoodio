@@ -11,7 +11,7 @@ import { User } from '../user/user.entity';
 
 @Entity({ name: 'today_behaviors' })
 export class TodayBehavior extends BaseIdCreatedUpdatedDeletedEntity {
-  @ManyToOne(() => Behavior, {
+  @ManyToOne(() => Behavior, (behavior) => behavior.todayBehaviors, {
     createForeignKeyConstraints: false,
   })
   @JoinColumn({ name: 'behaviorId' })

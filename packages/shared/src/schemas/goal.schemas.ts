@@ -62,40 +62,10 @@ export const GetGoalsResponseSchema = z.array(GetGoalSummarySchema);
 export type GetGoalSummary = z.infer<typeof GetGoalSummarySchema>;
 export type GetGoalsResponse = z.infer<typeof GetGoalsResponseSchema>;
 
-// Uncaught (in promise) ZodError: [
-//   {
-//     "origin": "string",
-//     "code": "invalid_format",
-//     "format": "uuid",
-//     "pattern": "/^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$/",
-//     "path": [
-//       0,
-//       "id"
-//     ],
-//     "message": "Invalid UUID"
-//   },
-//   {
-//     "origin": "string",
-//     "code": "invalid_format",
-//     "format": "uuid",
-//     "pattern": "/^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$/",
-//     "path": [
-//       1,
-//       "id"
-//     ],
-//     "message": "Invalid UUID"
-//   },
-//   {
-//     "origin": "string",
-//     "code": "invalid_format",
-//     "format": "uuid",
-//     "pattern": "/^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$/",
-//     "path": [
-//       2,
-//       "id"
-//     ],
-//     "message": "Invalid UUID"
-//   }
-// ]
-//     at fetchGoals (fetchGoals.api.ts:16:33)
-//     at async Promise.all (:5173/index 1)
+export const GoalStampSchema = z.object({
+  id: z.uuid({ version: 'v7' }),
+  difficulty: z.enum(BEHAVIOR_DIFFICULTIES),
+});
+
+export const GetGoalStampsResponseSchema = z.array(GoalStampSchema);
+export type GetGoalStampsResponse = z.infer<typeof GetGoalStampsResponseSchema>;

@@ -1,3 +1,5 @@
+import { BehaviorDifficulty } from './behavior.types';
+
 export const GOAL_COLORS = [
   'light-pink',
   'pink',
@@ -21,4 +23,9 @@ export interface Goal {
 
 export interface GoalSummary extends Goal {
   behaviorCount: number;
+}
+
+export interface GoalStamp {
+  id: string;
+  difficulty: BehaviorDifficulty;
 }
