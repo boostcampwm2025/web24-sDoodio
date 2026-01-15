@@ -24,6 +24,7 @@ import { AIModule } from './features/ai/ai.module';
         DB_USER: Joi.string().required(),
         DB_PASS: Joi.string().required(),
         DB_NAME: Joi.string().required(),
+        CLOVA_API_KEY: Joi.string().required(),
       }),
     }),
     TypeOrmModule.forRootAsync({
