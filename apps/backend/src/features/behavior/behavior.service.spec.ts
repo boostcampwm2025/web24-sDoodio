@@ -6,6 +6,8 @@ import { TodayBehaviorStatus } from '@web24/shared';
 import { BehaviorService } from './behavior.service';
 import { Behavior } from './behavior.entity';
 import { TodayBehavior } from './today-behavior.entity';
+import { AIBehavior } from './ai-behavior.entity';
+import { AIService } from '../ai/ai.service';
 
 jest.mock('crypto', () => ({ randomInt: jest.fn() }));
 
@@ -16,6 +18,8 @@ describe('BehaviorService', () => {
     find: jest.Mock;
   };
   let todayBehaviorRepository: { update: jest.Mock };
+  let aiBehaviorRepository: { find: jest.Mock };
+  let aiService: { createAIBehaviors: jest.Mock };
   let dataSource: { transaction: jest.Mock };
   let queryBuilder: {
     leftJoinAndSelect: jest.Mock;
@@ -36,6 +40,8 @@ describe('BehaviorService', () => {
       find: jest.fn(),
     };
     todayBehaviorRepository = { update: jest.fn() };
+    aiBehaviorRepository = { find: jest.fn() };
+    aiService = { createAIBehaviors: jest.fn() };
     dataSource = { transaction: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -43,7 +49,9 @@ describe('BehaviorService', () => {
         BehaviorService,
         { provide: getRepositoryToken(Behavior), useValue: repository },
         { provide: getRepositoryToken(TodayBehavior), useValue: todayBehaviorRepository },
+        { provide: getRepositoryToken(AIBehavior), useValue: aiBehaviorRepository },
         { provide: getDataSourceToken(), useValue: dataSource },
+        { provide: AIService, useValue: aiService },
       ],
     }).compile();
 

@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Between, DataSource, In, Not, Repository } from 'typeorm';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { BEHAVIOR_DIFFICULTIES, TodayBehaviorStatus } from '@web24/shared';
+import { AIBehaviorStatus, BEHAVIOR_DIFFICULTIES, TodayBehaviorStatus } from '@web24/shared';
 import { getKstDayKey } from '../../common/utils/time.utils';
 import { Behavior } from './behavior.entity';
 import { TodayBehavior } from './today-behavior.entity';
@@ -17,6 +17,8 @@ export class BehaviorService {
     private readonly behaviorRepository: Repository<Behavior>,
     @InjectRepository(TodayBehavior)
     private readonly todayBehaviorRepository: Repository<TodayBehavior>,
+    @InjectRepository(AIBehavior)
+    private readonly aiBehaviorRepository: Repository<AIBehavior>,
     @InjectDataSource()
     private readonly dataSource: DataSource,
     private readonly aiService: AIService,
@@ -259,5 +261,13 @@ export class BehaviorService {
         isRecommended: true,
       }));
     });
+  }
+
+  async updateAIBehaviorStatus(id: string, status: AIBehaviorStatus) {
+    const result = await this.aiBehaviorRepository.update({ id }, { status });
+    if (result.affected === 0) {
+      throw new NotFoundException('AIBehavior not found');
+    }
+    return { id, status };
   }
 }

@@ -1,6 +1,9 @@
 import { Get, Body, Controller, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
 import {
   type GetAIBehaviorResponse,
+  type PatchAIBehaviorStatusRequest,
+  PatchAIBehaviorStatusRequestSchema,
+  PatchAIBehaviorStatusResponse,
   type PatchTodayBehaviorStatusRequest,
   PatchTodayBehaviorStatusRequestSchema,
   PatchTodayBehaviorStatusResponse,
@@ -26,6 +29,15 @@ export class TodayBehaviorController {
   @Post('/ai')
   async createAIBehaviors(): Promise<PostAIBehaviorResponse> {
     return this.behaviorService.createAIBhaviors();
+  }
+
+  @Patch('/ai/:id/status')
+  async updateAIBehaviorStatus(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body(new ZodValidationPipe(PatchAIBehaviorStatusRequestSchema))
+    body: PatchAIBehaviorStatusRequest,
+  ): Promise<PatchAIBehaviorStatusResponse> {
+    return this.behaviorService.updateAIBehaviorStatus(id, body.status);
   }
 
   @Patch(':id/status')

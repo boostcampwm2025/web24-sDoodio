@@ -1,4 +1,5 @@
 import {
+  AI_BEHAVIOR_STATUS,
   BEHAVIOR_DIFFICULTIES,
   TODAY_BEHAVIOR_STATUS,
   type Behavior,
@@ -54,3 +55,14 @@ export type GetAIBehaviorResponse = z.infer<typeof GetAIBehaviorResponseSchema>;
 
 export const PostAIBehaviorResponseSchema = z.array(AIBehaviorSchema);
 export type PostAIBehaviorResponse = z.infer<typeof PostAIBehaviorResponseSchema>;
+
+export const PatchAIBehaviorStatusRequestSchema = z.object({
+  status: z.enum(AI_BEHAVIOR_STATUS),
+});
+export type PatchAIBehaviorStatusRequest = z.infer<typeof PatchAIBehaviorStatusRequestSchema>;
+
+export const PatchAIBehaviorStatusResponseSchema = z.object({
+  id: z.uuid({ version: 'v7' }),
+  status: z.enum(AI_BEHAVIOR_STATUS),
+});
+export type PatchAIBehaviorStatusResponse = z.infer<typeof PatchAIBehaviorStatusResponseSchema>;
