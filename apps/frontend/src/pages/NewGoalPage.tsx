@@ -6,9 +6,10 @@ import { DODO_LINES } from '@/features/goal/constants/dodo';
 import { useGoalTemplates } from '@/features/goal/hooks/useGoalTemplates';
 import { TemplateSelection } from '@/features/goal/components/TemplateSelection';
 import { BehaviorSelection, type BehaviorItem } from '@/features/goal/components/BehaviorSelection';
-import { createGoal } from '@/features/goal/apis/createGoal.api';
 import { NewGoal } from '@/features/goal/components/NewGoal';
+import { createGoal } from '@/features/goal/apis/createGoal.api';
 import { v7 } from 'uuid';
+import { toast } from 'react-toastify';
 
 export function NewGoalPage() {
   const navigate = useNavigate();
@@ -183,6 +184,13 @@ export function NewGoalPage() {
   const handleSkip = () => {};
 
   const handleComplete = async () => {
+    const isDemoBlocked = import.meta.env.VITE_DEMO_LOCK_CREATE_GOAL === 'true';
+    if (isDemoBlocked) {
+      toast('구현중입니다.');
+      navigate('/', { replace: true });
+      return;
+    }
+
     const buildBehaviors = (difficulty: BehaviorDifficulty, behaviors: BehaviorItem[]) =>
       behaviors
         .map((behavior) => ({
