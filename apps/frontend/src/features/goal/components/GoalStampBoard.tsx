@@ -63,7 +63,7 @@ export function GoalStampBoard({ stamps }: GoalStampBoardProps) {
   }, [stamps.length]);
 
   return (
-    <div className="bg-bg-light border-primary-strong scrollbar-pretty grid max-h-[60vh] min-h-[45vh] w-full grid-cols-[repeat(auto-fill,minmax(56px,1fr))] gap-2 overflow-y-scroll rounded-2xl p-4">
+    <div className="bg-bg-light border-primary-strong scrollbar-pretty grid max-h-[60vh] min-h-[45vh] w-full auto-rows-min grid-cols-[repeat(auto-fill,minmax(56px,1fr))] gap-2 overflow-y-scroll rounded-2xl p-4">
       {stamps.map((stamp, index) => (
         <Stamp
           key={stamp.id}
