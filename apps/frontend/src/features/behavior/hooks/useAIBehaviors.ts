@@ -1,5 +1,5 @@
 import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { fetchAIBehaviors } from '../apis/fetchAIBehaviors.api';
 import { createAIBehaviors } from '../apis/createAIBehaviors.api';
 
@@ -9,7 +9,12 @@ export function useAIBehaviors() {
   const [isMaking, setIsMaking] = useState(false);
   const [isError, setIsError] = useState<Error | null>(null);
 
+  const isRequested = useRef(false);
+
   useEffect(() => {
+    if (isRequested.current) return;
+    isRequested.current = true;
+
     setIsLoading(true);
 
     const getAIBehaviors = async () => {
