@@ -4,6 +4,7 @@ import { DifficultyBadge } from '@/shared/components/behavior/DifficultyBadge';
 import { useGoalBehaviors } from '../hooks/useGoalBehaviors';
 
 type DifficultyFilter = 'ALL' | BehaviorDifficulty;
+const VISIBLE_DIFFICULTIES = BEHAVIOR_DIFFICULTIES.filter((difficulty) => difficulty !== 'AI');
 
 interface GoalBehaviorListProps {
   goalId: string;
@@ -49,7 +50,7 @@ export function GoalBehaviorList({ goalId }: GoalBehaviorListProps) {
         >
           전체 {behaviors?.length ?? 0}
         </button>
-        {BEHAVIOR_DIFFICULTIES.map((difficulty) => (
+        {VISIBLE_DIFFICULTIES.map((difficulty) => (
           <DifficultyBadge
             key={difficulty}
             level={difficulty}
