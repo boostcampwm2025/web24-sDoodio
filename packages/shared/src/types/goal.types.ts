@@ -15,10 +15,6 @@ export const GOAL_COLORS = [
 
 export type GoalColor = (typeof GOAL_COLORS)[number];
 
-export const GOAL_STAMP_SOURCES = ['today', 'ai'] as const;
-
-export type GoalStampSource = (typeof GOAL_STAMP_SOURCES)[number];
-
 export interface Goal {
   id: string;
   title: string;
@@ -33,5 +29,5 @@ export interface GoalStamp {
   id: string;
   title: string;
   difficulty: BehaviorDifficulty;
-  source: GoalStampSource;
+  updatedAt: string;
 }

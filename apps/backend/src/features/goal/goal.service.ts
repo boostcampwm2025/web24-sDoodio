@@ -112,14 +112,14 @@ export class GoalService {
       id: todayBehavior.id,
       title: todayBehavior.behavior.title,
       difficulty: todayBehavior.behavior.difficulty,
-      source: 'today',
+      updatedAt: todayBehavior.updatedAt.toISOString(),
     }));
 
     const aiStamps: GoalStamp[] = aiBehaviors.map((aiBehavior) => ({
       id: aiBehavior.id,
       title: aiBehavior.title,
       difficulty: 'AI',
-      source: 'ai',
+      updatedAt: aiBehavior.updatedAt.toISOString(),
     }));
 
     return [...todayStamps, ...aiStamps];

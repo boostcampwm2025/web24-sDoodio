@@ -121,16 +121,28 @@ describe('GoalService', () => {
           id: 'tb1',
           status: 'completed',
           behavior: { id: 'b1', title: '행동 1', difficulty: '몰입하기' },
+          updatedAt: new Date('2024-01-01T00:00:00.000Z'),
         },
         {
           id: 'tb3',
           status: 'completed',
           behavior: { id: 'b2', title: '행동 2', difficulty: '시작하기' },
+          updatedAt: new Date('2024-01-02T00:00:00.000Z'),
         },
       ];
       const aiBehaviors = [
-        { id: 'ai1', status: 'completed', title: 'AI 행동 1' },
-        { id: 'ai2', status: 'completed', title: 'AI 행동 2' },
+        {
+          id: 'ai1',
+          status: 'completed',
+          title: 'AI 행동 1',
+          updatedAt: new Date('2024-01-03T00:00:00.000Z'),
+        },
+        {
+          id: 'ai2',
+          status: 'completed',
+          title: 'AI 행동 2',
+          updatedAt: new Date('2024-01-04T00:00:00.000Z'),
+        },
       ];
 
       const todayBehaviorRepository = {
@@ -143,10 +155,30 @@ describe('GoalService', () => {
       const { service } = await createService({ todayBehaviorRepository, aiBehaviorRepository });
 
       await expect(service.getGoalStamps('goal-abc')).resolves.toEqual([
-        { id: 'tb1', title: '행동 1', difficulty: '몰입하기', source: 'today' },
-        { id: 'tb3', title: '행동 2', difficulty: '시작하기', source: 'today' },
-        { id: 'ai1', title: 'AI 행동 1', difficulty: 'AI', source: 'ai' },
-        { id: 'ai2', title: 'AI 행동 2', difficulty: 'AI', source: 'ai' },
+        {
+          id: 'tb1',
+          title: '행동 1',
+          difficulty: '몰입하기',
+          updatedAt: '2024-01-01T00:00:00.000Z',
+        },
+        {
+          id: 'tb3',
+          title: '행동 2',
+          difficulty: '시작하기',
+          updatedAt: '2024-01-02T00:00:00.000Z',
+        },
+        {
+          id: 'ai1',
+          title: 'AI 행동 1',
+          difficulty: 'AI',
+          updatedAt: '2024-01-03T00:00:00.000Z',
+        },
+        {
+          id: 'ai2',
+          title: 'AI 행동 2',
+          difficulty: 'AI',
+          updatedAt: '2024-01-04T00:00:00.000Z',
+        },
       ]);
 
       expect(todayBehaviorRepository.find).toHaveBeenCalledWith({

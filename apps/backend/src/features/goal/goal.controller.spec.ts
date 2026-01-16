@@ -65,8 +65,18 @@ describe('GoalController', () => {
 
   it('id로 목표 스탬프 목록을 반환한다', async () => {
     const mockStamps = [
-      { id: 's1', title: '행동 1', difficulty: '몰입하기', source: 'today' },
-      { id: 's2', title: 'AI 행동', difficulty: 'AI', source: 'ai' },
+      {
+        id: 's1',
+        title: '행동 1',
+        difficulty: '몰입하기',
+        updatedAt: '2024-01-01T00:00:00.000Z',
+      },
+      {
+        id: 's2',
+        title: 'AI 행동',
+        difficulty: 'AI',
+        updatedAt: '2024-01-02T00:00:00.000Z',
+      },
     ];
 
     goalService.getGoalStamps.mockResolvedValue(mockStamps);

@@ -13,5 +13,7 @@ export async function fetchGoalStamps(goalId: string): Promise<GetGoalStampsResp
   }
 
   const json = await res.json();
-  return GetGoalStampsResponseSchema.parse(json);
+  const stamps = GetGoalStampsResponseSchema.parse(json);
+  // updatedAt 기준 최신순(내림차순) 정렬
+  return [...stamps].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }

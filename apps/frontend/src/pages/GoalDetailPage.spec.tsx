@@ -70,8 +70,18 @@ describe('GoalDetailPage', () => {
 
   it('가져온 스탬프 개수를 표시한다', async () => {
     (fetchGoalStamps as any).mockResolvedValueOnce([
-      { id: 's1', title: '행동 1', difficulty: '몰입하기', source: 'today' },
-      { id: 's2', title: 'AI 행동', difficulty: 'AI', source: 'ai' },
+      {
+        id: 's1',
+        title: '행동 1',
+        difficulty: '몰입하기',
+        updatedAt: '2024-01-01T00:00:00.000Z',
+      },
+      {
+        id: 's2',
+        title: 'AI 행동',
+        difficulty: 'AI',
+        updatedAt: '2024-01-02T00:00:00.000Z',
+      },
     ]);
 
     renderPage();
@@ -85,9 +95,24 @@ describe('GoalDetailPage', () => {
 
   it('GoalStampBoard에 stamps를 전달한다', async () => {
     (fetchGoalStamps as any).mockResolvedValueOnce([
-      { id: 's1', title: '행동 1', difficulty: '시작하기', source: 'today' },
-      { id: 's2', title: '행동 2', difficulty: '몰입하기', source: 'today' },
-      { id: 's3', title: '행동 3', difficulty: '이어가기', source: 'today' },
+      {
+        id: 's1',
+        title: '행동 1',
+        difficulty: '시작하기',
+        updatedAt: '2024-01-01T00:00:00.000Z',
+      },
+      {
+        id: 's2',
+        title: '행동 2',
+        difficulty: '몰입하기',
+        updatedAt: '2024-01-02T00:00:00.000Z',
+      },
+      {
+        id: 's3',
+        title: '행동 3',
+        difficulty: '이어가기',
+        updatedAt: '2024-01-03T00:00:00.000Z',
+      },
     ]);
 
     renderPage();

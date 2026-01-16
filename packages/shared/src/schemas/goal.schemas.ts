@@ -1,7 +1,7 @@
 import { BEHAVIOR_TITLE_MAX_LENGTH } from '../constants/behavior.constants';
 import { GOAL_TITLE_MAX_LENGTH } from '../constants/goal.constants';
 import { BEHAVIOR_DIFFICULTIES } from '../types/behavior.types';
-import { GOAL_COLORS, GOAL_STAMP_SOURCES } from '../types/goal.types';
+import { GOAL_COLORS } from '../types/goal.types';
 import { z } from '../zod';
 
 export const GoalTemplateLevelSchema = z.object({
@@ -75,7 +75,7 @@ export const GoalStampSchema = z.object({
   id: z.uuid({ version: 'v7' }),
   title: z.string().min(1),
   difficulty: z.enum(BEHAVIOR_DIFFICULTIES),
-  source: z.enum(GOAL_STAMP_SOURCES),
+  updatedAt: z.iso.datetime(),
 });
 
 export const GetGoalStampsResponseSchema = z.array(GoalStampSchema);
