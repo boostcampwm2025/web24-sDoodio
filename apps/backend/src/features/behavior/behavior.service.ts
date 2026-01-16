@@ -200,6 +200,23 @@ export class BehaviorService {
         throw new NotFoundException('User not found');
       }
 
+      const existingAIBehaviors = await manager.getRepository(AIBehavior).find({
+        where: { date: nowDate, user: { id: user.id } },
+        relations: { goal: true },
+      });
+
+      if (existingAIBehaviors.length > 0) {
+        return existingAIBehaviors.map((b) => ({
+          id: b.id,
+          title: b.title,
+          goalTitle: b.goal.title,
+          goalColor: b.goal.color,
+          difficulty: BEHAVIOR_DIFFICULTIES[4],
+          isChecked: b.status === 'completed',
+          isRecommended: true,
+        }));
+      }
+
       const weekTodayBehaviors = await manager.getRepository(TodayBehavior).find({
         where: { date: Between(weekBeforeDate, nowDate), user: { id: user.id } },
         relations: { behavior: { goal: true } },
