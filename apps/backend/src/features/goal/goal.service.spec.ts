@@ -306,39 +306,24 @@ describe('GoalService', () => {
   });
 
   describe('getGoalBehaviors', () => {
-    it('목표의 행동과 AI 행동 목록을 반환한다', async () => {
+    it('목표의 행동 목록을 반환한다', async () => {
       const goalId = 'goal-1';
       const behaviors = [
-        { id: 'b1', title: 'b1', difficulty: '몰입하기' },
-        { id: 'b2', title: 'b2', difficulty: '시작하기' },
+        { id: 'b1', title: 'b1', difficulty: 'easy' },
+        { id: 'b2', title: 'b2', difficulty: 'hard' },
       ];
       const goal = { id: goalId, behaviors };
-      const aiBehaviors = [
-        { id: 'ai-1', title: 'ai 1' },
-        { id: 'ai-2', title: 'ai 2' },
-      ];
 
       const goalRepository = {
         findOne: jest.fn().mockResolvedValue(goal),
       };
-      const aiBehaviorRepository = {
-        find: jest.fn().mockResolvedValue(aiBehaviors),
-      };
 
-      const { service } = await createService({ goalRepository, aiBehaviorRepository });
+      const { service } = await createService({ goalRepository });
 
-      await expect(service.getGoalBehaviors(goalId)).resolves.toEqual([
-        { id: 'b1', goalId, title: 'b1', difficulty: '몰입하기' },
-        { id: 'b2', goalId, title: 'b2', difficulty: '시작하기' },
-        { id: 'ai-1', goalId, title: 'ai 1', difficulty: 'AI' },
-        { id: 'ai-2', goalId, title: 'ai 2', difficulty: 'AI' },
-      ]);
+      await expect(service.getGoalBehaviors(goalId)).resolves.toEqual(behaviors);
       expect(goalRepository.findOne).toHaveBeenCalledWith({
         where: { id: goalId },
         relations: ['behaviors'],
-      });
-      expect(aiBehaviorRepository.find).toHaveBeenCalledWith({
-        where: { goal: { id: goalId } },
       });
     });
 
