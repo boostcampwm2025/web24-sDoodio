@@ -1,4 +1,5 @@
 import {
+  AI_BEHAVIOR_STATUS,
   BEHAVIOR_DIFFICULTIES,
   TODAY_BEHAVIOR_STATUS,
   type Behavior,
@@ -15,6 +16,8 @@ export const TodayBehaviorSchema = z.object({
   isChecked: z.boolean(),
   isRecommended: z.boolean(),
 });
+
+export const AIBehaviorSchema = TodayBehaviorSchema;
 
 export type TodayBehavior = z.infer<typeof TodayBehaviorSchema>;
 
@@ -44,5 +47,22 @@ export const PatchTodayBehaviorStatusResponseSchema = z.object({
   status: z.enum(TODAY_BEHAVIOR_STATUS),
 });
 export type PatchTodayBehaviorStatusResponse = z.infer<
-  typeof PatchTodayBehaviorStatusRequestSchema
+  typeof PatchTodayBehaviorStatusResponseSchema
 >;
+
+export const GetAIBehaviorResponseSchema = z.array(AIBehaviorSchema);
+export type GetAIBehaviorResponse = z.infer<typeof GetAIBehaviorResponseSchema>;
+
+export const PostAIBehaviorResponseSchema = z.array(AIBehaviorSchema);
+export type PostAIBehaviorResponse = z.infer<typeof PostAIBehaviorResponseSchema>;
+
+export const PatchAIBehaviorStatusRequestSchema = z.object({
+  status: z.enum(AI_BEHAVIOR_STATUS),
+});
+export type PatchAIBehaviorStatusRequest = z.infer<typeof PatchAIBehaviorStatusRequestSchema>;
+
+export const PatchAIBehaviorStatusResponseSchema = z.object({
+  id: z.uuid({ version: 'v7' }),
+  status: z.enum(AI_BEHAVIOR_STATUS),
+});
+export type PatchAIBehaviorStatusResponse = z.infer<typeof PatchAIBehaviorStatusResponseSchema>;

@@ -7,6 +7,7 @@ import { TodayBehavior } from '../behavior/today-behavior.entity';
 import { Behavior } from '../behavior/behavior.entity';
 import { Goal } from './goal.entity';
 import { User } from '../user/user.entity';
+import { AIBehavior } from '../behavior/ai-behavior.entity';
 
 describe('GoalService', () => {
   type TransactionManager = {
@@ -17,11 +18,13 @@ describe('GoalService', () => {
     goalRepository: goalRepositoryOverride,
     behaviorRepository: behaviorRepositoryOverride,
     todayBehaviorRepository: todayBehaviorRepositoryOverride,
+    aiBehaviorRepository: aiBehaviorRepositoryOverride,
     userRepository: userRepositoryOverride,
   }: {
     goalRepository?: Record<string, unknown>;
     behaviorRepository?: Record<string, unknown>;
     todayBehaviorRepository?: Record<string, unknown>;
+    aiBehaviorRepository?: Record<string, unknown>;
     userRepository?: Record<string, unknown>;
   } = {}) => {
     const goalRepository = {
@@ -42,6 +45,10 @@ describe('GoalService', () => {
       find: jest.fn(),
       ...todayBehaviorRepositoryOverride,
     };
+    const aiBehaviorRepository = {
+      find: jest.fn(),
+      ...aiBehaviorRepositoryOverride,
+    };
     const userRepository = {
       findOne: jest.fn(),
       ...userRepositoryOverride,
@@ -53,6 +60,7 @@ describe('GoalService', () => {
         { provide: getRepositoryToken(Goal), useValue: goalRepository },
         { provide: getRepositoryToken(Behavior), useValue: behaviorRepository },
         { provide: getRepositoryToken(TodayBehavior), useValue: todayBehaviorRepository },
+        { provide: getRepositoryToken(AIBehavior), useValue: aiBehaviorRepository },
         { provide: getRepositoryToken(User), useValue: userRepository },
       ],
     }).compile();
@@ -62,6 +70,7 @@ describe('GoalService', () => {
       goalRepository,
       behaviorRepository,
       todayBehaviorRepository,
+      aiBehaviorRepository,
       userRepository,
     };
   };
@@ -106,19 +115,71 @@ describe('GoalService', () => {
   });
 
   describe('getGoalStamps', () => {
-    it('goalId로 완료된 TodayBehavior 목록만 반환한다', async () => {
+    it('goalId로 완료된 TodayBehavior와 AIBehavior 목록을 반환한다', async () => {
       const todayBehaviors = [
-        { id: 'tb1', status: 'completed', behavior: { id: 'b1' } },
-        { id: 'tb3', status: 'completed', behavior: { id: 'b2' } },
+        {
+          id: 'tb1',
+          status: 'completed',
+          behavior: { id: 'b1', title: '행동 1', difficulty: '몰입하기' },
+          updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        },
+        {
+          id: 'tb3',
+          status: 'completed',
+          behavior: { id: 'b2', title: '행동 2', difficulty: '시작하기' },
+          updatedAt: new Date('2024-01-02T00:00:00.000Z'),
+        },
+      ];
+      const aiBehaviors = [
+        {
+          id: 'ai1',
+          status: 'completed',
+          title: 'AI 행동 1',
+          updatedAt: new Date('2024-01-03T00:00:00.000Z'),
+        },
+        {
+          id: 'ai2',
+          status: 'completed',
+          title: 'AI 행동 2',
+          updatedAt: new Date('2024-01-04T00:00:00.000Z'),
+        },
       ];
 
       const todayBehaviorRepository = {
         find: jest.fn().mockResolvedValue(todayBehaviors),
       };
+      const aiBehaviorRepository = {
+        find: jest.fn().mockResolvedValue(aiBehaviors),
+      };
 
-      const { service } = await createService({ todayBehaviorRepository });
+      const { service } = await createService({ todayBehaviorRepository, aiBehaviorRepository });
 
-      await expect(service.getGoalStamps('goal-abc')).resolves.toEqual(todayBehaviors);
+      await expect(service.getGoalStamps('goal-abc')).resolves.toEqual([
+        {
+          id: 'tb1',
+          title: '행동 1',
+          difficulty: '몰입하기',
+          updatedAt: '2024-01-01T00:00:00.000Z',
+        },
+        {
+          id: 'tb3',
+          title: '행동 2',
+          difficulty: '시작하기',
+          updatedAt: '2024-01-02T00:00:00.000Z',
+        },
+        {
+          id: 'ai1',
+          title: 'AI 행동 1',
+          difficulty: 'AI',
+          updatedAt: '2024-01-03T00:00:00.000Z',
+        },
+        {
+          id: 'ai2',
+          title: 'AI 행동 2',
+          difficulty: 'AI',
+          updatedAt: '2024-01-04T00:00:00.000Z',
+        },
+      ]);
 
       expect(todayBehaviorRepository.find).toHaveBeenCalledWith({
         where: {
@@ -128,6 +189,12 @@ describe('GoalService', () => {
           status: 'completed',
         },
         relations: ['behavior'],
+      });
+      expect(aiBehaviorRepository.find).toHaveBeenCalledWith({
+        where: {
+          goal: { id: 'goal-abc' },
+          status: 'completed',
+        },
       });
     });
   });
@@ -239,24 +306,39 @@ describe('GoalService', () => {
   });
 
   describe('getGoalBehaviors', () => {
-    it('목표의 행동 목록을 반환한다', async () => {
+    it('목표의 행동과 AI 행동 목록을 반환한다', async () => {
       const goalId = 'goal-1';
       const behaviors = [
-        { id: 'b1', title: 'b1', difficulty: 'easy' },
-        { id: 'b2', title: 'b2', difficulty: 'hard' },
+        { id: 'b1', title: 'b1', difficulty: '몰입하기' },
+        { id: 'b2', title: 'b2', difficulty: '시작하기' },
       ];
       const goal = { id: goalId, behaviors };
+      const aiBehaviors = [
+        { id: 'ai-1', title: 'ai 1' },
+        { id: 'ai-2', title: 'ai 2' },
+      ];
 
       const goalRepository = {
         findOne: jest.fn().mockResolvedValue(goal),
       };
+      const aiBehaviorRepository = {
+        find: jest.fn().mockResolvedValue(aiBehaviors),
+      };
 
-      const { service } = await createService({ goalRepository });
+      const { service } = await createService({ goalRepository, aiBehaviorRepository });
 
-      await expect(service.getGoalBehaviors(goalId)).resolves.toEqual(behaviors);
+      await expect(service.getGoalBehaviors(goalId)).resolves.toEqual([
+        { id: 'b1', goalId, title: 'b1', difficulty: '몰입하기' },
+        { id: 'b2', goalId, title: 'b2', difficulty: '시작하기' },
+        { id: 'ai-1', goalId, title: 'ai 1', difficulty: 'AI' },
+        { id: 'ai-2', goalId, title: 'ai 2', difficulty: 'AI' },
+      ]);
       expect(goalRepository.findOne).toHaveBeenCalledWith({
         where: { id: goalId },
         relations: ['behaviors'],
+      });
+      expect(aiBehaviorRepository.find).toHaveBeenCalledWith({
+        where: { goal: { id: goalId } },
       });
     });
 

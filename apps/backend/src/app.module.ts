@@ -9,6 +9,7 @@ import { AppService } from './app.service';
 import { User } from './features/user/user.entity';
 import { GoalModule } from './features/goal/goal.module';
 import { BehaviorModule } from './features/behavior/behavior.module';
+import { AIModule } from './features/ai/ai.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { BehaviorModule } from './features/behavior/behavior.module';
         DB_USER: Joi.string().required(),
         DB_PASS: Joi.string().required(),
         DB_NAME: Joi.string().required(),
+        CLOVA_API_KEY: Joi.string().required(),
       }),
     }),
     TypeOrmModule.forRootAsync({
@@ -45,6 +47,7 @@ import { BehaviorModule } from './features/behavior/behavior.module';
     TypeOrmModule.forFeature([AppEntitySample, User]),
     GoalModule,
     BehaviorModule,
+    AIModule,
   ],
   controllers: [AppController],
   providers: [AppService],

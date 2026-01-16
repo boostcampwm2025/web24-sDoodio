@@ -4,12 +4,15 @@ import {
   CreateGoalResponseSchema,
   type CreateGoalRequest,
   type CreateGoalResponse,
+  type Behavior as BehaviorResponse,
+  type GoalStamp,
 } from '@web24/shared';
 import { Repository } from 'typeorm';
-import { Behavior } from '../behavior/behavior.entity';
+import { Behavior as BehaviorEntity } from '../behavior/behavior.entity';
 import { User } from '../user/user.entity';
 import { Goal } from './goal.entity';
 import { TodayBehavior } from '../behavior/today-behavior.entity';
+import { AIBehavior } from '../behavior/ai-behavior.entity';
 
 @Injectable()
 export class GoalService {
@@ -18,6 +21,8 @@ export class GoalService {
     private readonly goalRepository: Repository<Goal>,
     @InjectRepository(TodayBehavior)
     private readonly todayBehaviorRepository: Repository<TodayBehavior>,
+    @InjectRepository(AIBehavior)
+    private readonly aiBehaviorRepository: Repository<AIBehavior>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
   ) {}
@@ -53,7 +58,7 @@ export class GoalService {
     return goal;
   }
 
-  async getGoalBehaviors(goalId: string): Promise<Behavior[]> {
+  async getGoalBehaviors(goalId: string): Promise<BehaviorResponse[]> {
     const goal = await this.goalRepository.findOne({
       where: { id: goalId },
       relations: ['behaviors'],
@@ -63,19 +68,61 @@ export class GoalService {
       throw new NotFoundException('Goal not found');
     }
 
-    return goal.behaviors || [];
+    const behaviors: BehaviorResponse[] = (goal.behaviors || []).map((behavior) => ({
+      id: behavior.id,
+      goalId,
+      title: behavior.title,
+      difficulty: behavior.difficulty,
+    }));
+
+    const aiBehaviors = await this.aiBehaviorRepository.find({
+      where: { goal: { id: goalId } },
+    });
+
+    const aiMapped: BehaviorResponse[] = aiBehaviors.map((behavior) => ({
+      id: behavior.id,
+      goalId,
+      title: behavior.title,
+      difficulty: 'AI',
+    }));
+
+    return [...behaviors, ...aiMapped];
   }
 
-  async getGoalStamps(goalId: string): Promise<TodayBehavior[]> {
-    return this.todayBehaviorRepository.find({
-      where: {
-        behavior: {
-          goal: { id: goalId },
+  async getGoalStamps(goalId: string): Promise<GoalStamp[]> {
+    const [todayBehaviors, aiBehaviors] = await Promise.all([
+      this.todayBehaviorRepository.find({
+        where: {
+          behavior: {
+            goal: { id: goalId },
+          },
+          status: 'completed',
         },
-        status: 'completed',
-      },
-      relations: ['behavior'],
-    });
+        relations: ['behavior'],
+      }),
+      this.aiBehaviorRepository.find({
+        where: {
+          goal: { id: goalId },
+          status: 'completed',
+        },
+      }),
+    ]);
+
+    const todayStamps: GoalStamp[] = todayBehaviors.map((todayBehavior) => ({
+      id: todayBehavior.id,
+      title: todayBehavior.behavior.title,
+      difficulty: todayBehavior.behavior.difficulty,
+      updatedAt: todayBehavior.updatedAt.toISOString(),
+    }));
+
+    const aiStamps: GoalStamp[] = aiBehaviors.map((aiBehavior) => ({
+      id: aiBehavior.id,
+      title: aiBehavior.title,
+      difficulty: 'AI',
+      updatedAt: aiBehavior.updatedAt.toISOString(),
+    }));
+
+    return [...todayStamps, ...aiStamps];
   }
 
   async createGoal(request: CreateGoalRequest): Promise<CreateGoalResponse> {
@@ -95,13 +142,13 @@ export class GoalService {
       const savedGoal = await manager.getRepository(Goal).save(goal);
 
       const behaviors = request.behaviors.map((behavior) =>
-        manager.getRepository(Behavior).create({
+        manager.getRepository(BehaviorEntity).create({
           title: behavior.title,
           difficulty: behavior.difficulty,
           goal: savedGoal,
         }),
       );
-      const savedBehaviors = await manager.getRepository(Behavior).save(behaviors);
+      const savedBehaviors = await manager.getRepository(BehaviorEntity).save(behaviors);
 
       return CreateGoalResponseSchema.parse({
         id: savedGoal.id,

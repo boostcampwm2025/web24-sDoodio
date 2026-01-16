@@ -79,6 +79,7 @@ jobs:
             export DB_USER="${{ secrets.STAGING_DB_USER }}"
             export DB_PASS="${{ secrets.STAGING_DB_PASS }}"
             export DB_NAME="${{ secrets.STAGING_DB_NAME }}"
+            export CLOVA_API_KEY="${{ secrets.STAGING_CLOVA_API_KEY }}"
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
             docker compose -f infra/staging/docker-compose.staging.yml pull
             docker compose -f infra/staging/docker-compose.staging.yml run --rm backend node ./node_modules/typeorm/cli.js -d ./dist/common/database/data-source.js migration:run
@@ -109,6 +110,7 @@ jobs:
             export DB_USER="${{ secrets.PROD_DB_USER }}"
             export DB_PASS="${{ secrets.PROD_DB_PASS }}"
             export DB_NAME="${{ secrets.PROD_DB_NAME }}"
+            export CLOVA_API_KEY="${{ secrets.PROD_CLOVA_API_KEY }}"
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
             docker compose -f infra/prod/docker-compose.prod.yml pull
             docker compose -f infra/prod/docker-compose.prod.yml run --rm backend node ./node_modules/typeorm/cli.js -d ./dist/common/database/data-source.js migration:run

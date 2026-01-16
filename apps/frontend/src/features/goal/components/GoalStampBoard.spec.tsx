@@ -5,10 +5,30 @@ import { GoalStampBoard } from './GoalStampBoard';
 
 describe('GoalStampBoard', () => {
   const stamps: GoalStamp[] = [
-    { id: 'stamp-1', difficulty: '몰입하기' },
-    { id: 'stamp-2', difficulty: '이어가기' },
-    { id: 'stamp-3', difficulty: '마음열기' },
-    { id: 'stamp-4', difficulty: '시작하기' },
+    {
+      id: 'stamp-1',
+      title: '행동 1',
+      difficulty: '몰입하기',
+      updatedAt: '2024-01-01T00:00:00.000Z',
+    },
+    {
+      id: 'stamp-2',
+      title: '행동 2',
+      difficulty: '이어가기',
+      updatedAt: '2024-01-02T00:00:00.000Z',
+    },
+    {
+      id: 'stamp-3',
+      title: '행동 3',
+      difficulty: '마음열기',
+      updatedAt: '2024-01-03T00:00:00.000Z',
+    },
+    {
+      id: 'stamp-4',
+      title: '행동 4',
+      difficulty: '시작하기',
+      updatedAt: '2024-01-04T00:00:00.000Z',
+    },
   ];
 
   it('스탬프 개수만큼 버튼을 렌더링한다', () => {

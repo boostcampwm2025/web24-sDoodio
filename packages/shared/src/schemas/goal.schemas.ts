@@ -73,7 +73,9 @@ export type GetGoalResponse = z.infer<typeof GetGoalResponseSchema>;
 
 export const GoalStampSchema = z.object({
   id: z.uuid({ version: 'v7' }),
+  title: z.string().min(1),
   difficulty: z.enum(BEHAVIOR_DIFFICULTIES),
+  updatedAt: z.iso.datetime(),
 });
 
 export const GetGoalStampsResponseSchema = z.array(GoalStampSchema);

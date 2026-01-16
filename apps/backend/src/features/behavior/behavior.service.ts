@@ -1,11 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DataSource, In, Not, Repository } from 'typeorm';
+import { Between, DataSource, In, Not, Repository } from 'typeorm';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { TodayBehaviorStatus } from '@web24/shared';
+import { AIBehaviorStatus, BEHAVIOR_DIFFICULTIES, TodayBehaviorStatus } from '@web24/shared';
 import { getKstDayKey } from '../../common/utils/time.utils';
 import { Behavior } from './behavior.entity';
 import { TodayBehavior } from './today-behavior.entity';
 import { User } from '../user/user.entity';
+import { AIBehavior } from './ai-behavior.entity';
+import { Goal } from '../goal/goal.entity';
+import { AIService } from '../ai/ai.service';
 
 @Injectable()
 export class BehaviorService {
@@ -14,8 +17,11 @@ export class BehaviorService {
     private readonly behaviorRepository: Repository<Behavior>,
     @InjectRepository(TodayBehavior)
     private readonly todayBehaviorRepository: Repository<TodayBehavior>,
+    @InjectRepository(AIBehavior)
+    private readonly aiBehaviorRepository: Repository<AIBehavior>,
     @InjectDataSource()
     private readonly dataSource: DataSource,
+    private readonly aiService: AIService,
   ) {}
 
   async getTodayBehaviors() {
@@ -152,5 +158,144 @@ export class BehaviorService {
       title: b.title,
       difficulty: b.difficulty,
     }));
+  }
+
+  async getAIBehaviors() {
+    return this.dataSource.transaction(async (manager) => {
+      const todayDate = getKstDayKey();
+
+      const user = await manager.getRepository(User).findOne({ where: { nickname: '테스트유저' } });
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      const aiBehaviors = await manager.getRepository(AIBehavior).find({
+        where: { date: todayDate, user: { id: user.id } },
+        relations: { goal: true },
+      });
+
+      return aiBehaviors.map((b) => ({
+        id: b.id,
+        title: b.title,
+        goalTitle: b.goal.title,
+        goalColor: b.goal.color,
+        difficulty: BEHAVIOR_DIFFICULTIES[4],
+        isChecked: b.status === 'completed',
+        isRecommended: true,
+      }));
+    });
+  }
+
+  async createAIBehaviors() {
+    const now = new Date();
+    const weekBefore = new Date(now);
+    weekBefore.setDate(now.getDate() - 7);
+
+    const nowDate = getKstDayKey(now);
+    const weekBeforeDate = getKstDayKey(weekBefore);
+
+    return this.dataSource.transaction(async (manager) => {
+      const user = await manager.getRepository(User).findOne({ where: { nickname: '테스트유저' } });
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      const existingAIBehaviors = await manager.getRepository(AIBehavior).find({
+        where: { date: nowDate, user: { id: user.id } },
+        relations: { goal: true },
+      });
+
+      if (existingAIBehaviors.length > 0) {
+        return existingAIBehaviors.map((b) => ({
+          id: b.id,
+          title: b.title,
+          goalTitle: b.goal.title,
+          goalColor: b.goal.color,
+          difficulty: BEHAVIOR_DIFFICULTIES[4],
+          isChecked: b.status === 'completed',
+          isRecommended: true,
+        }));
+      }
+
+      const weekTodayBehaviors = await manager.getRepository(TodayBehavior).find({
+        where: { date: Between(weekBeforeDate, nowDate), user: { id: user.id } },
+        relations: { behavior: { goal: true } },
+      });
+
+      // key: goalId, value: [goal 별 completed, goal 별 전체 갯수]
+      const goalCompletionCountMap = weekTodayBehaviors.reduce((acc, tb) => {
+        const goalId = tb.behavior.goal.id;
+
+        const [completed, total] = acc.get(goalId) ?? [0, 0];
+        const completedDelta = tb.status === 'completed' ? 1 : 0;
+
+        acc.set(goalId, [completed + completedDelta, total + 1]);
+        return acc;
+      }, new Map<string, [number, number]>());
+
+      const sortedGoals = Array.from(goalCompletionCountMap.entries())
+        .map(([id, [completed, total]]) => ({
+          id,
+          completed,
+          total,
+          rate: total > 0 ? completed / total : 0,
+        }))
+        .sort((a, b) => {
+          // 1순위: 완료율 내림차순
+          if (b.rate !== a.rate) {
+            return b.rate - a.rate;
+          }
+          // 2순위: 완료율이 같으면 전체 횟수(total) 내림차순
+          return b.total - a.total;
+        });
+
+      let bestGoal: Goal | null = null;
+
+      if (sortedGoals.length > 0) {
+        bestGoal = await manager.getRepository(Goal).findOne({
+          where: { id: sortedGoals[0].id },
+          relations: { behaviors: true },
+        });
+      } else {
+        bestGoal = await manager.getRepository(Goal).findOne({
+          where: { user: { id: user.id } },
+          order: { createdAt: 'DESC' },
+          relations: { behaviors: true },
+        });
+      }
+
+      if (!bestGoal) return [];
+
+      const aiBehaviorTitles = await this.aiService.getAIBehaviorTitles(bestGoal);
+
+      const toSave = aiBehaviorTitles.map((title) =>
+        manager.getRepository(AIBehavior).create({
+          goal: bestGoal,
+          title,
+          user,
+          date: nowDate,
+          status: 'pending',
+        }),
+      );
+
+      const aiBehaviors = await manager.getRepository(AIBehavior).save(toSave);
+      return aiBehaviors.map((b) => ({
+        id: b.id,
+        title: b.title,
+        goalTitle: b.goal.title,
+        goalColor: b.goal.color,
+        difficulty: BEHAVIOR_DIFFICULTIES[4],
+        isChecked: false,
+        isRecommended: true,
+      }));
+    });
+  }
+
+  async updateAIBehaviorStatus(id: string, status: AIBehaviorStatus) {
+    const result = await this.aiBehaviorRepository.update({ id }, { status });
+    if (result.affected === 0) {
+      throw new NotFoundException('AIBehavior not found');
+    }
+    return { id, status };
   }
 }

@@ -27,5 +27,7 @@ export interface GoalSummary extends Goal {
 
 export interface GoalStamp {
   id: string;
+  title: string;
   difficulty: BehaviorDifficulty;
+  updatedAt: string;
 }

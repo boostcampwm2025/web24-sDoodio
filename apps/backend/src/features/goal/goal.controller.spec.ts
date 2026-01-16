@@ -65,16 +65,23 @@ describe('GoalController', () => {
 
   it('id로 목표 스탬프 목록을 반환한다', async () => {
     const mockStamps = [
-      { id: 's1', behavior: { difficulty: '몰입하기' } },
-      { id: 's2', behavior: { difficulty: '시작하기' } },
+      {
+        id: 's1',
+        title: '행동 1',
+        difficulty: '몰입하기',
+        updatedAt: '2024-01-01T00:00:00.000Z',
+      },
+      {
+        id: 's2',
+        title: 'AI 행동',
+        difficulty: 'AI',
+        updatedAt: '2024-01-02T00:00:00.000Z',
+      },
     ];
 
     goalService.getGoalStamps.mockResolvedValue(mockStamps);
 
-    await expect(controller.getGoalStamps('goal-abc')).resolves.toEqual([
-      { id: 's1', difficulty: '몰입하기' },
-      { id: 's2', difficulty: '시작하기' },
-    ]);
+    await expect(controller.getGoalStamps('goal-abc')).resolves.toEqual(mockStamps);
 
     expect(goalService.getGoalStamps).toHaveBeenCalledWith('goal-abc');
     expect(goalService.getGoalStamps).toHaveBeenCalledTimes(1);
@@ -145,11 +152,15 @@ describe('GoalController', () => {
   it('목표의 행동 목록을 반환한다', async () => {
     const goalId = '01890fba-7e6a-7b6b-9e5d-0f3c9b8b4c6d';
     const behaviorId = '01890fba-7e6a-7b6c-9e5d-0f3c9b8b4c6e';
-    const behaviors = [{ id: behaviorId, title: 'b1', difficulty: 'easy', extra: 'ignored' }];
+    const behaviors = [
+      { id: behaviorId, title: 'b1', difficulty: '몰입하기', extra: 'ignored' },
+      { id: 'ai-1', title: 'ai 1', difficulty: 'AI' },
+    ];
     goalService.getGoalBehaviors.mockResolvedValue(behaviors);
 
     await expect(controller.getGoalBehaviors(goalId)).resolves.toEqual([
-      { id: behaviorId, title: 'b1', difficulty: 'easy' },
+      { id: behaviorId, title: 'b1', difficulty: '몰입하기' },
+      { id: 'ai-1', title: 'ai 1', difficulty: 'AI' },
     ]);
     expect(goalService.getGoalBehaviors).toHaveBeenCalledWith(goalId);
   });

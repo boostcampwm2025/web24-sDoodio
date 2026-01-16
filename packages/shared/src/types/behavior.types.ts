@@ -16,6 +16,10 @@ export const TODAY_BEHAVIOR_ORIGIN = ['user', 'system'] as const;
 
 export type TodayBehaviorOrigin = (typeof TODAY_BEHAVIOR_ORIGIN)[number];
 
+export const AI_BEHAVIOR_STATUS = ['pending', 'completed'] as const;
+
+export type AIBehaviorStatus = (typeof AI_BEHAVIOR_STATUS)[number];
+
 export interface Behavior {
   id: string;
   goalId?: string;
