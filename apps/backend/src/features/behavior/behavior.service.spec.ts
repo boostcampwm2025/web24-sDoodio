@@ -434,6 +434,7 @@ describe('BehaviorService', () => {
       const todayRepository = { find: jest.fn().mockResolvedValue(weekTodayBehaviors) };
       const goalRepository = { findOne: jest.fn().mockResolvedValue(bestGoal) };
       const aiBehaviorRepo = {
+        find: jest.fn().mockResolvedValue([]),
         create: jest.fn((value) => value),
         save: jest.fn().mockResolvedValue([
           { id: 'ai-1', title: 'AI 행동1', goal: bestGoal },
