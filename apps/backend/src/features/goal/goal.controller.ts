@@ -32,6 +32,19 @@ export class GoalController {
     }));
   }
 
+  @Get('templates')
+  async getTemplates(): Promise<GoalTemplateListResponse> {
+    const filePath = join(process.cwd(), 'src/features/goal/goal-templates.ndjson');
+    const raw = await readFile(filePath, 'utf-8');
+    const templates = raw
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => JSON.parse(line));
+
+    return GoalTemplateListResponseSchema.parse(templates);
+  }
+
   @Get(':id')
   async getGoal(@Param('id', ParseUUIDPipe) id: string): Promise<GetGoalResponse> {
     const goal = await this.goalService.getGoal(id);
@@ -55,19 +68,6 @@ export class GoalController {
   @Get(':id/stamps')
   async getGoalStamps(@Param('id', ParseUUIDPipe) id: string): Promise<GetGoalStampsResponse> {
     return this.goalService.getGoalStamps(id);
-  }
-
-  @Get('templates')
-  async getTemplates(): Promise<GoalTemplateListResponse> {
-    const filePath = join(process.cwd(), 'src/features/goal/goal-templates.ndjson');
-    const raw = await readFile(filePath, 'utf-8');
-    const templates = raw
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter(Boolean)
-      .map((line) => JSON.parse(line));
-
-    return GoalTemplateListResponseSchema.parse(templates);
   }
 
   @Post()
