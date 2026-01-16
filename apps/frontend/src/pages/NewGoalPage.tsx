@@ -6,8 +6,10 @@ import { DODO_LINES } from '@/features/goal/constants/dodo';
 import { useGoalTemplates } from '@/features/goal/hooks/useGoalTemplates';
 import { TemplateSelection } from '@/features/goal/components/TemplateSelection';
 import { BehaviorSelection, type BehaviorItem } from '@/features/goal/components/BehaviorSelection';
-import { createGoal } from '@/features/goal/apis/createGoal.api';
 import { NewGoal } from '@/features/goal/components/NewGoal';
+import { createGoal } from '@/features/goal/apis/createGoal.api';
+import { v7 } from 'uuid';
+import { toast } from 'react-toastify';
 
 export function NewGoalPage() {
   const navigate = useNavigate();
@@ -42,25 +44,25 @@ export function NewGoalPage() {
             setNewGoalTitle(selectedTemplate?.title ?? '');
             setOpenBehaviors(
               (selectedTemplate?.level.마음열기 ?? []).map((title) => ({
-                id: crypto.randomUUID(),
+                id: v7(),
                 title,
               })),
             );
             setStartBehaviors(
               (selectedTemplate?.level.시작하기 ?? []).map((title) => ({
-                id: crypto.randomUUID(),
+                id: v7(),
                 title,
               })),
             );
             setContinueBehaviors(
               (selectedTemplate?.level.이어가기 ?? []).map((title) => ({
-                id: crypto.randomUUID(),
+                id: v7(),
                 title,
               })),
             );
             setDeepBehaviors(
               (selectedTemplate?.level.몰입하기 ?? []).map((title) => ({
-                id: crypto.randomUUID(),
+                id: v7(),
                 title,
               })),
             );
@@ -97,7 +99,7 @@ export function NewGoalPage() {
             );
           }}
           onAdd={() => {
-            setOpenBehaviors([...openBehaviors, { id: crypto.randomUUID(), title: '' }]);
+            setOpenBehaviors([...openBehaviors, { id: v7(), title: '' }]);
           }}
           onDelete={(targetId) => {
             setOpenBehaviors(openBehaviors.filter((item) => item.id !== targetId));
@@ -121,7 +123,7 @@ export function NewGoalPage() {
             );
           }}
           onAdd={() => {
-            setStartBehaviors([...startBehaviors, { id: crypto.randomUUID(), title: '' }]);
+            setStartBehaviors([...startBehaviors, { id: v7(), title: '' }]);
           }}
           onDelete={(targetId) => {
             setStartBehaviors(startBehaviors.filter((item) => item.id !== targetId));
@@ -145,7 +147,7 @@ export function NewGoalPage() {
             );
           }}
           onAdd={() => {
-            setContinueBehaviors([...continueBehaviors, { id: crypto.randomUUID(), title: '' }]);
+            setContinueBehaviors([...continueBehaviors, { id: v7(), title: '' }]);
           }}
           onDelete={(targetId) => {
             setContinueBehaviors(continueBehaviors.filter((item) => item.id !== targetId));
@@ -169,7 +171,7 @@ export function NewGoalPage() {
             );
           }}
           onAdd={() => {
-            setDeepBehaviors([...deepBehaviors, { id: crypto.randomUUID(), title: '' }]);
+            setDeepBehaviors([...deepBehaviors, { id: v7(), title: '' }]);
           }}
           onDelete={(targetId) => {
             setDeepBehaviors(deepBehaviors.filter((item) => item.id !== targetId));
@@ -182,6 +184,13 @@ export function NewGoalPage() {
   const handleSkip = () => {};
 
   const handleComplete = async () => {
+    const isDemoBlocked = import.meta.env.VITE_DEMO_LOCK_CREATE_GOAL === 'true';
+    if (isDemoBlocked) {
+      toast('구현중입니다.');
+      navigate('/', { replace: true });
+      return;
+    }
+
     const buildBehaviors = (difficulty: BehaviorDifficulty, behaviors: BehaviorItem[]) =>
       behaviors
         .map((behavior) => ({

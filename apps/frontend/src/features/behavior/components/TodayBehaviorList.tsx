@@ -3,6 +3,7 @@ import { BehaviorCard } from '@/shared/components/behavior/BehaviorCard';
 import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
 import { Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { SwiperTabs } from './SwiperTabs';
 
 interface BehaviorListProps {
@@ -60,6 +61,9 @@ export function TodayBahaviorList({ goals, behaviors, onToggle }: BehaviorListPr
 
         {/* 행동 추가 버튼 */}
         <button
+          onClick={() => {
+            toast('구현 예정입니다.');
+          }}
           type="button"
           className="group border-primary-weak text-primary-normal hover:border-primary-strong hover:text-primary-strong hover:bg-primary-weak/30 relative flex min-h-30 cursor-pointer items-center justify-center rounded-3xl border-2 border-dashed bg-transparent p-5 transition-all"
         >

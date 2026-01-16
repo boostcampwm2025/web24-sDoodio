@@ -4,6 +4,17 @@ on:
   push:
     branches: [develop, main]
   workflow_dispatch:
+    inputs:
+      target:
+        description: Job to run
+        type: choice
+        required: true
+        default: all
+        options:
+          - all
+          - build-and-push
+          - deploy-staging
+          - deploy-production
 
 concurrency:
   group: deploy-${{ github.ref }}
@@ -20,14 +31,22 @@ jobs:
       IMAGE_NAME_BACKEND: boostcampwm2025/web24-sdoodio-backend
       IMAGE_NAME_FRONTEND: boostcampwm2025/web24-sdoodio-frontend
       DEPLOY_TAG: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+      TARGET: ${{ inputs.target || 'all' }}
     steps:
+      - name: Skip build (deploy-only)
+        if: ${{ env.TARGET == 'deploy-staging' || env.TARGET == 'deploy-production' }}
+        run: echo "Skipping build-and-push."
+
       - name: Checkout code
+        if: ${{ env.TARGET == 'all' || env.TARGET == 'build-and-push' }}
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
+        if: ${{ env.TARGET == 'all' || env.TARGET == 'build-and-push' }}
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to GHCR
+        if: ${{ env.TARGET == 'all' || env.TARGET == 'build-and-push' }}
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -35,6 +54,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push backend image
+        if: ${{ env.TARGET == 'all' || env.TARGET == 'build-and-push' }}
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -45,6 +65,7 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}
 
       - name: Build and push frontend image
+        if: ${{ env.TARGET == 'all' || env.TARGET == 'build-and-push' }}
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -55,7 +76,7 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_FRONTEND }}:${{ github.sha }}
 
   deploy-staging:
-    if: github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/develop' && (github.event_name != 'workflow_dispatch' || inputs.target == 'all' || inputs.target == 'deploy-staging')
     runs-on: ubuntu-latest
     needs: build-and-push
     environment:
@@ -86,7 +107,7 @@ jobs:
             docker compose -f infra/staging/docker-compose.staging.yml up -d
 
   deploy-production:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && (github.event_name != 'workflow_dispatch' || inputs.target == 'all' || inputs.target == 'deploy-production')
     runs-on: ubuntu-latest
     needs: build-and-push
     environment:
