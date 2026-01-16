@@ -1,0 +1,28 @@
+export const BEHAVIOR_DIFFICULTIES = [
+  '마음열기',
+  '시작하기',
+  '이어가기',
+  '몰입하기',
+  'AI',
+] as const;
+
+export type BehaviorDifficulty = (typeof BEHAVIOR_DIFFICULTIES)[number];
+
+export const TODAY_BEHAVIOR_STATUS = ['pending', 'completed', 'skipped', 'ignored'] as const;
+
+export type TodayBehaviorStatus = (typeof TODAY_BEHAVIOR_STATUS)[number];
+
+export const TODAY_BEHAVIOR_ORIGIN = ['user', 'system'] as const;
+
+export type TodayBehaviorOrigin = (typeof TODAY_BEHAVIOR_ORIGIN)[number];
+
+export const AI_BEHAVIOR_STATUS = ['pending', 'completed'] as const;
+
+export type AIBehaviorStatus = (typeof AI_BEHAVIOR_STATUS)[number];
+
+export interface Behavior {
+  id: string;
+  goalId?: string;
+  title: string;
+  difficulty: BehaviorDifficulty;
+}

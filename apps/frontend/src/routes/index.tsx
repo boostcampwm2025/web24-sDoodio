@@ -1,14 +1,20 @@
+import { NewGoalPage } from '@/pages/NewGoalPage';
 import { Route, Routes } from 'react-router-dom';
-
-import { DodoRoom } from '@/features/dodoroom/components/DodoRoom';
-import { AuthRoutes } from './auth.routes';
+import { IndexPage } from '@/pages/IndexPage';
+import { AllGoalsPage } from '@/pages/AllGoalsPage';
+import { GoalDetailPage } from '@/pages/GoalDetailPage';
 
 export function AppRoutes() {
   return (
     <Routes>
-      <Route element={<DodoRoom />} index />
-      <Route element={<AuthRoutes />} path="/auth/*" />
-      <Route element={<div className="text-zinc-300">Not Found</div>} path="*" />
+      <Route element={<IndexPage />} index />
+      <Route element={<NewGoalPage />} path="/goals/new" />
+      <Route element={<AllGoalsPage />} path="/all-goals" />
+      <Route element={<GoalDetailPage />} path="/goals/:goalId" />
+      <Route
+        element={<div className="text-label-disable text-center">구현 예정입니다</div>}
+        path="*"
+      />
     </Routes>
   );
 }

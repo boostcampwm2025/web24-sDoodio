@@ -1,0 +1,1 @@
+export const BEHAVIOR_TITLE_MAX_LENGTH = 30;

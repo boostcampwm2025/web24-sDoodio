@@ -2,11 +2,30 @@
   "name": "@web24/shared",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
+  "type": "commonjs",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "default": "./dist/cjs/index.js"
     }
+  },
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
+  "scripts": {
+    "build": "pnpm run build:types && pnpm run build:cjs && pnpm run build:esm",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:esm": "tsc -p tsconfig.esm.json && node ./scripts/write-esm-package-json.cjs",
+    "build:types": "tsc -p tsconfig.types.json",
+    "dev": "pnpm -w exec concurrently \"pnpm --filter @web24/shared run dev:types\" \"pnpm --filter @web24/shared run dev:cjs\" \"pnpm --filter @web24/shared run dev:esm\"",
+    "dev:cjs": "tsc -p tsconfig.cjs.json --watch",
+    "dev:esm": "node ./scripts/write-esm-package-json.cjs && tsc -p tsconfig.esm.json --watch",
+    "dev:types": "tsc -p tsconfig.types.json --watch"
+  },
+  "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^8.4.0",
+    "zod": "^4.3.5"
   }
 }

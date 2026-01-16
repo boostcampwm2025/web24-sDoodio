@@ -2,20 +2,65 @@
   "name": "web24-boostcamp",
   "private": true,
   "packageManager": "pnpm@10.23.0",
+  "engines": {
+    "node": ">=24.12.0",
+    "pnpm": ">=10.23.0"
+  },
   "scripts": {
-    "dev": "pnpm -C apps/frontend dev",
-    "build": "pnpm -C apps/frontend build",
-    "preview": "pnpm -C apps/frontend preview",
-    "typecheck": "pnpm -C apps/frontend typecheck",
-    "test": "pnpm -C apps/frontend test",
-    "test:e2e": "pnpm -C apps/frontend test:e2e",
-    "lint": "pnpm -C apps/frontend lint",
-    "format": "pnpm -C apps/frontend format"
+    "format": "pnpm -r format",
+    "build": "pnpm run build:shared && pnpm run build:fe && pnpm run build:be",
+    "build:shared": "pnpm -F @web24/shared build",
+    "build:fe": "pnpm -F @web24/frontend build",
+    "build:be": "pnpm -F @web24/backend build",
+    "dev": "concurrently \"pnpm run dev:shared\" \"pnpm run dev:fe\" \"pnpm run dev:be\"",
+    "dev:shared": "pnpm -F @web24/shared dev",
+    "dev:fe": "pnpm -F @web24/frontend dev",
+    "dev:be": "pnpm -F @web24/backend dev",
+    "test": "concurrently \"pnpm run test:fe\" \"pnpm run test:be\"",
+    "test:fe": "pnpm -F @web24/frontend test",
+    "test:cov": "concurrently \"pnpm run test:fe:cov\" \"pnpm run test:be:cov\"",
+    "test:fe:run": "pnpm -F @web24/frontend test:run",
+    "test:fe:e2e": "pnpm -F @web24/frontend test:e2e",
+    "test:fe:cov": "pnpm -F @web24/frontend test:cov",
+    "test:be": "pnpm -F @web24/backend test",
+    "test:be:cov": "pnpm -F @web24/backend test:cov",
+    "lint": "concurrently \"pnpm run lint:fe\" \"pnpm run lint:be\"",
+    "lint:fe": "pnpm -F @web24/frontend lint",
+    "lint:be": "pnpm -F @web24/backend lint",
+    "preview": "pnpm -F @web24/frontend preview",
+    "typecheck": "concurrently \"pnpm run typecheck:fe\" \"pnpm run typecheck:be\"",
+    "typecheck:fe": "pnpm -F @web24/frontend typecheck",
+    "typecheck:be": "pnpm -F @web24/backend typecheck",
+    "format:check": "concurrently \"pnpm -F @web24/frontend format:check\" \"pnpm -F @web24/backend format:check\"",
+    "migration:generate": "pnpm -F @web24/backend migration:generate",
+    "migration:create": "pnpm -F @web24/backend migration:create",
+    "migration:run": "pnpm -F @web24/backend migration:run",
+    "migration:run:prod": "pnpm -F @web24/backend migration:run:prod",
+    "migration:revert": "pnpm -F @web24/backend migration:revert",
+    "migration:revert:prod": "pnpm -F @web24/backend migration:revert:prod",
+    "ci:local": "pnpm format:check && pnpm lint && pnpm build && pnpm typecheck && pnpm test",
+    "sonar": "pnpm test:cov && sonar-scanner",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "apps/frontend/**/*.{ts,tsx}": [
+      "pnpm -F @web24/frontend format",
+      "pnpm -F @web24/frontend lint --fix"
+    ],
+    "apps/backend/**/*.ts": [
+      "pnpm -F @web24/backend format",
+      "pnpm -F @web24/backend lint --fix"
+    ],
+    "packages/**/*.{ts,tsx}": [
+      "prettier --write",
+      "eslint --fix"
+    ]
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
+    "concurrently": "^9.2.1",
     "eslint": "^8.57.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-airbnb-typescript": "^18.0.0",
@@ -26,9 +71,15 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
-    "prettier": "^3.4.2"
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.11",
+    "prettier": "^3.4.2",
+    "sonar-scanner": "^3.1.0",
+    "typescript": "^5.9.3"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild"]
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }

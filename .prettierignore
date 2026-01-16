@@ -1,0 +1,25 @@
+# 빌드 결과물
+dist/
+build/
+coverage/
+
+# 의존성
+node_modules/
+.pnp.*
+
+# 로그 파일
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# 환경 변수
+.env
+.env.local
+.env.*.local
+
+# 테스트 결과
+.vitest/
+
+# 기타 생성된 파일
+*.min.js
+*.min.css

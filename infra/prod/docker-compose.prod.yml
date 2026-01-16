@@ -1,0 +1,25 @@
+services:
+  frontend:
+    image: ghcr.io/boostcampwm2025/web24-sdoodio-frontend:production
+    container_name: web24-frontend-prod
+    restart: unless-stopped
+    ports:
+      - '80:8080'
+    depends_on:
+      - backend
+
+  backend:
+    image: ghcr.io/boostcampwm2025/web24-sdoodio-backend:production
+    container_name: web24-backend-prod
+    restart: unless-stopped
+    ports:
+      - '3002:3000'
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
+      CLOVA_API_KEY: ${CLOVA_API_KEY}

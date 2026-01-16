@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+
+# 현재 브랜치 확인
+current_branch=$(git symbolic-ref --short HEAD)
+
+# 1. main 브랜치에서 직접 push 차단
+if [ "$current_branch" = "main" ]; then
+  echo "🚫 오류: main 브랜치에서 직접 푸시는 허용되지 않습니다!"
+  echo "💡 새로운 기능 브랜치를 만들어서 작업해주세요."
+  exit 1
+fi
+
+# 2. main 브랜치로 push 시도 차단
+while read local_ref local_sha remote_ref remote_sha
+do
+  # remote_ref가 refs/heads/main이면 차단
+  if [ "$remote_ref" = "refs/heads/main" ]; then
+    echo "🚫 오류: main 브랜치로 직접 푸시는 허용되지 않습니다!"
+    echo "💡 Pull Request를 통해 main 브랜치에 머지해주세요."
+    exit 1
+  fi
+done
+
+exit 0

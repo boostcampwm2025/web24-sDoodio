@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+# 변경된 파일만 format + lint
+pnpm exec lint-staged

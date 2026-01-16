@@ -1,0 +1,94 @@
+name: Auto Assign and Request Reviewers
+
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  assign-and-review:
+    # Draft PR은 제외
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Auto assign PR creator and request reviewers
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const prAuthor = context.payload.pull_request.user.login;
+
+            // 1. PR 작성자를 assignee로 지정
+            await github.rest.issues.addAssignees({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              assignees: [prAuthor]
+            });
+            console.log(`✅ Assignee 지정 완료: ${prAuthor}`);
+
+            // 현재 리뷰어 확인
+            const { data: requestedReviewers } = await github.rest.pulls.listRequestedReviewers({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber
+            });
+
+            // 이미 요청된 사람 수 확인
+            const existingReviewerLogins = new Set([
+              ...requestedReviewers.users.map(u => u.login)
+            ]);
+
+            const currentCount = existingReviewerLogins.size;
+            const targetCount = 2;
+            const neededCount = targetCount - currentCount;
+
+            console.log(`📊 현재 리뷰어 수: ${currentCount}, 추가 필요: ${neededCount}`);
+
+            if (neededCount <= 0) {
+              console.log('✨ 이미 충분한 리뷰어가 할당되어 있습니다.');
+              return;
+            }
+
+            // 2. 저장소의 collaborator 목록 가져오기
+            const { data: collaborators } = await github.rest.repos.listCollaborators({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              affiliation: 'direct', // direct collaborators만 (조직 멤버 제외)
+              permission: 'push' // push 권한 이상인 사용자만
+            });
+
+            // collaborator username 목록 추출
+            const collaboratorUsernames = collaborators.map(c => c.login);
+            console.log(`📋 Collaborator 목록: ${collaboratorUsernames.join(', ')}`);
+
+            // 3. PR 작성자와 이미 할당된 리뷰어를 제외한 풀 생성
+            const availableReviewers = collaboratorUsernames.filter(
+              username => username !== prAuthor && !existingReviewerLogins.has(username)
+            );
+            console.log(`🔍 사용 가능한 리뷰어: ${availableReviewers.join(', ')}`);
+
+            // 4. 필요한 만큼 랜덤 리뷰어 선택 (Fisher-Yates Shuffle)
+            // 기존 sort() + random()은 편향이 심하므로 개선
+            const shuffled = [...availableReviewers];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+              const j = Math.floor(Math.random() * (i + 1));
+              [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            const selectedReviewers = shuffled.slice(0, neededCount);
+
+            // 4. 리뷰어 요청
+            if (selectedReviewers.length > 0) {
+              await github.rest.pulls.requestReviewers({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber,
+                reviewers: selectedReviewers
+              });
+              console.log(`✅ 리뷰어 요청 완료: ${selectedReviewers.join(', ')}`);
+            } else {
+              console.log('⚠️ 사용 가능한 리뷰어가 없습니다.');
+            }
