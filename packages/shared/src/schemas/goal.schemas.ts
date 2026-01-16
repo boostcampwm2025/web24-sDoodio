@@ -62,6 +62,15 @@ export const GetGoalsResponseSchema = z.array(GetGoalSummarySchema);
 export type GetGoalSummary = z.infer<typeof GetGoalSummarySchema>;
 export type GetGoalsResponse = z.infer<typeof GetGoalsResponseSchema>;
 
+export const GoalSchema = z.object({
+  id: z.uuid({ version: 'v7' }),
+  title: z.string().min(1).max(GOAL_TITLE_MAX_LENGTH),
+  color: z.enum(GOAL_COLORS),
+});
+
+export const GetGoalResponseSchema = GoalSchema;
+export type GetGoalResponse = z.infer<typeof GetGoalResponseSchema>;
+
 export const GoalStampSchema = z.object({
   id: z.uuid({ version: 'v7' }),
   difficulty: z.enum(BEHAVIOR_DIFFICULTIES),

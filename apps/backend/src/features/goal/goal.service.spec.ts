@@ -1,6 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
+import { Test, type TestingModule } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import type { CreateGoalRequest } from '@web24/shared';
-import { DataSource } from 'typeorm';
 import { GoalService } from './goal.service';
 import { TodayBehavior } from '../behavior/today-behavior.entity';
 import { Behavior } from '../behavior/behavior.entity';
@@ -10,6 +11,59 @@ import { User } from '../user/user.entity';
 describe('GoalService', () => {
   type TransactionManager = {
     getRepository: (entity: Function) => unknown;
+  };
+
+  const createService = async ({
+    goalRepository: goalRepositoryOverride,
+    behaviorRepository: behaviorRepositoryOverride,
+    todayBehaviorRepository: todayBehaviorRepositoryOverride,
+    userRepository: userRepositoryOverride,
+  }: {
+    goalRepository?: Record<string, unknown>;
+    behaviorRepository?: Record<string, unknown>;
+    todayBehaviorRepository?: Record<string, unknown>;
+    userRepository?: Record<string, unknown>;
+  } = {}) => {
+    const goalRepository = {
+      find: jest.fn(),
+      findOne: jest.fn(),
+      create: jest.fn(),
+      save: jest.fn(),
+      manager: { transaction: jest.fn() },
+      ...goalRepositoryOverride,
+    };
+    const behaviorRepository = {
+      findOne: jest.fn(),
+      create: jest.fn(),
+      save: jest.fn(),
+      ...behaviorRepositoryOverride,
+    };
+    const todayBehaviorRepository = {
+      find: jest.fn(),
+      ...todayBehaviorRepositoryOverride,
+    };
+    const userRepository = {
+      findOne: jest.fn(),
+      ...userRepositoryOverride,
+    };
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        GoalService,
+        { provide: getRepositoryToken(Goal), useValue: goalRepository },
+        { provide: getRepositoryToken(Behavior), useValue: behaviorRepository },
+        { provide: getRepositoryToken(TodayBehavior), useValue: todayBehaviorRepository },
+        { provide: getRepositoryToken(User), useValue: userRepository },
+      ],
+    }).compile();
+
+    return {
+      service: module.get<GoalService>(GoalService),
+      goalRepository,
+      behaviorRepository,
+      todayBehaviorRepository,
+      userRepository,
+    };
   };
 
   const request: CreateGoalRequest = {
@@ -29,15 +83,7 @@ describe('GoalService', () => {
       ];
       const goalRepository = { find: jest.fn().mockResolvedValue(goals) };
 
-      const dataSource = {
-        getRepository: jest.fn((entity: Function) => {
-          if (entity === User) return userRepository;
-          if (entity === Goal) return goalRepository;
-          return null;
-        }),
-      } as unknown as DataSource;
-
-      const service = new GoalService(dataSource);
+      const { service } = await createService({ goalRepository, userRepository });
 
       await expect(service.getGoals()).resolves.toEqual(goals);
       expect(userRepository.findOne).toHaveBeenCalledWith({ where: { nickname: '테스트유저' } });
@@ -52,15 +98,7 @@ describe('GoalService', () => {
       const userRepository = { findOne: jest.fn().mockResolvedValue(null) };
       const goalRepository = { find: jest.fn() };
 
-      const dataSource = {
-        getRepository: jest.fn((entity: Function) => {
-          if (entity === User) return userRepository;
-          if (entity === Goal) return goalRepository;
-          return null;
-        }),
-      } as unknown as DataSource;
-
-      const service = new GoalService(dataSource);
+      const { service } = await createService({ goalRepository, userRepository });
 
       await expect(service.getGoals()).rejects.toBeInstanceOf(NotFoundException);
       expect(goalRepository.find).not.toHaveBeenCalled();
@@ -78,18 +116,10 @@ describe('GoalService', () => {
         find: jest.fn().mockResolvedValue(todayBehaviors),
       };
 
-      const dataSource = {
-        getRepository: jest.fn((entity: Function) => {
-          if (entity === TodayBehavior) return todayBehaviorRepository;
-          return null;
-        }),
-      } as unknown as DataSource;
-
-      const service = new GoalService(dataSource);
+      const { service } = await createService({ todayBehaviorRepository });
 
       await expect(service.getGoalStamps('goal-abc')).resolves.toEqual(todayBehaviors);
 
-      expect(dataSource.getRepository).toHaveBeenCalledWith(TodayBehavior);
       expect(todayBehaviorRepository.find).toHaveBeenCalledWith({
         where: {
           behavior: {
@@ -117,13 +147,15 @@ describe('GoalService', () => {
         }),
       };
 
-      const dataSource = {
-        transaction: jest.fn((callback: (manager: TransactionManager) => Promise<unknown>) =>
-          callback(manager),
-        ),
-      } as unknown as DataSource;
+      const goalRepositoryWithManager = {
+        manager: {
+          transaction: jest.fn((callback: (manager: TransactionManager) => Promise<unknown>) =>
+            callback(manager),
+          ),
+        },
+      };
 
-      const service = new GoalService(dataSource);
+      const { service } = await createService({ goalRepository: goalRepositoryWithManager });
 
       await expect(service.createGoal(request)).rejects.toBeInstanceOf(NotFoundException);
       expect(goalRepository.save).not.toHaveBeenCalled();
@@ -168,13 +200,15 @@ describe('GoalService', () => {
         }),
       };
 
-      const dataSource = {
-        transaction: jest.fn((callback: (manager: TransactionManager) => Promise<unknown>) =>
-          callback(manager),
-        ),
-      } as unknown as DataSource;
+      const goalRepositoryWithManager = {
+        manager: {
+          transaction: jest.fn((callback: (manager: TransactionManager) => Promise<unknown>) =>
+            callback(manager),
+          ),
+        },
+      };
 
-      const service = new GoalService(dataSource);
+      const { service } = await createService({ goalRepository: goalRepositoryWithManager });
 
       await expect(service.createGoal(request)).resolves.toEqual({
         id: '01890fba-7e6a-7b6b-9e5d-0f3c9b8b4c6d',
@@ -217,14 +251,7 @@ describe('GoalService', () => {
         findOne: jest.fn().mockResolvedValue(goal),
       };
 
-      const dataSource = {
-        getRepository: jest.fn((entity: Function) => {
-          if (entity === Goal) return goalRepository;
-          return null;
-        }),
-      } as unknown as DataSource;
-
-      const service = new GoalService(dataSource);
+      const { service } = await createService({ goalRepository });
 
       await expect(service.getGoalBehaviors(goalId)).resolves.toEqual(behaviors);
       expect(goalRepository.findOne).toHaveBeenCalledWith({
@@ -239,14 +266,7 @@ describe('GoalService', () => {
         findOne: jest.fn().mockResolvedValue(null),
       };
 
-      const dataSource = {
-        getRepository: jest.fn((entity: Function) => {
-          if (entity === Goal) return goalRepository;
-          return null;
-        }),
-      } as unknown as DataSource;
-
-      const service = new GoalService(dataSource);
+      const { service } = await createService({ goalRepository });
 
       await expect(service.getGoalBehaviors(goalId)).rejects.toBeInstanceOf(NotFoundException);
     });

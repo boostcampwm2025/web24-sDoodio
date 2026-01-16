@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import type { GoalStamp } from '@web24/shared';
 import { GoalStampBoard } from './GoalStampBoard';
@@ -25,14 +25,16 @@ describe('GoalStampBoard', () => {
     expect(dodos).toHaveLength(1);
   });
 
-  it('두두 스탬프 클릭 시 두두 위치가 변경된다', () => {
+  it('두두 스탬프 클릭 시 두두 위치가 변경된다', async () => {
     render(<GoalStampBoard stamps={stamps} />);
 
     const before = screen.getByLabelText('dodo-stamp');
     fireEvent.click(before);
 
-    const after = screen.getByLabelText('dodo-stamp');
-    expect(after).not.toBe(before);
+    await waitFor(() => {
+      const after = screen.getByLabelText('dodo-stamp');
+      expect(after).not.toBe(before);
+    });
   });
 
   it('일반 스탬프 클릭 시 두두 위치는 변경되지 않는다', () => {

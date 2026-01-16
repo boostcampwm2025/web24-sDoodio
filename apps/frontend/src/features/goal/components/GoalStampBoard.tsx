@@ -16,16 +16,36 @@ interface GoalStampBoardProps {
 
 function Stamp({ difficulty, isDodo, onSelect }: StampProps) {
   const { bg } = DIFFICULTY_COLOR_STYLES[difficulty];
+  const [isBouncing, setIsBouncing] = useState(false);
+
+  const handleClick = () => {
+    if (isDodo) {
+      setIsBouncing(true);
+
+      setTimeout(() => {
+        setIsBouncing(false);
+        onSelect();
+      }, 600);
+    } else {
+      onSelect();
+    }
+  };
 
   return (
     <button
       type="button"
       aria-label={isDodo ? 'dodo-stamp' : 'stamp'}
-      onClick={onSelect}
+      onClick={handleClick}
       className={`flex h-12 w-12 items-center justify-center rounded-full ${bg} scale-100 rotate-[-5deg] transform transition-transform duration-400 ease-out hover:scale-125 hover:rotate-12`}
     >
       {isDodo ? (
-        <img src="/DodoFace.png" width={ICON_SIZE.md} height={ICON_SIZE.md} alt="두두 얼굴" />
+        <img
+          src="/DodoFace.png"
+          width={ICON_SIZE.md}
+          height={ICON_SIZE.md}
+          alt="두두 얼굴"
+          className={isBouncing ? 'animate-bounce' : ''}
+        />
       ) : (
         <Star size={ICON_SIZE.md} className="text-white" />
       )}
@@ -63,7 +83,7 @@ export function GoalStampBoard({ stamps }: GoalStampBoardProps) {
   }, [stamps.length]);
 
   return (
-    <div className="bg-bg-light border-primary-strong scrollbar-pretty grid max-h-[60vh] min-h-[45vh] w-full auto-rows-min grid-cols-[repeat(auto-fill,minmax(56px,1fr))] gap-2 overflow-y-scroll rounded-2xl p-4">
+    <div className="bg-bg-light/75 border-primary-strong scrollbar-pretty grid max-h-[60vh] min-h-[45vh] w-full auto-rows-min grid-cols-[repeat(auto-fill,minmax(56px,1fr))] gap-2 overflow-y-scroll rounded-2xl p-4">
       {stamps.map((stamp, index) => (
         <Stamp
           key={stamp.id}
