@@ -22,3 +22,4 @@ services:
       DB_USER: ${DB_USER}
       DB_PASS: ${DB_PASS}
       DB_NAME: ${DB_NAME}
+      CLOVA_API_KEY: ${CLOVA_API_KEY}
