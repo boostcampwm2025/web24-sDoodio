@@ -4,10 +4,11 @@ import {
   CreateGoalResponseSchema,
   type CreateGoalRequest,
   type CreateGoalResponse,
+  type Behavior as BehaviorResponse,
   type GoalStamp,
 } from '@web24/shared';
 import { Repository } from 'typeorm';
-import { Behavior } from '../behavior/behavior.entity';
+import { Behavior as BehaviorEntity } from '../behavior/behavior.entity';
 import { User } from '../user/user.entity';
 import { Goal } from './goal.entity';
 import { TodayBehavior } from '../behavior/today-behavior.entity';
@@ -57,7 +58,7 @@ export class GoalService {
     return goal;
   }
 
-  async getGoalBehaviors(goalId: string): Promise<Behavior[]> {
+  async getGoalBehaviors(goalId: string): Promise<BehaviorResponse[]> {
     const goal = await this.goalRepository.findOne({
       where: { id: goalId },
       relations: ['behaviors'],
@@ -67,7 +68,25 @@ export class GoalService {
       throw new NotFoundException('Goal not found');
     }
 
-    return goal.behaviors || [];
+    const behaviors: BehaviorResponse[] = (goal.behaviors || []).map((behavior) => ({
+      id: behavior.id,
+      goalId,
+      title: behavior.title,
+      difficulty: behavior.difficulty,
+    }));
+
+    const aiBehaviors = await this.aiBehaviorRepository.find({
+      where: { goal: { id: goalId } },
+    });
+
+    const aiMapped: BehaviorResponse[] = aiBehaviors.map((behavior) => ({
+      id: behavior.id,
+      goalId,
+      title: behavior.title,
+      difficulty: 'AI',
+    }));
+
+    return [...behaviors, ...aiMapped];
   }
 
   async getGoalStamps(goalId: string): Promise<GoalStamp[]> {
@@ -123,13 +142,13 @@ export class GoalService {
       const savedGoal = await manager.getRepository(Goal).save(goal);
 
       const behaviors = request.behaviors.map((behavior) =>
-        manager.getRepository(Behavior).create({
+        manager.getRepository(BehaviorEntity).create({
           title: behavior.title,
           difficulty: behavior.difficulty,
           goal: savedGoal,
         }),
       );
-      const savedBehaviors = await manager.getRepository(Behavior).save(behaviors);
+      const savedBehaviors = await manager.getRepository(BehaviorEntity).save(behaviors);
 
       return CreateGoalResponseSchema.parse({
         id: savedGoal.id,
