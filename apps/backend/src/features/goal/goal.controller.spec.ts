@@ -65,16 +65,13 @@ describe('GoalController', () => {
 
   it('id로 목표 스탬프 목록을 반환한다', async () => {
     const mockStamps = [
-      { id: 's1', behavior: { difficulty: '몰입하기' } },
-      { id: 's2', behavior: { difficulty: '시작하기' } },
+      { id: 's1', title: '행동 1', difficulty: '몰입하기', source: 'today' },
+      { id: 's2', title: 'AI 행동', difficulty: 'AI', source: 'ai' },
     ];
 
     goalService.getGoalStamps.mockResolvedValue(mockStamps);
 
-    await expect(controller.getGoalStamps('goal-abc')).resolves.toEqual([
-      { id: 's1', difficulty: '몰입하기' },
-      { id: 's2', difficulty: '시작하기' },
-    ]);
+    await expect(controller.getGoalStamps('goal-abc')).resolves.toEqual(mockStamps);
 
     expect(goalService.getGoalStamps).toHaveBeenCalledWith('goal-abc');
     expect(goalService.getGoalStamps).toHaveBeenCalledTimes(1);

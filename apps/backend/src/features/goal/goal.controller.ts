@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import {
   CreateGoalRequestSchema,
   GetGoalsResponse,
+  type GetGoalStampsResponse,
   type GetGoalResponse,
   GoalTemplateListResponseSchema,
   type CreateGoalRequest,
@@ -52,12 +53,8 @@ export class GoalController {
   }
 
   @Get(':id/stamps')
-  async getGoalStamps(@Param('id', ParseUUIDPipe) id: string) {
-    const goalStamps = await this.goalService.getGoalStamps(id);
-    return goalStamps.map((gs) => ({
-      id: gs.id,
-      difficulty: gs.behavior.difficulty,
-    }));
+  async getGoalStamps(@Param('id', ParseUUIDPipe) id: string): Promise<GetGoalStampsResponse> {
+    return this.goalService.getGoalStamps(id);
   }
 
   @Get('templates')

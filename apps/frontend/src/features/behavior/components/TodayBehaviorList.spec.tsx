@@ -1,8 +1,18 @@
 import { render, screen, fireEvent, within } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
 import { TodayBahaviorList } from './TodayBehaviorList';
+
+const mockNavigate = vi.fn();
+
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
 
 // Mock SwiperTabs
 vi.mock('./SwiperTabs', () => ({
@@ -41,6 +51,10 @@ describe('TodayBehaviorList', () => {
     },
   ];
   const mockGoals = ['운동', '독서'];
+
+  beforeEach(() => {
+    mockNavigate.mockClear();
+  });
 
   it('헤더에 올바른 제목과 행동 개수를 표시한다', () => {
     renderWithRouter(
@@ -88,7 +102,9 @@ describe('TodayBehaviorList', () => {
       <TodayBahaviorList goals={mockGoals} behaviors={mockBehaviors} onToggle={vi.fn()} />,
     );
 
-    const addButton = screen.getByRole('button', { name: '' });
-    expect(addButton).toBeInTheDocument();
+    const addButton = screen.getByRole('button', { name: '목표' });
+    fireEvent.click(addButton);
+
+    expect(mockNavigate).toHaveBeenCalledWith('/goals/new');
   });
 });

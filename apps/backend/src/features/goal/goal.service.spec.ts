@@ -7,6 +7,7 @@ import { TodayBehavior } from '../behavior/today-behavior.entity';
 import { Behavior } from '../behavior/behavior.entity';
 import { Goal } from './goal.entity';
 import { User } from '../user/user.entity';
+import { AIBehavior } from '../behavior/ai-behavior.entity';
 
 describe('GoalService', () => {
   type TransactionManager = {
@@ -17,11 +18,13 @@ describe('GoalService', () => {
     goalRepository: goalRepositoryOverride,
     behaviorRepository: behaviorRepositoryOverride,
     todayBehaviorRepository: todayBehaviorRepositoryOverride,
+    aiBehaviorRepository: aiBehaviorRepositoryOverride,
     userRepository: userRepositoryOverride,
   }: {
     goalRepository?: Record<string, unknown>;
     behaviorRepository?: Record<string, unknown>;
     todayBehaviorRepository?: Record<string, unknown>;
+    aiBehaviorRepository?: Record<string, unknown>;
     userRepository?: Record<string, unknown>;
   } = {}) => {
     const goalRepository = {
@@ -42,6 +45,10 @@ describe('GoalService', () => {
       find: jest.fn(),
       ...todayBehaviorRepositoryOverride,
     };
+    const aiBehaviorRepository = {
+      find: jest.fn(),
+      ...aiBehaviorRepositoryOverride,
+    };
     const userRepository = {
       findOne: jest.fn(),
       ...userRepositoryOverride,
@@ -53,6 +60,7 @@ describe('GoalService', () => {
         { provide: getRepositoryToken(Goal), useValue: goalRepository },
         { provide: getRepositoryToken(Behavior), useValue: behaviorRepository },
         { provide: getRepositoryToken(TodayBehavior), useValue: todayBehaviorRepository },
+        { provide: getRepositoryToken(AIBehavior), useValue: aiBehaviorRepository },
         { provide: getRepositoryToken(User), useValue: userRepository },
       ],
     }).compile();
@@ -62,6 +70,7 @@ describe('GoalService', () => {
       goalRepository,
       behaviorRepository,
       todayBehaviorRepository,
+      aiBehaviorRepository,
       userRepository,
     };
   };
@@ -106,19 +115,39 @@ describe('GoalService', () => {
   });
 
   describe('getGoalStamps', () => {
-    it('goalId로 완료된 TodayBehavior 목록만 반환한다', async () => {
+    it('goalId로 완료된 TodayBehavior와 AIBehavior 목록을 반환한다', async () => {
       const todayBehaviors = [
-        { id: 'tb1', status: 'completed', behavior: { id: 'b1' } },
-        { id: 'tb3', status: 'completed', behavior: { id: 'b2' } },
+        {
+          id: 'tb1',
+          status: 'completed',
+          behavior: { id: 'b1', title: '행동 1', difficulty: '몰입하기' },
+        },
+        {
+          id: 'tb3',
+          status: 'completed',
+          behavior: { id: 'b2', title: '행동 2', difficulty: '시작하기' },
+        },
+      ];
+      const aiBehaviors = [
+        { id: 'ai1', status: 'completed', title: 'AI 행동 1' },
+        { id: 'ai2', status: 'completed', title: 'AI 행동 2' },
       ];
 
       const todayBehaviorRepository = {
         find: jest.fn().mockResolvedValue(todayBehaviors),
       };
+      const aiBehaviorRepository = {
+        find: jest.fn().mockResolvedValue(aiBehaviors),
+      };
 
-      const { service } = await createService({ todayBehaviorRepository });
+      const { service } = await createService({ todayBehaviorRepository, aiBehaviorRepository });
 
-      await expect(service.getGoalStamps('goal-abc')).resolves.toEqual(todayBehaviors);
+      await expect(service.getGoalStamps('goal-abc')).resolves.toEqual([
+        { id: 'tb1', title: '행동 1', difficulty: '몰입하기', source: 'today' },
+        { id: 'tb3', title: '행동 2', difficulty: '시작하기', source: 'today' },
+        { id: 'ai1', title: 'AI 행동 1', difficulty: 'AI', source: 'ai' },
+        { id: 'ai2', title: 'AI 행동 2', difficulty: 'AI', source: 'ai' },
+      ]);
 
       expect(todayBehaviorRepository.find).toHaveBeenCalledWith({
         where: {
@@ -128,6 +157,12 @@ describe('GoalService', () => {
           status: 'completed',
         },
         relations: ['behavior'],
+      });
+      expect(aiBehaviorRepository.find).toHaveBeenCalledWith({
+        where: {
+          goal: { id: 'goal-abc' },
+          status: 'completed',
+        },
       });
     });
   });

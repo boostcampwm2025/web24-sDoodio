@@ -70,8 +70,8 @@ describe('GoalDetailPage', () => {
 
   it('가져온 스탬프 개수를 표시한다', async () => {
     (fetchGoalStamps as any).mockResolvedValueOnce([
-      { id: 's1', difficulty: '몰입하기' },
-      { id: 's2', difficulty: '시작하기' },
+      { id: 's1', title: '행동 1', difficulty: '몰입하기', source: 'today' },
+      { id: 's2', title: 'AI 행동', difficulty: 'AI', source: 'ai' },
     ]);
 
     renderPage();
@@ -85,9 +85,9 @@ describe('GoalDetailPage', () => {
 
   it('GoalStampBoard에 stamps를 전달한다', async () => {
     (fetchGoalStamps as any).mockResolvedValueOnce([
-      { id: 's1', difficulty: '시작하기' },
-      { id: 's2', difficulty: '몰입하기' },
-      { id: 's3', difficulty: '이어가기' },
+      { id: 's1', title: '행동 1', difficulty: '시작하기', source: 'today' },
+      { id: 's2', title: '행동 2', difficulty: '몰입하기', source: 'today' },
+      { id: 's3', title: '행동 3', difficulty: '이어가기', source: 'today' },
     ]);
 
     renderPage();
