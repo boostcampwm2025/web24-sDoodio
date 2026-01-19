@@ -151,9 +151,10 @@ export class BehaviorService {
     return selected;
   }
 
-  async getAllBehaviors() {
+  async getAllBehaviors(userId: string) {
     const behaviors = await this.behaviorRepository.find({
       relations: ['goal'],
+      where: { goal: { user: { id: userId } } },
     });
 
     return behaviors.map((b) => ({
