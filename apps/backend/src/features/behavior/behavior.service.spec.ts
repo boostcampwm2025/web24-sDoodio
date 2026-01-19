@@ -1,5 +1,5 @@
 import { In, Not } from 'typeorm';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getDataSourceToken, getRepositoryToken } from '@nestjs/typeorm';
 import { type AIBehaviorStatus, BEHAVIOR_DIFFICULTIES, TodayBehaviorStatus } from '@web24/shared';
@@ -19,7 +19,11 @@ describe('BehaviorService', () => {
     createQueryBuilder: jest.Mock;
     find: jest.Mock;
   };
-  let todayBehaviorRepository: { update: jest.Mock };
+  let todayBehaviorRepository: {
+    update: jest.Mock;
+    findOne?: jest.Mock;
+    delete?: jest.Mock;
+  };
   let aiBehaviorRepository: { find: jest.Mock; update: jest.Mock };
   let aiService: { createAIBehaviors: jest.Mock; getAIBehaviorTitles: jest.Mock };
   let dataSource: { transaction: jest.Mock };
@@ -89,6 +93,38 @@ describe('BehaviorService', () => {
       await expect(
         service.updateTodayBehaviorStatus('user-1', 'tb-404', 'completed' as TodayBehaviorStatus),
       ).rejects.toBeInstanceOf(NotFoundException);
+    });
+  });
+
+  describe('deleteTodayBehavior', () => {
+    it('completed면 BadRequestException을 던진다', async () => {
+      todayBehaviorRepository.findOne = jest.fn().mockResolvedValue({
+        id: 'tb-1',
+        status: 'completed',
+      });
+      todayBehaviorRepository.delete = jest.fn();
+
+      await expect(service.deleteTodayBehavior('tb-1')).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('대상이 없으면 NotFoundException을 던진다', async () => {
+      todayBehaviorRepository.findOne = jest.fn().mockResolvedValue(null);
+      todayBehaviorRepository.delete = jest.fn();
+
+      await expect(service.deleteTodayBehavior('tb-404')).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('삭제 후 id를 반환한다', async () => {
+      todayBehaviorRepository.findOne = jest.fn().mockResolvedValue({
+        id: 'tb-1',
+        status: 'pending',
+      });
+      todayBehaviorRepository.delete = jest.fn().mockResolvedValue({ affected: 1 });
+
+      const result = await service.deleteTodayBehavior('tb-1');
+
+      expect(todayBehaviorRepository.delete).toHaveBeenCalledWith({ id: 'tb-1' });
+      expect(result).toEqual({ id: 'tb-1' });
     });
   });
 
