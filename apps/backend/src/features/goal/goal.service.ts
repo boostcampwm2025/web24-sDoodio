@@ -2,9 +2,12 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   CreateGoalResponseSchema,
+  type UpdateGoalRequest,
   type CreateGoalRequest,
   type CreateGoalResponse,
   type GoalStamp,
+  type UpdateGoalResponse,
+  UpdateGoalResponseSchema,
 } from '@web24/shared';
 import { Repository } from 'typeorm';
 import { Behavior } from '../behavior/behavior.entity';
@@ -146,6 +149,34 @@ export class GoalService {
           title: behavior.title,
           difficulty: behavior.difficulty,
         })),
+      });
+    });
+  }
+
+  async updateGoal(goalId: string, request: UpdateGoalRequest): Promise<UpdateGoalResponse> {
+    return this.goalRepository.manager.transaction(async (manager) => {
+      const goalRepo = manager.getRepository(Goal);
+
+      // 목표 조회
+      const goal = await goalRepo.findOne({
+        where: { id: goalId },
+        relations: ['user'],
+      });
+
+      if (!goal) {
+        throw new NotFoundException('Goal not found');
+      }
+
+      goal.title = request.title;
+      goal.color = request.color;
+
+      const savedGoal = await goalRepo.save(goal);
+
+      // 응답
+      return UpdateGoalResponseSchema.parse({
+        id: savedGoal.id,
+        title: savedGoal.title,
+        color: savedGoal.color,
       });
     });
   }

@@ -7,12 +7,16 @@ import {
   GoalTemplateListResponseSchema,
   GetGoalBehaviorsResponseSchema,
   GetGoalStampsResponseSchema,
+  UpdateGoalRequestSchema,
+  UpdateGoalResponseSchema,
 } from '@web24/shared';
 
 export function registerGoalApi(registry: OpenAPIRegistry) {
   const getGoalsResponse = registry.register('GetGoalsResponse', GetGoalsResponseSchema);
   const createGoalRequest = registry.register('CreateGoalRequest', CreateGoalRequestSchema);
   const createGoalResponse = registry.register('CreateGoalResponse', CreateGoalResponseSchema);
+  const updateGoalRequest = registry.register('UpdateGoalRequest', UpdateGoalRequestSchema);
+  const updateGoalResponse = registry.register('UpdateGoalResponse', UpdateGoalResponseSchema);
   const getGoalResponse = registry.register('GetGoalResponse', GetGoalResponseSchema);
   const getGoalTemplatesResponse = registry.register(
     'GetGoalTemplatesResponse',
@@ -64,6 +68,36 @@ export function registerGoalApi(registry: OpenAPIRegistry) {
             schema: createGoalResponse,
           },
         },
+      },
+    },
+  });
+
+  registry.registerPath({
+    method: 'put',
+    path: '/goals/{id}',
+    request: {
+      body: {
+        content: {
+          'application/json': {
+            schema: updateGoalRequest,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: 'Goal updated',
+        content: {
+          'application/json': {
+            schema: updateGoalResponse,
+          },
+        },
+      },
+      400: {
+        description: 'Validation failed',
+      },
+      404: {
+        description: 'Goal not found',
       },
     },
   });

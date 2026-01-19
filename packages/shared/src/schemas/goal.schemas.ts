@@ -48,6 +48,21 @@ export const CreateGoalResponseSchema = z.object({
 
 export type CreateGoalResponse = z.infer<typeof CreateGoalResponseSchema>;
 
+export const UpdateGoalRequestSchema = z.object({
+  title: z.string().min(1).max(GOAL_TITLE_MAX_LENGTH),
+  color: z.enum(GOAL_COLORS),
+});
+
+export type UpdateGoalRequest = z.infer<typeof UpdateGoalRequestSchema>;
+
+export const UpdateGoalResponseSchema = z.object({
+  id: z.uuid({ version: 'v7' }),
+  title: z.string().min(1).max(GOAL_TITLE_MAX_LENGTH),
+  color: z.enum(GOAL_COLORS),
+});
+
+export type UpdateGoalResponse = z.infer<typeof UpdateGoalResponseSchema>;
+
 export const GetGoalSummarySchema = z.object({
   id: z.uuid(),
   createdAt: z.iso.datetime(),

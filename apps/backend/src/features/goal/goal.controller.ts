@@ -1,17 +1,21 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Put, UseGuards } from '@nestjs/common';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import {
   CreateGoalRequestSchema,
+  UpdateGoalRequestSchema,
   GetGoalsResponse,
   type GetGoalStampsResponse,
   type GetGoalResponse,
   GoalTemplateListResponseSchema,
   type CreateGoalRequest,
   type CreateGoalResponse,
-  type GoalTemplateListResponse,
+  GoalTemplateListResponse,
+  type UpdateGoalRequest,
+  type UpdateGoalResponse,
 } from '@web24/shared';
+import { ZodType } from 'zod';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { SessionAuthGuard } from '../../common/guards/session-auth.guard';
 import { UserId } from '../../common/decorators/user-id.decorator';
@@ -85,5 +89,13 @@ export class GoalController {
     @Body(new ZodValidationPipe(CreateGoalRequestSchema)) body: CreateGoalRequest,
   ): Promise<CreateGoalResponse> {
     return this.goalService.createGoal(userId, body);
+  }
+
+  @Put(':id')
+  async updateGoal(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body(new ZodValidationPipe(UpdateGoalRequestSchema as ZodType)) body: UpdateGoalRequest,
+  ): Promise<UpdateGoalResponse> {
+    return this.goalService.updateGoal(id, body);
   }
 }
