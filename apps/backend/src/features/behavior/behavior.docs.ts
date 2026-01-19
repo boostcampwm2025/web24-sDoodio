@@ -52,6 +52,7 @@ export function registerBehaviorApi(registry: OpenAPIRegistry, common: CommonSch
   registry.registerPath({
     method: 'get',
     path: '/today-behaviors',
+    security: [{ sessionAuth: [] }],
     responses: {
       200: {
         description:
@@ -68,6 +69,7 @@ export function registerBehaviorApi(registry: OpenAPIRegistry, common: CommonSch
   registry.registerPath({
     method: 'get',
     path: '/today-behaviors/ai',
+    security: [{ sessionAuth: [] }],
     responses: {
       200: {
         description: '오늘 AI 행동 목록을 반환, 없으면 빈 리스트',
@@ -83,6 +85,7 @@ export function registerBehaviorApi(registry: OpenAPIRegistry, common: CommonSch
   registry.registerPath({
     method: 'post',
     path: '/today-behaviors/ai',
+    security: [{ sessionAuth: [] }],
     responses: {
       200: {
         description:
@@ -99,6 +102,7 @@ export function registerBehaviorApi(registry: OpenAPIRegistry, common: CommonSch
   registry.registerPath({
     method: 'patch',
     path: '/today-behaviors/ai/{id}/status',
+    security: [{ sessionAuth: [] }],
     request: {
       body: {
         content: {
@@ -131,6 +135,7 @@ export function registerBehaviorApi(registry: OpenAPIRegistry, common: CommonSch
   registry.registerPath({
     method: 'patch',
     path: '/today-behaviors/{id}/status',
+    security: [{ sessionAuth: [] }],
     request: {
       body: {
         content: {
@@ -164,6 +169,7 @@ export function registerBehaviorApi(registry: OpenAPIRegistry, common: CommonSch
   registry.registerPath({
     method: 'get',
     path: '/behaviors/all',
+    security: [{ sessionAuth: [] }],
     responses: {
       200: {
         description: 'List of all behaviors',

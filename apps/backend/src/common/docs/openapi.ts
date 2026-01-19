@@ -28,3 +28,15 @@ export const openApiDocument: OpenApiDocument = new OpenApiGeneratorV3(
   },
   servers: [{ url: '/api' }],
 });
+
+openApiDocument.components = {
+  ...openApiDocument.components,
+  securitySchemes: {
+    ...(openApiDocument.components?.securitySchemes ?? {}),
+    sessionAuth: {
+      type: 'apiKey',
+      in: 'cookie',
+      name: 'connect.sid',
+    },
+  },
+};
