@@ -237,6 +237,73 @@ export class BehaviorService {
     return { id };
   }
 
+  async createTodayBehavior(userId: string, behaviorId: string) {
+    return this.dataSource.transaction(async (manager) => {
+      const todayDate = getKstDayKey();
+
+      const user = await manager.getRepository(User).findOne({ where: { id: userId } });
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      const behavior = await manager.getRepository(Behavior).findOne({
+        where: { id: behaviorId, goal: { user: { id: userId } } },
+        relations: { goal: true },
+      });
+      if (!behavior) {
+        throw new NotFoundException('Behavior not found');
+      }
+      if (behavior.difficulty === 'AI') {
+        throw new BadRequestException('AI behavior is not allowed');
+      }
+
+      const todayBehaviorRepository = manager.getRepository(TodayBehavior);
+      const existingTodayBehavior = await todayBehaviorRepository.findOne({
+        where: { date: todayDate, user: { id: user.id }, behavior: { id: behaviorId } },
+      });
+
+      if (existingTodayBehavior) {
+        // 중복 추가는 막되, skipped 상태는 pending으로 복구한다.
+        if (existingTodayBehavior.status !== 'skipped') {
+          throw new BadRequestException('Today behavior already exists');
+        }
+        await todayBehaviorRepository.update(
+          { id: existingTodayBehavior.id },
+          { status: 'pending', origin: 'user' },
+        );
+      } else {
+        // 신규 추가는 오늘 날짜 기준으로 pending 상태로 생성한다.
+        const toCreate = todayBehaviorRepository.create({
+          date: todayDate,
+          status: 'pending',
+          origin: 'user',
+          user,
+          behavior,
+        });
+        await todayBehaviorRepository.save(toCreate);
+      }
+
+      // 최종 목록을 다시 조회해서 일관된 형태로 반환한다.
+      const todayBehaviors = await todayBehaviorRepository.find({
+        where: {
+          date: todayDate,
+          user: { id: user.id },
+          status: Not(In(['skipped', 'ignored', 'deleted'])),
+        },
+        relations: { behavior: { goal: true }, user: true },
+      });
+
+      return todayBehaviors.map((b) => ({
+        id: b.id,
+        title: b.behavior.title,
+        goalTitle: b.behavior.goal.title,
+        goalColor: b.behavior.goal.color,
+        difficulty: b.behavior.difficulty,
+        isChecked: b.status === 'completed',
+        isRecommended: false,
+      }));
+    });
+  }
   extractTodayBehaviors(behaviors: Behavior[]): Behavior[] {
     const LEVEL_SCORE = {
       마음열기: 1,
