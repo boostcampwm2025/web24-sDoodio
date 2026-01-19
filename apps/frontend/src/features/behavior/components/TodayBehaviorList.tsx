@@ -12,9 +12,16 @@ interface BehaviorListProps {
   behaviors: Behavior[];
   onToggle: (id: string) => void;
   onRefresh?: () => void;
+  onDelete?: (id: string) => void;
 }
 
-export function TodayBahaviorList({ goals, behaviors, onToggle, onRefresh }: BehaviorListProps) {
+export function TodayBahaviorList({
+  goals,
+  behaviors,
+  onToggle,
+  onRefresh,
+  onDelete,
+}: BehaviorListProps) {
   const [activeGoal, setActiveGoal] = useState<string>('ALL');
   const navigate = useNavigate();
 
@@ -86,6 +93,7 @@ export function TodayBahaviorList({ goals, behaviors, onToggle, onRefresh }: Beh
             key={behavior.id}
             behavior={behavior}
             onToggle={() => onToggle(behavior.id)}
+            onDelete={onDelete ? () => onDelete(behavior.id) : undefined}
           />
         ))}
 

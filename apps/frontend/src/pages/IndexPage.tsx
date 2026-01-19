@@ -10,6 +10,7 @@ import { updateTodayBehaviorStatus } from '@/features/behavior/apis/updateTodayB
 import { useAIBehaviors } from '@/features/behavior/hooks/useAIBehaviors';
 import { updateAIBehaviorStatus } from '@/features/behavior/apis/updateAIBehaviorStatus.api';
 import { refreshTodayBehaviors } from '@/features/behavior/apis/refreshTodayBehaviors.api';
+import { deleteTodayBehavior } from '@/features/behavior/apis/deleteTodayBehavior.api';
 import { toast } from 'react-toastify';
 
 export function IndexPage() {
@@ -43,6 +44,16 @@ export function IndexPage() {
 
     const nextStatus = targetBehavior.isChecked ? 'pending' : 'completed';
     updateTodayBehaviorStatus(id, nextStatus).catch(() => toggleBehaviorIsChecked(id));
+  };
+
+  const handleBehaviorDelete = (id: string) => {
+    const previousBehaviors = behaviors;
+    setBehaviors((bs) => bs.filter((b) => b.id !== id));
+
+    deleteTodayBehavior(id).catch(() => {
+      setBehaviors(previousBehaviors);
+      toast('삭제에 실패했습니다.');
+    });
   };
 
   const handleAIBehaviorToggle = (id: string) => {
@@ -96,6 +107,7 @@ export function IndexPage() {
         behaviors={behaviors}
         onToggle={handleBehaviorToggle}
         onRefresh={handleRefreshTodayBehaviors}
+        onDelete={handleBehaviorDelete}
       />
     </div>
   );
