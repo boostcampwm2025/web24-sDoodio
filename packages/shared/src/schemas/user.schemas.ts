@@ -12,3 +12,9 @@ export type User = z.infer<typeof UserSchema>;
 
 export const UserMeResponseSchema = UserSchema;
 export type UserMeResponse = z.infer<typeof UserMeResponseSchema>;
+
+export const LogoutResponseSchema = z.object({
+  success: z.boolean(),
+});
+
+export type LogoutResponse = z.infer<typeof LogoutResponseSchema>;

@@ -1,5 +1,4 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
-import { z } from 'zod';
 import {
   GetAllBehaviorsResponseSchema,
   GetAIBehaviorResponseSchema,
@@ -11,7 +10,11 @@ import {
   PatchTodayBehaviorStatusResponseSchema,
 } from '@web24/shared';
 
-export function registerBehaviorApi(registry: OpenAPIRegistry) {
+type CommonSchemas = {
+  errorResponse: ReturnType<OpenAPIRegistry['register']>;
+};
+
+export function registerBehaviorApi(registry: OpenAPIRegistry, common: CommonSchemas) {
   const getTodayBehaviorsResponse = registry.register(
     'GetTodayBehaviorsResponse',
     GetTodayBehaviorsResponseSchema,
@@ -44,15 +47,7 @@ export function registerBehaviorApi(registry: OpenAPIRegistry) {
     'PatchAIBehaviorStatusResponse',
     PatchAIBehaviorStatusResponseSchema,
   );
-  const errorResponse = registry.register(
-    'ErrorResponse',
-    z.object({
-      statusCode: z.number().int(),
-      message: z.string(),
-      path: z.string(),
-      timestamp: z.string(),
-    }),
-  );
+  const { errorResponse } = common;
 
   registry.registerPath({
     method: 'get',
