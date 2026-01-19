@@ -50,6 +50,11 @@ export type PatchTodayBehaviorStatusResponse = z.infer<
   typeof PatchTodayBehaviorStatusResponseSchema
 >;
 
+export const DeleteTodayBehaviorResponseSchema = z.object({
+  id: z.uuid({ version: 'v7' }),
+});
+export type DeleteTodayBehaviorResponse = z.infer<typeof DeleteTodayBehaviorResponseSchema>;
+
 export const GetAIBehaviorResponseSchema = z.array(AIBehaviorSchema);
 export type GetAIBehaviorResponse = z.infer<typeof GetAIBehaviorResponseSchema>;
 
