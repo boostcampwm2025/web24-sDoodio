@@ -9,6 +9,9 @@ import {
   GetGoalStampsResponseSchema,
   UpdateGoalRequestSchema,
   UpdateGoalResponseSchema,
+  CreateGoalBehaviorsRequestSchema,
+  UpdateGoalBehaviorsRequestSchema,
+  DeleteGoalBehaviorsRequestSchema,
 } from '@web24/shared';
 
 export function registerGoalApi(registry: OpenAPIRegistry) {
@@ -29,6 +32,18 @@ export function registerGoalApi(registry: OpenAPIRegistry) {
   const getGoalStampsResponse = registry.register(
     'GetGoalStampsResponse',
     GetGoalStampsResponseSchema,
+  );
+  const createGoalBehaviorsRequest = registry.register(
+    'CreateGoalBehaviorsRequest',
+    CreateGoalBehaviorsRequestSchema,
+  );
+  const updateGoalBehaviorsRequest = registry.register(
+    'UpdateGoalBehaviorsRequest',
+    UpdateGoalBehaviorsRequestSchema,
+  );
+  const deleteGoalBehaviorsRequest = registry.register(
+    'DeleteGoalBehaviorsRequest',
+    DeleteGoalBehaviorsRequestSchema,
   );
 
   registry.registerPath({
@@ -162,6 +177,66 @@ export function registerGoalApi(registry: OpenAPIRegistry) {
             schema: getGoalStampsResponse,
           },
         },
+      },
+    },
+  });
+
+  registry.registerPath({
+    method: 'post',
+    path: '/goals/{goalId}/behaviors',
+    summary: '목표에 새로운 행동 추가',
+    request: {
+      body: {
+        content: {
+          'application/json': {
+            schema: createGoalBehaviorsRequest,
+          },
+        },
+      },
+    },
+    responses: {
+      201: {
+        description: '행동 생성 성공',
+      },
+    },
+  });
+
+  registry.registerPath({
+    method: 'patch',
+    path: '/goals/{goalId}/behaviors',
+    summary: '목표의 행동 목록 수정',
+    request: {
+      body: {
+        content: {
+          'application/json': {
+            schema: updateGoalBehaviorsRequest,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: '행동 수정 성공',
+      },
+    },
+  });
+
+  registry.registerPath({
+    method: 'delete',
+    path: '/goals/{goalId}/behaviors',
+    summary: '목표의 행동 목록 삭제',
+    request: {
+      body: {
+        content: {
+          'application/json': {
+            schema: deleteGoalBehaviorsRequest,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: '행동 삭제 성공',
       },
     },
   });

@@ -95,3 +95,18 @@ export const GoalStampSchema = z.object({
 
 export const GetGoalStampsResponseSchema = z.array(GoalStampSchema);
 export type GetGoalStampsResponse = z.infer<typeof GetGoalStampsResponseSchema>;
+
+export const CreateGoalBehaviorsRequestSchema = z.object({
+  behaviors: z.array(CreateGoalBehaviorSchema).min(1),
+});
+export type CreateGoalBehaviorsRequest = z.infer<typeof CreateGoalBehaviorsRequestSchema>;
+
+export const UpdateGoalBehaviorsRequestSchema = z.object({
+  behaviors: z.array(CreateGoalBehaviorResponseSchema),
+});
+export type UpdateGoalBehaviorsRequest = z.infer<typeof UpdateGoalBehaviorsRequestSchema>;
+
+export const DeleteGoalBehaviorsRequestSchema = z.object({
+  behaviorIds: z.array(z.uuid({ version: 'v7' })).min(1),
+});
+export type DeleteGoalBehaviorsRequest = z.infer<typeof DeleteGoalBehaviorsRequestSchema>;

@@ -1,4 +1,15 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Put, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -14,8 +25,13 @@ import {
   GoalTemplateListResponse,
   type UpdateGoalRequest,
   type UpdateGoalResponse,
+  CreateGoalBehaviorsRequestSchema,
+  UpdateGoalBehaviorsRequestSchema,
+  DeleteGoalBehaviorsRequestSchema,
+  type DeleteGoalBehaviorsRequest,
+  type UpdateGoalBehaviorsRequest,
+  type CreateGoalBehaviorsRequest,
 } from '@web24/shared';
-import { ZodType } from 'zod';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
 import { SessionAuthGuard } from '../../common/guards/session-auth.guard';
 import { UserId } from '../../common/decorators/user-id.decorator';
@@ -94,8 +110,34 @@ export class GoalController {
   @Put(':id')
   async updateGoal(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @Body(new ZodValidationPipe(UpdateGoalRequestSchema as ZodType)) body: UpdateGoalRequest,
+    @Body(new ZodValidationPipe(UpdateGoalRequestSchema)) body: UpdateGoalRequest,
   ): Promise<UpdateGoalResponse> {
     return this.goalService.updateGoal(id, body);
+  }
+
+  @Post(':goalId/behaviors')
+  async createGoalBehaviors(
+    @Param('goalId', new ParseUUIDPipe()) goalId: string,
+    @Body(new ZodValidationPipe(CreateGoalBehaviorsRequestSchema))
+    body: CreateGoalBehaviorsRequest,
+  ): Promise<void> {
+    return this.goalService.createGoalBehaviors(goalId, body);
+  }
+
+  @Patch(':goalId/behaviors')
+  async updateGoalBehaviors(
+    @Param('goalId', new ParseUUIDPipe()) goalId: string,
+    @Body(new ZodValidationPipe(UpdateGoalBehaviorsRequestSchema))
+    body: UpdateGoalBehaviorsRequest,
+  ): Promise<void> {
+    return this.goalService.updateGoalBehaviors(goalId, body);
+  }
+
+  @Delete(':goalId/behaviors')
+  async deleteGoalBehaviors(
+    @Param('goalId', new ParseUUIDPipe()) goalId: string,
+    @Body(new ZodValidationPipe(DeleteGoalBehaviorsRequestSchema)) body: DeleteGoalBehaviorsRequest,
+  ): Promise<void> {
+    return this.goalService.deleteGoalBehaviors(goalId, body);
   }
 }

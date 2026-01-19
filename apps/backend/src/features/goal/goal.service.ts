@@ -8,8 +8,11 @@ import {
   type GoalStamp,
   type UpdateGoalResponse,
   UpdateGoalResponseSchema,
+  type CreateGoalBehaviorsRequest,
+  type UpdateGoalBehaviorsRequest,
+  type DeleteGoalBehaviorsRequest,
 } from '@web24/shared';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Behavior } from '../behavior/behavior.entity';
 import { User } from '../user/user.entity';
 import { Goal } from './goal.entity';
@@ -154,12 +157,45 @@ export class GoalService {
   }
 
   async updateGoal(goalId: string, request: UpdateGoalRequest): Promise<UpdateGoalResponse> {
-    return this.goalRepository.manager.transaction(async (manager) => {
-      const goalRepo = manager.getRepository(Goal);
+    // MEMO: 임시로 테스트 사용자를 바탕으로 조회
+    const user = await this.userRepository.findOne({ where: { nickname: '테스트유저' } });
 
-      // 목표 조회
-      const goal = await goalRepo.findOne({
-        where: { id: goalId },
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const goal = await this.goalRepository.findOne({
+      where: { id: goalId, user: { id: user.id } },
+      relations: ['user'],
+    });
+
+    if (!goal) {
+      throw new NotFoundException('Goal not found');
+    }
+
+    goal.title = request.title;
+    goal.color = request.color;
+
+    const savedGoal = await this.goalRepository.save(goal);
+
+    // 응답
+    return UpdateGoalResponseSchema.parse({
+      id: savedGoal.id,
+      title: savedGoal.title,
+      color: savedGoal.color,
+    });
+  }
+
+  async createGoalBehaviors(goalId: string, request: CreateGoalBehaviorsRequest): Promise<void> {
+    await this.goalRepository.manager.transaction(async (manager) => {
+      // MEMO: 임시로 테스트 사용자를 바탕으로 조회
+      const user = await this.userRepository.findOne({ where: { nickname: '테스트유저' } });
+      if (!user) {
+        throw new NotFoundException('Test User not found');
+      }
+
+      const goal = await this.goalRepository.findOne({
+        where: { id: goalId, user: { id: user.id } },
         relations: ['user'],
       });
 
@@ -167,16 +203,79 @@ export class GoalService {
         throw new NotFoundException('Goal not found');
       }
 
-      goal.title = request.title;
-      goal.color = request.color;
+      const newBehaviors = request.behaviors.map((behavior) =>
+        manager.getRepository(Behavior).create({
+          title: behavior.title,
+          difficulty: behavior.difficulty,
+          goal,
+        }),
+      );
 
-      const savedGoal = await goalRepo.save(goal);
+      // 일괄 저장
+      await manager.getRepository(Behavior).save(newBehaviors);
+    });
+  }
 
-      // 응답
-      return UpdateGoalResponseSchema.parse({
-        id: savedGoal.id,
-        title: savedGoal.title,
-        color: savedGoal.color,
+  async updateGoalBehaviors(goalId: string, request: UpdateGoalBehaviorsRequest): Promise<void> {
+    await this.goalRepository.manager.transaction(async (manager) => {
+      // MEMO: 임시로 테스트 사용자를 바탕으로 조회
+      const user = await this.userRepository.findOne({ where: { nickname: '테스트유저' } });
+      if (!user) {
+        throw new NotFoundException('Test User not found');
+      }
+
+      const goal = await this.goalRepository.findOne({
+        where: { id: goalId, user: { id: user.id } },
+        relations: ['user'],
+      });
+
+      if (!goal) {
+        throw new NotFoundException('Goal not found');
+      }
+
+      const updatePromises = request.behaviors.map(async (dto) => {
+        const behaviorRepo = manager.getRepository(Behavior);
+        const behavior = await behaviorRepo.findOne({
+          where: { id: dto.id, goal: { id: goalId } },
+        });
+
+        if (!behavior) return;
+
+        // 변경된 필드만 업데이트
+        behaviorRepo.merge(behavior, {
+          title: dto.title,
+          difficulty: dto.difficulty,
+        });
+        await behaviorRepo.save(behavior);
+      });
+
+      await Promise.all(updatePromises);
+    });
+  }
+
+  async deleteGoalBehaviors(goalId: string, request: DeleteGoalBehaviorsRequest): Promise<void> {
+    if (request.behaviorIds.length === 0) return;
+
+    await this.goalRepository.manager.transaction(async (manager) => {
+      // MEMO: 임시로 테스트 사용자를 바탕으로 조회
+      const user = await this.userRepository.findOne({ where: { nickname: '테스트유저' } });
+      if (!user) {
+        throw new NotFoundException('Test User not found');
+      }
+
+      const goal = await this.goalRepository.findOne({
+        where: { id: goalId, user: { id: user.id } },
+        relations: ['user'],
+      });
+
+      if (!goal) {
+        throw new NotFoundException('Goal not found');
+      }
+
+      // goalId와 behaviorIds가 모두 일치하는 것만 삭제
+      await manager.getRepository(Behavior).delete({
+        id: In(request.behaviorIds),
+        goal: { id: goalId },
       });
     });
   }
