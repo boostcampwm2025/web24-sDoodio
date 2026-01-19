@@ -9,10 +9,18 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import GoalDetailPageHeader from '@/features/goal/components/GoalDetailPageHeader';
 import { updateGoal } from '@/features/goal/apis/updateGoal.api';
+import { useGoalBehaviors } from '@/features/goal/hooks/useGoalBehaviors';
 
 export function GoalDetailPage() {
-  const [goal, setGoal] = useState<Goal | undefined>();
   const { goalId } = useParams<{ goalId: string }>();
+
+  const {
+    behaviors,
+    isLoading: isBehaviorsLoading,
+    refetch: refetchBehaviors,
+  } = useGoalBehaviors(goalId!, Boolean(goalId));
+
+  const [goal, setGoal] = useState<Goal | undefined>();
   const [stamps, setStamps] = useState<GoalStamp[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -105,7 +113,16 @@ export function GoalDetailPage() {
           </p>
           <GoalStampBoard stamps={stamps} />
         </div>
-        <div className="w-1/2">{goalId && <GoalBehaviorList goalId={goalId} />}</div>
+        <div className="w-1/2">
+          {goalId && (
+            <GoalBehaviorList
+              goalId={goalId}
+              behaviors={behaviors}
+              isLoading={isBehaviorsLoading}
+              onRefetch={refetchBehaviors}
+            />
+          )}
+        </div>
       </div>
 
       {/* 목표 본문 (<TABLET) */}
@@ -143,7 +160,14 @@ export function GoalDetailPage() {
             </SwiperSlide>
 
             <SwiperSlide className="box-border p-2">
-              {goalId && <GoalBehaviorList goalId={goalId} />}
+              {goalId && (
+                <GoalBehaviorList
+                  goalId={goalId}
+                  behaviors={behaviors}
+                  isLoading={isBehaviorsLoading}
+                  onRefetch={refetchBehaviors}
+                />
+              )}
             </SwiperSlide>
           </Swiper>
         </div>
