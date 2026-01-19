@@ -3,7 +3,6 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppEntitySample } from './app.sample.entity';
 import { AppService } from './app.service';
-import { User } from './features/user/user.entity';
 
 describe('AppController', () => {
   let appController: AppController;
@@ -11,17 +10,9 @@ describe('AppController', () => {
     create: jest.Mock;
     save: jest.Mock;
   };
-  let userRepository: {
-    create: jest.Mock;
-    save: jest.Mock;
-  };
 
   beforeEach(async () => {
     samplesRepository = {
-      create: jest.fn(),
-      save: jest.fn(),
-    };
-    userRepository = {
       create: jest.fn(),
       save: jest.fn(),
     };
@@ -33,10 +24,6 @@ describe('AppController', () => {
         {
           provide: getRepositoryToken(AppEntitySample),
           useValue: samplesRepository,
-        },
-        {
-          provide: getRepositoryToken(User),
-          useValue: userRepository,
         },
       ],
     }).compile();
@@ -66,26 +53,6 @@ describe('AppController', () => {
       await expect(appController.createSample(body)).resolves.toBe(saved);
       expect(samplesRepository.create).toHaveBeenCalledWith({ name: body.name });
       expect(samplesRepository.save).toHaveBeenCalledWith(created);
-    });
-  });
-
-  describe('user', () => {
-    it('사용자를 생성한다', async () => {
-      const created = { nickname: '테스트' };
-      const saved: User = {
-        id: 'user-id',
-        nickname: '테스트',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        deletedAt: null,
-      };
-
-      userRepository.create.mockReturnValue(created);
-      userRepository.save.mockResolvedValue(saved);
-
-      await expect(appController.createUser()).resolves.toBe(saved);
-      expect(userRepository.create).toHaveBeenCalledWith({ nickname: '테스트' });
-      expect(userRepository.save).toHaveBeenCalledWith(created);
     });
   });
 });
