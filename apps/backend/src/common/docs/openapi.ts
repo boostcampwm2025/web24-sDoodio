@@ -30,7 +30,7 @@ export const openApiDocument: OpenApiDocument = new OpenApiGeneratorV3(
 openApiDocument.components = {
   ...openApiDocument.components,
   securitySchemes: {
-    ...(openApiDocument.components?.securitySchemes ?? {}),
+    ...openApiDocument.components?.securitySchemes,
     sessionAuth: {
       type: 'apiKey',
       in: 'cookie',
