@@ -349,6 +349,7 @@ describe('BehaviorService', () => {
 
   describe('getAllBehaviors', () => {
     it('전체 행동 목록을 반환한다', async () => {
+      const userId = 'user-1';
       const behaviors = [
         {
           id: 'b1',
@@ -359,10 +360,11 @@ describe('BehaviorService', () => {
       ];
       repository.find.mockResolvedValue(behaviors);
 
-      const result = await service.getAllBehaviors();
+      const result = await service.getAllBehaviors(userId);
 
       expect(repository.find).toHaveBeenCalledWith({
         relations: ['goal'],
+        where: { goal: { user: { id: userId } } },
       });
 
       expect(result).toEqual([
