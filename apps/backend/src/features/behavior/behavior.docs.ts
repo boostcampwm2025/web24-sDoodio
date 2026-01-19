@@ -1,5 +1,6 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import {
+  DeleteTodayBehaviorResponseSchema,
   GetAllBehaviorsResponseSchema,
   GetAIBehaviorResponseSchema,
   GetTodayBehaviorsResponseSchema,
@@ -47,7 +48,13 @@ export function registerBehaviorApi(registry: OpenAPIRegistry, common: CommonSch
     'PatchAIBehaviorStatusResponse',
     PatchAIBehaviorStatusResponseSchema,
   );
+
   const { errorResponse } = common;
+
+  const deleteTodayBehaviorResponse = registry.register(
+    'DeleteTodayBehaviorResponse',
+    DeleteTodayBehaviorResponseSchema,
+  );
 
   registry.registerPath({
     method: 'get',
@@ -173,6 +180,37 @@ export function registerBehaviorApi(registry: OpenAPIRegistry, common: CommonSch
       404: {
         description:
           'Today behavior not found (service에서 대상 today behavior가 없어 상태 변경에 실패한 경우)',
+        content: {
+          'application/json': {
+            schema: errorResponse,
+          },
+        },
+      },
+    },
+  });
+
+  registry.registerPath({
+    method: 'delete',
+    path: '/today-behaviors/{id}',
+    responses: {
+      200: {
+        description: 'Today behavior deleted',
+        content: {
+          'application/json': {
+            schema: deleteTodayBehaviorResponse,
+          },
+        },
+      },
+      400: {
+        description: 'Completed behavior cannot be deleted',
+        content: {
+          'application/json': {
+            schema: errorResponse,
+          },
+        },
+      },
+      404: {
+        description: 'Today behavior not found',
         content: {
           'application/json': {
             schema: errorResponse,
