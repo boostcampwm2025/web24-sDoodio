@@ -14,6 +14,7 @@ import { User } from './features/user/user.entity';
 import { GoalModule } from './features/goal/goal.module';
 import { BehaviorModule } from './features/behavior/behavior.module';
 import { AIModule } from './features/ai/ai.module';
+import { AuthModule } from './features/auth/auth.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { AIModule } from './features/ai/ai.module';
     GoalModule,
     BehaviorModule,
     AIModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [
