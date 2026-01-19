@@ -10,6 +10,10 @@ export class AuthService {
     private readonly userRepository: Repository<User>,
   ) {}
 
+  async getUserById(userId: string): Promise<User | null> {
+    return this.userRepository.findOne({ where: { id: userId } });
+  }
+
   async createGuestUser(): Promise<User> {
     const user = this.userRepository.create({
       nickname: this.generateGuestNickname(),
