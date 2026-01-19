@@ -201,6 +201,14 @@
   }
 }
 
+@layer base {
+  button,
+  [role='button'],
+  [role='link'] {
+    cursor: pointer;
+  }
+}
+
 html,
 body {
   height: 100%;
