@@ -7,6 +7,7 @@ describe('TodayBehaviorController', () => {
   let service: {
     updateTodayBehaviorStatus: jest.Mock;
     getTodayBehaviors: jest.Mock;
+    refreshTodayBehaviors: jest.Mock;
     getAIBehaviors: jest.Mock;
     createAIBehaviors: jest.Mock;
     updateAIBehaviorStatus: jest.Mock;
@@ -16,6 +17,7 @@ describe('TodayBehaviorController', () => {
     service = {
       updateTodayBehaviorStatus: jest.fn(),
       getTodayBehaviors: jest.fn(),
+      refreshTodayBehaviors: jest.fn(),
       getAIBehaviors: jest.fn(),
       createAIBehaviors: jest.fn(),
       updateAIBehaviorStatus: jest.fn(),
@@ -45,6 +47,27 @@ describe('TodayBehaviorController', () => {
 
       expect(service.getTodayBehaviors).toHaveBeenCalledWith(userId);
       expect(result).toBe(mock);
+    });
+  });
+
+  describe('refreshTodayBehaviors', () => {
+    it('서비스 결과를 반환한다', async () => {
+      const mock = [{ id: 'refreshed-1' }];
+      service.refreshTodayBehaviors.mockResolvedValue(mock);
+
+      const result = await controller.refreshTodayBehaviors();
+
+      expect(service.refreshTodayBehaviors).toHaveBeenCalledTimes(1);
+      expect(result).toBe(mock);
+    });
+
+    it('행동이 없으면 빈 배열을 반환한다', async () => {
+      service.refreshTodayBehaviors.mockResolvedValue([]);
+
+      const result = await controller.refreshTodayBehaviors();
+
+      expect(service.refreshTodayBehaviors).toHaveBeenCalledTimes(1);
+      expect(result).toEqual([]);
     });
   });
 

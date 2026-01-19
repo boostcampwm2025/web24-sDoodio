@@ -9,6 +9,7 @@ import { TodayBehavior } from './today-behavior.entity';
 import { AIBehavior } from './ai-behavior.entity';
 import { AIService } from '../ai/ai.service';
 import { Goal } from '../goal/goal.entity';
+import { User } from '../user/user.entity';
 
 jest.mock('crypto', () => ({ randomInt: jest.fn() }));
 
@@ -344,6 +345,212 @@ describe('BehaviorService', () => {
 
       expect(result.some((b) => b.difficulty === 'AI')).toBe(false);
       expect(totalScore).toBeLessThanOrEqual(totalTodayBehaviorScore);
+    });
+  });
+
+  describe('refreshTodayBehaviors', () => {
+    it('기존 행동을 재사용하고 skipped를 pending으로 되돌린다', async () => {
+      const user = { id: 'user-1', nickname: '테스트유저' };
+      const goal = { title: '건강한 생활', color: 'mint' };
+      const behavior1 = {
+        id: 'b-1',
+        title: '물 1컵 마시기',
+        difficulty: '마음열기',
+        goal,
+      } as Behavior;
+      const behavior2 = {
+        id: 'b-2',
+        title: '스트레칭',
+        difficulty: '시작하기',
+        goal,
+      } as Behavior;
+      const behavior3 = {
+        id: 'b-3',
+        title: '걷기',
+        difficulty: '이어가기',
+        goal,
+      } as Behavior;
+      const existing = [
+        { id: 'tb-1', status: 'completed', behavior: behavior1 },
+        { id: 'tb-2', status: 'skipped', behavior: behavior2 },
+        { id: 'tb-3', status: 'pending', behavior: behavior3 },
+      ] as TodayBehavior[];
+
+      const userQueryBuilder = {
+        setLock: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getOne: jest.fn().mockResolvedValue(user),
+      };
+      const userRepository = {
+        createQueryBuilder: jest.fn().mockReturnValue(userQueryBuilder),
+      };
+      const todayRepository = {
+        find: jest.fn().mockResolvedValue(existing),
+        update: jest.fn().mockResolvedValue({ affected: 1 }),
+        create: jest.fn((value) => value),
+        save: jest.fn(),
+      };
+      const behaviorRepository = {
+        find: jest.fn().mockResolvedValue([behavior1, behavior2, behavior3]),
+      };
+      const manager = {
+        getRepository: (entity: unknown) => {
+          if (entity === (User as unknown)) return userRepository;
+          if (entity === (TodayBehavior as unknown)) return todayRepository;
+          if (entity === (Behavior as unknown)) return behaviorRepository;
+          return null;
+        },
+      };
+
+      dataSource.transaction.mockImplementation(async (work: (m: typeof manager) => unknown) =>
+        work(manager),
+      );
+      const extractSpy = jest
+        .spyOn(service, 'extractTodayBehaviors')
+        .mockReturnValue([behavior1, behavior2]);
+
+      const result = await service.refreshTodayBehaviors();
+
+      expect(userRepository.createQueryBuilder).toHaveBeenCalledWith('user');
+      expect(userQueryBuilder.setLock).toHaveBeenCalledWith('pessimistic_write');
+      expect(todayRepository.update).toHaveBeenNthCalledWith(
+        1,
+        { date: expect.any(String), user: { id: user.id }, status: 'pending' },
+        { status: 'skipped' },
+      );
+      expect(todayRepository.update).toHaveBeenNthCalledWith(
+        2,
+        { id: In(['tb-2']) },
+        { status: 'pending' },
+      );
+      expect(todayRepository.save).not.toHaveBeenCalled();
+      expect(result).toEqual([
+        {
+          id: 'tb-1',
+          title: '물 1컵 마시기',
+          goalTitle: '건강한 생활',
+          goalColor: 'mint',
+          difficulty: '마음열기',
+          isChecked: true,
+          isRecommended: false,
+        },
+        {
+          id: 'tb-2',
+          title: '스트레칭',
+          goalTitle: '건강한 생활',
+          goalColor: 'mint',
+          difficulty: '시작하기',
+          isChecked: false,
+          isRecommended: false,
+        },
+      ]);
+      extractSpy.mockRestore();
+    });
+
+    it('추출 결과가 없으면 빈 배열을 반환한다', async () => {
+      const user = { id: 'user-1', nickname: '테스트유저' };
+
+      const userQueryBuilder = {
+        setLock: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getOne: jest.fn().mockResolvedValue(user),
+      };
+      const userRepository = {
+        createQueryBuilder: jest.fn().mockReturnValue(userQueryBuilder),
+      };
+      const todayRepository = {
+        find: jest.fn().mockResolvedValue([]),
+        update: jest.fn().mockResolvedValue({ affected: 0 }),
+        create: jest.fn((value) => value),
+        save: jest.fn(),
+      };
+      const behaviorRepository = {
+        find: jest.fn().mockResolvedValue([]),
+      };
+      const manager = {
+        getRepository: (entity: unknown) => {
+          if (entity === (User as unknown)) return userRepository;
+          if (entity === (TodayBehavior as unknown)) return todayRepository;
+          if (entity === (Behavior as unknown)) return behaviorRepository;
+          return null;
+        },
+      };
+
+      dataSource.transaction.mockImplementation(async (work: (m: typeof manager) => unknown) =>
+        work(manager),
+      );
+      const extractSpy = jest.spyOn(service, 'extractTodayBehaviors').mockReturnValue([]);
+
+      const result = await service.refreshTodayBehaviors();
+
+      expect(todayRepository.update).toHaveBeenCalledWith(
+        { date: expect.any(String), user: { id: user.id }, status: 'pending' },
+        { status: 'skipped' },
+      );
+      expect(todayRepository.save).not.toHaveBeenCalled();
+      expect(result).toEqual([]);
+      extractSpy.mockRestore();
+    });
+
+    it('기존 행동이 없으면 새로 저장하고 반환한다', async () => {
+      const user = { id: 'user-1', nickname: '테스트유저' };
+      const behavior = {
+        id: 'b-1',
+        title: '물 1컵 마시기',
+        difficulty: '마음열기',
+        goal: { title: '건강한 생활', color: 'mint' },
+      } as Behavior;
+
+      const userQueryBuilder = {
+        setLock: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getOne: jest.fn().mockResolvedValue(user),
+      };
+      const userRepository = {
+        createQueryBuilder: jest.fn().mockReturnValue(userQueryBuilder),
+      };
+      const todayRepository = {
+        find: jest.fn().mockResolvedValue([]),
+        update: jest.fn().mockResolvedValue({ affected: 1 }),
+        create: jest.fn((value) => value),
+        save: jest.fn().mockResolvedValue([{ id: 'tb-new', status: 'pending' }]),
+      };
+      const behaviorRepository = {
+        find: jest.fn().mockResolvedValue([behavior]),
+      };
+      const manager = {
+        getRepository: (entity: unknown) => {
+          if (entity === (User as unknown)) return userRepository;
+          if (entity === (TodayBehavior as unknown)) return todayRepository;
+          if (entity === (Behavior as unknown)) return behaviorRepository;
+          return null;
+        },
+      };
+
+      dataSource.transaction.mockImplementation(async (work: (m: typeof manager) => unknown) =>
+        work(manager),
+      );
+      const extractSpy = jest.spyOn(service, 'extractTodayBehaviors').mockReturnValue([behavior]);
+
+      const result = await service.refreshTodayBehaviors();
+
+      expect(todayRepository.update).toHaveBeenCalledWith(
+        { date: expect.any(String), user: { id: user.id }, status: 'pending' },
+        { status: 'skipped' },
+      );
+      expect(todayRepository.save).toHaveBeenCalledTimes(1);
+      expect(result).toEqual([
+        {
+          id: 'tb-new',
+          title: '물 1컵 마시기',
+          goalTitle: '건강한 생활',
+          goalColor: 'mint',
+          difficulty: '마음열기',
+          isChecked: false,
+          isRecommended: false,
+        },
+      ]);
+      extractSpy.mockRestore();
     });
   });
 
