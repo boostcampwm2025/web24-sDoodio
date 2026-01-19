@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -44,31 +44,33 @@ describe('AuthController', () => {
       expect(req.session.isGuest).toBe(true);
       expect(result).toBe(user);
     });
+
+    it('이미 로그인 상태면 400을 반환한다', async () => {
+      const req = { session: { userId: 'user-id' } } as Request;
+
+      await expect(controller.guestLogin(req)).rejects.toBeInstanceOf(BadRequestException);
+    });
   });
 
   describe('me', () => {
-    it('세션이 없으면 401을 반환한다', async () => {
-      const req = { session: {} } as Request;
-
-      await expect(controller.me(req)).rejects.toBeInstanceOf(UnauthorizedException);
-    });
-
     it('유저를 찾지 못하면 401을 반환한다', async () => {
-      const req = { session: { userId: 'user-id' } } as Request;
       authService.getUserById.mockResolvedValue(null);
 
-      await expect(controller.me(req)).rejects.toBeInstanceOf(UnauthorizedException);
+      await expect(controller.me('user-id')).rejects.toBeInstanceOf(UnauthorizedException);
     });
 
     it('세션 기반으로 유저 정보를 반환한다', async () => {
       const user = { id: 'user-id', nickname: 'G-abcd12', kind: 'guest' } as User;
-      const req = { session: { userId: 'user-id' } } as Request;
       authService.getUserById.mockResolvedValue(user);
 
-      const result = await controller.me(req);
+      const result = await controller.me('user-id');
 
       expect(authService.getUserById).toHaveBeenCalledWith('user-id');
-      expect(result).toEqual(user);
+      expect(result).toEqual({
+        id: user.id,
+        nickname: user.nickname,
+        kind: user.kind,
+      });
     });
   });
 
