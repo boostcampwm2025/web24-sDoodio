@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  ParseUUIDPipe,
-  Post,
-  UseGuards,
-  UsePipes,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -89,10 +80,9 @@ export class GoalController {
   }
 
   @Post()
-  @UsePipes(new ZodValidationPipe(CreateGoalRequestSchema))
   async createGoal(
     @UserId() userId: string,
-    @Body() body: CreateGoalRequest,
+    @Body(new ZodValidationPipe(CreateGoalRequestSchema)) body: CreateGoalRequest,
   ): Promise<CreateGoalResponse> {
     return this.goalService.createGoal(userId, body);
   }
