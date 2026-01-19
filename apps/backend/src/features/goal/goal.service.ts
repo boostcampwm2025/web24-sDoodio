@@ -82,7 +82,7 @@ export class GoalService {
       this.todayBehaviorRepository.find({
         where: {
           behavior: {
-            goal: { id: goalId, user: { id: userId } },
+            goal: { id: goalId },
           },
           status: 'completed',
         },
@@ -90,7 +90,7 @@ export class GoalService {
       }),
       this.aiBehaviorRepository.find({
         where: {
-          goal: { id: goalId, user: { id: userId } },
+          goal: { id: goalId },
           status: 'completed',
         },
       }),
