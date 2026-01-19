@@ -10,7 +10,6 @@ import { Pool } from 'pg';
 import { AppController } from './app.controller';
 import { AppEntitySample } from './app.sample.entity';
 import { AppService } from './app.service';
-import { User } from './features/user/user.entity';
 import { GoalModule } from './features/goal/goal.module';
 import { BehaviorModule } from './features/behavior/behavior.module';
 import { AIModule } from './features/ai/ai.module';
@@ -51,7 +50,7 @@ import { AuthModule } from './features/auth/auth.module';
         };
       },
     }),
-    TypeOrmModule.forFeature([AppEntitySample, User]),
+    TypeOrmModule.forFeature([AppEntitySample]),
     GoalModule,
     BehaviorModule,
     AIModule,

@@ -3,13 +3,11 @@ import { OpenAPIRegistry, OpenApiGeneratorV3 } from '@asteasolutions/zod-to-open
 import { registerSampleApi } from './sample.docs';
 import { registerBehaviorApi } from '../../features/behavior/behavior.docs';
 import { registerGoalApi } from '../../features/goal/goal.docs';
-import { registerUserApi } from '../../features/user/user.docs';
 
 const registry = new OpenAPIRegistry();
 
 // Register Feature APIs
 registerSampleApi(registry);
-registerUserApi(registry);
 registerGoalApi(registry);
 registerBehaviorApi(registry);
 
