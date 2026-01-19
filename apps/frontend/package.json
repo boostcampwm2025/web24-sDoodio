@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@web24/shared": "workspace:*",
+    "framer-motion": "^12.27.1",
     "lucide-react": "^0.562.0",
     "react": "^19.2.3",
     "react-compiler-runtime": "^1.0.0",
