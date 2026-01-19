@@ -1,13 +1,33 @@
 import { useScroll } from '@/shared/hooks/useScroll';
 import { Bell } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
 import { MENU_ITEMS } from '@/shared/constants/menu';
 import { toast } from 'react-toastify';
+import useAuthStore from '@/stores/useAuthStore';
 
 function DesktopHeader() {
   const navigate = useNavigate();
   const location = useLocation();
   const isScrolled = useScroll(10);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const { user, logout } = useAuthStore();
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isProfileOpen) {
+      return () => {};
+    }
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isProfileOpen]);
 
   return (
     <header
@@ -58,15 +78,32 @@ function DesktopHeader() {
             <Bell size={20} />
             <span className="bg-goal-2 border-bg-light absolute top-2 right-2 h-1.5 w-1.5 rounded-full border" />
           </button>
-          <button
-            className="hover:border-primary-strong text-label-2 text-label-alternative bg-bg-light border-primary-weak flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border font-bold transition-all"
-            type="button"
-            onClick={() => {
-              toast('구현 예정입니다.');
-            }}
-          >
-            U
-          </button>
+          {user ? (
+            <div className="relative" ref={profileRef}>
+              <button
+                className="hover:border-primary-strong text-label-2 text-label-alternative bg-bg-light border-primary-weak flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border font-bold transition-all"
+                type="button"
+                onClick={() => setIsProfileOpen((prev) => !prev)}
+              >
+                {user.nickname.charAt(0)}
+              </button>
+              {isProfileOpen ? (
+                <div className="border-bg-alternative bg-bg-light shadow-emphasize absolute right-0 mt-2 w-36 rounded-xl border p-2">
+                  <button
+                    type="button"
+                    className="hover:bg-bg-alternative w-full rounded-lg px-3 py-2 text-left text-sm text-[#d84343]"
+                    onClick={async () => {
+                      await logout();
+                      setIsProfileOpen(false);
+                      navigate('/login');
+                    }}
+                  >
+                    로그아웃
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       </div>
     </header>
