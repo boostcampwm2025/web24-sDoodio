@@ -191,6 +191,7 @@ describe('NewGoalPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '다음' }));
     fireEvent.click(screen.getByRole('button', { name: '다음' }));
     fireEvent.click(screen.getByRole('button', { name: '다음' }));
+    fireEvent.click(screen.getByRole('button', { name: '다음' }));
 
     await fireEvent.click(screen.getByRole('button', { name: '완료' }));
 
