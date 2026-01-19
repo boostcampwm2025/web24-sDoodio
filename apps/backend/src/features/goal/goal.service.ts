@@ -26,9 +26,8 @@ export class GoalService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async getGoals(): Promise<(Goal & { behaviorCount: number })[]> {
-    // MEMO: 임시로 테스트 사용자를 바탕으로 조회
-    const user = await this.userRepository.findOne({ where: { nickname: '테스트유저' } });
+  async getGoals(userId: string): Promise<(Goal & { behaviorCount: number })[]> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
 
     if (!user) {
       throw new NotFoundException('User not found');
@@ -45,9 +44,9 @@ export class GoalService {
     }));
   }
 
-  async getGoal(goalId: string): Promise<Goal> {
+  async getGoal(userId: string, goalId: string): Promise<Goal> {
     const goal = await this.goalRepository.findOne({
-      where: { id: goalId },
+      where: { id: goalId, user: { id: userId } },
     });
 
     if (!goal) {
@@ -57,9 +56,9 @@ export class GoalService {
     return goal;
   }
 
-  async getGoalBehaviors(goalId: string): Promise<Behavior[]> {
+  async getGoalBehaviors(userId: string, goalId: string): Promise<Behavior[]> {
     const goal = await this.goalRepository.findOne({
-      where: { id: goalId },
+      where: { id: goalId, user: { id: userId } },
       relations: ['behaviors'],
     });
 
@@ -70,12 +69,20 @@ export class GoalService {
     return goal.behaviors || [];
   }
 
-  async getGoalStamps(goalId: string): Promise<GoalStamp[]> {
+  async getGoalStamps(userId: string, goalId: string): Promise<GoalStamp[]> {
+    const goal = await this.goalRepository.findOne({
+      where: { id: goalId, user: { id: userId } },
+    });
+
+    if (!goal) {
+      throw new NotFoundException('Goal not found');
+    }
+
     const [todayBehaviors, aiBehaviors] = await Promise.all([
       this.todayBehaviorRepository.find({
         where: {
           behavior: {
-            goal: { id: goalId },
+            goal: { id: goalId, user: { id: userId } },
           },
           status: 'completed',
         },
@@ -83,7 +90,7 @@ export class GoalService {
       }),
       this.aiBehaviorRepository.find({
         where: {
-          goal: { id: goalId },
+          goal: { id: goalId, user: { id: userId } },
           status: 'completed',
         },
       }),
@@ -106,10 +113,9 @@ export class GoalService {
     return [...todayStamps, ...aiStamps];
   }
 
-  async createGoal(request: CreateGoalRequest): Promise<CreateGoalResponse> {
+  async createGoal(userId: string, request: CreateGoalRequest): Promise<CreateGoalResponse> {
     return this.goalRepository.manager.transaction(async (manager) => {
-      // MEMO: 임시로 테스트 사용자를 바탕으로 조회
-      const user = await manager.getRepository(User).findOne({ where: { nickname: '테스트유저' } });
+      const user = await manager.getRepository(User).findOne({ where: { id: userId } });
 
       if (!user) {
         throw new NotFoundException('User not found');
