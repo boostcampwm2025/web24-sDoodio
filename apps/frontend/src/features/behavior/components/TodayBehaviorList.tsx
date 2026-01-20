@@ -15,7 +15,7 @@ interface BehaviorListProps {
   onDelete?: (id: string) => void;
 }
 
-export function TodayBahaviorList({
+export function TodayBehaviorList({
   goals,
   behaviors,
   onToggle,
