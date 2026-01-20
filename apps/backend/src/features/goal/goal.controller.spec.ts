@@ -12,6 +12,7 @@ describe('GoalController', () => {
   let goalService: {
     createGoal: jest.Mock;
     getGoals: jest.Mock;
+    getGoal: jest.Mock;
     getGoalBehaviors: jest.Mock;
     getGoalStamps: jest.Mock;
   };
@@ -20,6 +21,7 @@ describe('GoalController', () => {
     goalService = {
       createGoal: jest.fn(),
       getGoals: jest.fn(),
+      getGoal: jest.fn(),
       getGoalBehaviors: jest.fn(),
       getGoalStamps: jest.fn(),
     };
@@ -37,127 +39,156 @@ describe('GoalController', () => {
     controller = module.get<GoalController>(GoalController);
   });
 
-  it('전체 목표 목록을 반환한다', async () => {
-    const now = new Date('2026-01-01T00:00:00.000Z');
+  describe('getGoals', () => {
+    it('전체 목표 목록을 반환한다', async () => {
+      const userId = '019bd5d8-72dc-78ca-af5d-c93358058b32';
+      const now = new Date('2026-01-01T00:00:00.000Z');
 
-    goalService.getGoals.mockResolvedValue([
-      {
-        id: '01890fba-7e6a-7b6b-9e5d-0f3c9b8b4c6d',
-        createdAt: now,
-        updatedAt: now,
-        title: '건강',
-        color: 'mint',
-      },
-    ]);
-
-    await expect(controller.getGoals()).resolves.toEqual([
-      {
-        id: '01890fba-7e6a-7b6b-9e5d-0f3c9b8b4c6d',
-        createdAt: now.toISOString(),
-        updatedAt: now.toISOString(),
-        title: '건강',
-        color: 'mint',
-      },
-    ]);
-
-    expect(goalService.getGoals).toHaveBeenCalledTimes(1);
-  });
-
-  it('id로 목표 스탬프 목록을 반환한다', async () => {
-    const mockStamps = [
-      {
-        id: 's1',
-        title: '행동 1',
-        difficulty: '몰입하기',
-        updatedAt: '2024-01-01T00:00:00.000Z',
-      },
-      {
-        id: 's2',
-        title: 'AI 행동',
-        difficulty: 'AI',
-        updatedAt: '2024-01-02T00:00:00.000Z',
-      },
-    ];
-
-    goalService.getGoalStamps.mockResolvedValue(mockStamps);
-
-    await expect(controller.getGoalStamps('goal-abc')).resolves.toEqual(mockStamps);
-
-    expect(goalService.getGoalStamps).toHaveBeenCalledWith('goal-abc');
-    expect(goalService.getGoalStamps).toHaveBeenCalledTimes(1);
-  });
-
-  it('템플릿 목록을 반환한다', async () => {
-    (readFile as jest.Mock).mockResolvedValue(
-      [
-        JSON.stringify({
-          id: 'template-1',
-          title: '건강',
-          level: {
-            마음열기: ['물 한 컵 마시기'],
-            시작하기: ['스트레칭 5분'],
-            이어가기: ['주 2회 운동'],
-            몰입하기: ['헬스장 1시간'],
-          },
-        }),
-        JSON.stringify({
-          id: 'template-2',
-          title: '공부',
-          level: {
-            마음열기: ['책 펼치기'],
-            시작하기: ['10분 읽기'],
-            이어가기: ['30분 집중'],
-            몰입하기: ['1시간 정리'],
-          },
-        }),
-      ].join('\n'),
-    );
-
-    await expect(controller.getTemplates()).resolves.toHaveLength(2);
-    expect(readFile).toHaveBeenCalledWith(
-      expect.stringContaining('goal-templates.ndjson'),
-      'utf-8',
-    );
-  });
-
-  it('createGoal은 GoalService에 위임한다', async () => {
-    const response = {
-      id: '01890fba-7e6a-7b6b-9e5d-0f3c9b8b4c6d',
-      title: '건강',
-      color: 'blue',
-      behaviors: [
+      goalService.getGoals.mockResolvedValue([
         {
-          id: '01890fba-7e6a-7b6c-9e5d-0f3c9b8b4c6e',
-          title: '물 한 컵 마시기',
-          difficulty: '마음열기',
+          id: '01890fba-7e6a-7b6b-9e5d-0f3c9b8b4c6d',
+          createdAt: now,
+          updatedAt: now,
+          title: '건강',
+          color: 'mint',
         },
-      ],
-    };
-    goalService.createGoal.mockResolvedValue(response);
+      ]);
 
-    await expect(
-      controller.createGoal({
-        goalTitle: '건강',
-        goalColor: 'blue',
-        behaviors: [{ title: '물 한 컵 마시기', difficulty: '마음열기' }],
-      }),
-    ).resolves.toEqual(response);
-    expect(goalService.createGoal).toHaveBeenCalledWith({
-      goalTitle: '건강',
-      goalColor: 'blue',
-      behaviors: [{ title: '물 한 컵 마시기', difficulty: '마음열기' }],
+      await expect(controller.getGoals(userId)).resolves.toEqual([
+        {
+          id: '01890fba-7e6a-7b6b-9e5d-0f3c9b8b4c6d',
+          createdAt: now.toISOString(),
+          updatedAt: now.toISOString(),
+          title: '건강',
+          color: 'mint',
+        },
+      ]);
+
+      expect(goalService.getGoals).toHaveBeenCalledWith(userId);
     });
   });
 
-  it('목표의 행동 목록을 반환한다', async () => {
-    const goalId = '01890fba-7e6a-7b6b-9e5d-0f3c9b8b4c6d';
-    const behaviorId = '01890fba-7e6a-7b6c-9e5d-0f3c9b8b4c6e';
-    const behaviors = [{ id: behaviorId, title: 'b1', difficulty: 'easy', extra: 'ignored' }];
-    goalService.getGoalBehaviors.mockResolvedValue(behaviors);
+  describe('getGoalStamps', () => {
+    it('id로 목표 스탬프 목록을 반환한다', async () => {
+      const userId = '019bd5d8-72dc-78ca-af5d-c93358058b32';
+      const mockStamps = [
+        {
+          id: 's1',
+          title: '행동 1',
+          difficulty: '몰입하기',
+          updatedAt: '2024-01-01T00:00:00.000Z',
+        },
+        {
+          id: 's2',
+          title: 'AI 행동',
+          difficulty: 'AI',
+          updatedAt: '2024-01-02T00:00:00.000Z',
+        },
+      ];
 
-    await expect(controller.getGoalBehaviors(goalId)).resolves.toEqual([
-      { id: behaviorId, title: 'b1', difficulty: 'easy' },
-    ]);
-    expect(goalService.getGoalBehaviors).toHaveBeenCalledWith(goalId);
+      goalService.getGoalStamps.mockResolvedValue(mockStamps);
+
+      await expect(controller.getGoalStamps(userId, 'goal-abc')).resolves.toEqual(mockStamps);
+
+      expect(goalService.getGoalStamps).toHaveBeenCalledWith(userId, 'goal-abc');
+      expect(goalService.getGoalStamps).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('getTemplates', () => {
+    it('템플릿 목록을 반환한다', async () => {
+      (readFile as jest.Mock).mockResolvedValue(
+        [
+          JSON.stringify({
+            id: 'template-1',
+            title: '건강',
+            level: {
+              마음열기: ['물 한 컵 마시기'],
+              시작하기: ['스트레칭 5분'],
+              이어가기: ['주 2회 운동'],
+              몰입하기: ['헬스장 1시간'],
+            },
+          }),
+          JSON.stringify({
+            id: 'template-2',
+            title: '공부',
+            level: {
+              마음열기: ['책 펼치기'],
+              시작하기: ['10분 읽기'],
+              이어가기: ['30분 집중'],
+              몰입하기: ['1시간 정리'],
+            },
+          }),
+        ].join('\n'),
+      );
+
+      await expect(controller.getTemplates()).resolves.toHaveLength(2);
+      expect(readFile).toHaveBeenCalledWith(
+        expect.stringContaining('goal-templates.ndjson'),
+        'utf-8',
+      );
+    });
+  });
+
+  describe('createGoal', () => {
+    it('createGoal은 GoalService에 위임한다', async () => {
+      const userId = '019bd5d8-72dc-78ca-af5d-c93358058b32';
+      const response = {
+        id: '01890fba-7e6a-7b6b-9e5d-0f3c9b8b4c6d',
+        title: '건강',
+        color: 'blue',
+        behaviors: [
+          {
+            id: '01890fba-7e6a-7b6c-9e5d-0f3c9b8b4c6e',
+            title: '물 한 컵 마시기',
+            difficulty: '마음열기',
+          },
+        ],
+      };
+      goalService.createGoal.mockResolvedValue(response);
+
+      await expect(
+        controller.createGoal(userId, {
+          goalTitle: '건강',
+          goalColor: 'blue',
+          behaviors: [{ title: '물 한 컵 마시기', difficulty: '마음열기' }],
+        }),
+      ).resolves.toEqual(response);
+      expect(goalService.createGoal).toHaveBeenCalledWith(userId, {
+        goalTitle: '건강',
+        goalColor: 'blue',
+        behaviors: [{ title: '물 한 컵 마시기', difficulty: '마음열기' }],
+      });
+    });
+  });
+
+  describe('getGoalBehaviors', () => {
+    it('목표의 행동 목록을 반환한다', async () => {
+      const userId = '019bd5d8-72dc-78ca-af5d-c93358058b32';
+      const goalId = '01890fba-7e6a-7b6b-9e5d-0f3c9b8b4c6d';
+      const behaviorId = '01890fba-7e6a-7b6c-9e5d-0f3c9b8b4c6e';
+      const behaviors = [{ id: behaviorId, title: 'b1', difficulty: 'easy', extra: 'ignored' }];
+      goalService.getGoalBehaviors.mockResolvedValue(behaviors);
+
+      await expect(controller.getGoalBehaviors(userId, goalId)).resolves.toEqual([
+        { id: behaviorId, title: 'b1', difficulty: 'easy' },
+      ]);
+      expect(goalService.getGoalBehaviors).toHaveBeenCalledWith(userId, goalId);
+    });
+  });
+
+  describe('getGoal', () => {
+    it('id로 목표를 조회한다', async () => {
+      const userId = '019bd5d8-72dc-78ca-af5d-c93358058b32';
+      const goalId = '01890fba-7e6a-7b6b-9e5d-0f3c9b8b4c6d';
+      goalService.getGoal.mockResolvedValue({ id: goalId, title: '건강', color: 'mint' });
+
+      await expect(controller.getGoal(userId, goalId)).resolves.toEqual({
+        id: goalId,
+        title: '건강',
+        color: 'mint',
+      });
+      expect(goalService.getGoal).toHaveBeenCalledWith(userId, goalId);
+    });
   });
 });

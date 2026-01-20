@@ -24,11 +24,11 @@ export class BehaviorService {
     private readonly aiService: AIService,
   ) {}
 
-  async getTodayBehaviors() {
+  async getTodayBehaviors(userId: string) {
     return this.dataSource.transaction(async (manager) => {
       const todayDate = getKstDayKey();
 
-      const user = await manager.getRepository(User).findOne({ where: { nickname: '테스트유저' } });
+      const user = await manager.getRepository(User).findOne({ where: { id: userId } });
       if (!user) {
         throw new NotFoundException('User not found');
       }
@@ -52,6 +52,7 @@ export class BehaviorService {
 
       const behaviors = await manager.getRepository(Behavior).find({
         relations: { goal: true },
+        where: { goal: { user: { id: userId } } },
       });
 
       const extractedTodayBehavior = this.extractTodayBehaviors(behaviors);
@@ -80,8 +81,11 @@ export class BehaviorService {
     });
   }
 
-  async updateTodayBehaviorStatus(id: string, status: TodayBehaviorStatus) {
-    const result = await this.todayBehaviorRepository.update({ id }, { status });
+  async updateTodayBehaviorStatus(userId: string, id: string, status: TodayBehaviorStatus) {
+    const result = await this.todayBehaviorRepository.update(
+      { id, user: { id: userId } },
+      { status },
+    );
     if (result.affected === 0) {
       throw new NotFoundException('TodayBehavior not found');
     }
@@ -147,9 +151,10 @@ export class BehaviorService {
     return selected;
   }
 
-  async getAllBehaviors() {
+  async getAllBehaviors(userId: string) {
     const behaviors = await this.behaviorRepository.find({
       relations: ['goal'],
+      where: { goal: { user: { id: userId } } },
     });
 
     return behaviors.map((b) => ({
@@ -160,11 +165,11 @@ export class BehaviorService {
     }));
   }
 
-  async getAIBehaviors() {
+  async getAIBehaviors(userId: string) {
     return this.dataSource.transaction(async (manager) => {
       const todayDate = getKstDayKey();
 
-      const user = await manager.getRepository(User).findOne({ where: { nickname: '테스트유저' } });
+      const user = await manager.getRepository(User).findOne({ where: { id: userId } });
       if (!user) {
         throw new NotFoundException('User not found');
       }
@@ -186,7 +191,7 @@ export class BehaviorService {
     });
   }
 
-  async createAIBehaviors() {
+  async createAIBehaviors(userId: string) {
     const now = new Date();
     const weekBefore = new Date(now);
     weekBefore.setDate(now.getDate() - 7);
@@ -195,7 +200,7 @@ export class BehaviorService {
     const weekBeforeDate = getKstDayKey(weekBefore);
 
     return this.dataSource.transaction(async (manager) => {
-      const user = await manager.getRepository(User).findOne({ where: { nickname: '테스트유저' } });
+      const user = await manager.getRepository(User).findOne({ where: { id: userId } });
       if (!user) {
         throw new NotFoundException('User not found');
       }
@@ -291,8 +296,8 @@ export class BehaviorService {
     });
   }
 
-  async updateAIBehaviorStatus(id: string, status: AIBehaviorStatus) {
-    const result = await this.aiBehaviorRepository.update({ id }, { status });
+  async updateAIBehaviorStatus(userId: string, id: string, status: AIBehaviorStatus) {
+    const result = await this.aiBehaviorRepository.update({ id, user: { id: userId } }, { status });
     if (result.affected === 0) {
       throw new NotFoundException('AIBehavior not found');
     }

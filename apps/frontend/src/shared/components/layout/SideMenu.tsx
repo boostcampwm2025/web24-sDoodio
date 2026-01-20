@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { BREAKPOINTS } from '@/shared/constants/breakpoints';
+import useAuthStore from '@/stores/useAuthStore';
 
 interface SideMenuProps {
   isOpen: boolean;
@@ -8,6 +10,9 @@ interface SideMenuProps {
 }
 
 function SideMenu({ isOpen, onClose }: SideMenuProps) {
+  const navigate = useNavigate();
+  const { user, logout } = useAuthStore();
+
   // 스크롤 잠금
   useEffect(() => {
     if (isOpen) {
@@ -62,6 +67,20 @@ function SideMenu({ isOpen, onClose }: SideMenuProps) {
             <div className="bg-bg-alternative h-10 animate-pulse rounded-lg" />
             <div className="bg-bg-alternative h-10 animate-pulse rounded-lg" />
           </div>
+
+          {user ? (
+            <button
+              type="button"
+              className="hover:bg-bg-alternative w-full rounded-lg px-3 py-2 text-left text-sm text-[#d84343]"
+              onClick={async () => {
+                await logout();
+                onClose();
+                navigate('/login');
+              }}
+            >
+              로그아웃
+            </button>
+          ) : null}
         </div>
       </div>
     </>

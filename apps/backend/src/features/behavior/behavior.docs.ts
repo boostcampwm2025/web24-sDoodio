@@ -1,5 +1,4 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
-import { z } from 'zod';
 import {
   GetAllBehaviorsResponseSchema,
   GetAIBehaviorResponseSchema,
@@ -11,7 +10,11 @@ import {
   PatchTodayBehaviorStatusResponseSchema,
 } from '@web24/shared';
 
-export function registerBehaviorApi(registry: OpenAPIRegistry) {
+type CommonSchemas = {
+  errorResponse: ReturnType<OpenAPIRegistry['register']>;
+};
+
+export function registerBehaviorApi(registry: OpenAPIRegistry, common: CommonSchemas) {
   const getTodayBehaviorsResponse = registry.register(
     'GetTodayBehaviorsResponse',
     GetTodayBehaviorsResponseSchema,
@@ -44,19 +47,12 @@ export function registerBehaviorApi(registry: OpenAPIRegistry) {
     'PatchAIBehaviorStatusResponse',
     PatchAIBehaviorStatusResponseSchema,
   );
-  const errorResponse = registry.register(
-    'ErrorResponse',
-    z.object({
-      statusCode: z.number().int(),
-      message: z.string(),
-      path: z.string(),
-      timestamp: z.string(),
-    }),
-  );
+  const { errorResponse } = common;
 
   registry.registerPath({
     method: 'get',
     path: '/today-behaviors',
+    security: [{ sessionAuth: [] }],
     responses: {
       200: {
         description:
@@ -73,6 +69,7 @@ export function registerBehaviorApi(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: 'get',
     path: '/today-behaviors/ai',
+    security: [{ sessionAuth: [] }],
     responses: {
       200: {
         description: '오늘 AI 행동 목록을 반환, 없으면 빈 리스트',
@@ -88,6 +85,7 @@ export function registerBehaviorApi(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: 'post',
     path: '/today-behaviors/ai',
+    security: [{ sessionAuth: [] }],
     responses: {
       200: {
         description:
@@ -104,6 +102,7 @@ export function registerBehaviorApi(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: 'patch',
     path: '/today-behaviors/ai/{id}/status',
+    security: [{ sessionAuth: [] }],
     request: {
       body: {
         content: {
@@ -136,6 +135,7 @@ export function registerBehaviorApi(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: 'patch',
     path: '/today-behaviors/{id}/status',
+    security: [{ sessionAuth: [] }],
     request: {
       body: {
         content: {
@@ -169,6 +169,7 @@ export function registerBehaviorApi(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: 'get',
     path: '/behaviors/all',
+    security: [{ sessionAuth: [] }],
     responses: {
       200: {
         description: 'List of all behaviors',

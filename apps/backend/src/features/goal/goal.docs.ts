@@ -30,6 +30,7 @@ export function registerGoalApi(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: 'get',
     path: '/goals',
+    security: [{ sessionAuth: [] }],
     responses: {
       200: {
         description: 'List of goals',
@@ -45,6 +46,7 @@ export function registerGoalApi(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: 'post',
     path: '/goals',
+    security: [{ sessionAuth: [] }],
     request: {
       body: {
         content: {
@@ -69,6 +71,7 @@ export function registerGoalApi(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: 'get',
     path: '/goals/templates',
+    security: [{ sessionAuth: [] }],
     responses: {
       200: {
         description: 'List of goal templates',
@@ -84,6 +87,7 @@ export function registerGoalApi(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: 'get',
     path: '/goals/{id}',
+    security: [{ sessionAuth: [] }],
     responses: {
       200: {
         description: 'Goal detail',
@@ -99,6 +103,7 @@ export function registerGoalApi(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: 'get',
     path: '/goals/{id}/behaviors',
+    security: [{ sessionAuth: [] }],
     responses: {
       200: {
         description: 'List of behaviors for a goal',
@@ -114,6 +119,7 @@ export function registerGoalApi(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: 'get',
     path: '/goals/{id}/stamps',
+    security: [{ sessionAuth: [] }],
     responses: {
       200: {
         description: 'List of stamps for a goal',

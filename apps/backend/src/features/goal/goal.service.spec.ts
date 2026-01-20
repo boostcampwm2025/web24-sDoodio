@@ -83,7 +83,8 @@ describe('GoalService', () => {
 
   describe('getGoals', () => {
     it('목표 목록을 반환한다', async () => {
-      const user = { id: 'user-1', nickname: '테스트유저' };
+      const userId = 'user-1';
+      const user = { id: userId, nickname: '테스트유저' };
       const userRepository = { findOne: jest.fn().mockResolvedValue(user) };
 
       const goals = [
@@ -94,8 +95,8 @@ describe('GoalService', () => {
 
       const { service } = await createService({ goalRepository, userRepository });
 
-      await expect(service.getGoals()).resolves.toEqual(goals);
-      expect(userRepository.findOne).toHaveBeenCalledWith({ where: { nickname: '테스트유저' } });
+      await expect(service.getGoals(userId)).resolves.toEqual(goals);
+      expect(userRepository.findOne).toHaveBeenCalledWith({ where: { id: userId } });
       expect(goalRepository.find).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { user: { id: user.id } },
@@ -104,18 +105,22 @@ describe('GoalService', () => {
     });
 
     it('유저가 없으면 NotFoundException을 던진다', async () => {
+      const userId = 'user-1';
       const userRepository = { findOne: jest.fn().mockResolvedValue(null) };
       const goalRepository = { find: jest.fn() };
 
       const { service } = await createService({ goalRepository, userRepository });
 
-      await expect(service.getGoals()).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.getGoals(userId)).rejects.toBeInstanceOf(NotFoundException);
       expect(goalRepository.find).not.toHaveBeenCalled();
     });
   });
 
   describe('getGoalStamps', () => {
     it('goalId로 완료된 TodayBehavior와 AIBehavior 목록을 반환한다', async () => {
+      const userId = 'user-1';
+      const goalId = 'goal-abc';
+      const goalRepository = { findOne: jest.fn().mockResolvedValue({ id: goalId }) };
       const todayBehaviors = [
         {
           id: 'tb1',
@@ -152,9 +157,13 @@ describe('GoalService', () => {
         find: jest.fn().mockResolvedValue(aiBehaviors),
       };
 
-      const { service } = await createService({ todayBehaviorRepository, aiBehaviorRepository });
+      const { service } = await createService({
+        goalRepository,
+        todayBehaviorRepository,
+        aiBehaviorRepository,
+      });
 
-      await expect(service.getGoalStamps('goal-abc')).resolves.toEqual([
+      await expect(service.getGoalStamps(userId, goalId)).resolves.toEqual([
         {
           id: 'tb1',
           title: '행동 1',
@@ -181,10 +190,13 @@ describe('GoalService', () => {
         },
       ]);
 
+      expect(goalRepository.findOne).toHaveBeenCalledWith({
+        where: { id: goalId, user: { id: userId } },
+      });
       expect(todayBehaviorRepository.find).toHaveBeenCalledWith({
         where: {
           behavior: {
-            goal: { id: 'goal-abc' },
+            goal: { id: goalId },
           },
           status: 'completed',
         },
@@ -192,7 +204,7 @@ describe('GoalService', () => {
       });
       expect(aiBehaviorRepository.find).toHaveBeenCalledWith({
         where: {
-          goal: { id: 'goal-abc' },
+          goal: { id: goalId },
           status: 'completed',
         },
       });
@@ -201,6 +213,7 @@ describe('GoalService', () => {
 
   describe('createGoal', () => {
     it('유저가 없으면 NotFoundException을 던진다', async () => {
+      const userId = 'user-1';
       const userRepository = { findOne: jest.fn().mockResolvedValue(null) };
       const goalRepository = { create: jest.fn(), save: jest.fn() };
       const behaviorRepository = { create: jest.fn(), save: jest.fn() };
@@ -224,12 +237,13 @@ describe('GoalService', () => {
 
       const { service } = await createService({ goalRepository: goalRepositoryWithManager });
 
-      await expect(service.createGoal(request)).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.createGoal(userId, request)).rejects.toBeInstanceOf(NotFoundException);
       expect(goalRepository.save).not.toHaveBeenCalled();
     });
 
     it('목표와 행동을 저장하고 응답을 반환한다', async () => {
-      const user = { id: 'user-1', nickname: '테스트유저' };
+      const userId = 'user-1';
+      const user = { id: userId, nickname: '테스트유저' };
       const userRepository = { findOne: jest.fn().mockResolvedValue(user) };
 
       const goal = { title: request.goalTitle, color: request.goalColor, user };
@@ -277,7 +291,7 @@ describe('GoalService', () => {
 
       const { service } = await createService({ goalRepository: goalRepositoryWithManager });
 
-      await expect(service.createGoal(request)).resolves.toEqual({
+      await expect(service.createGoal(userId, request)).resolves.toEqual({
         id: '01890fba-7e6a-7b6b-9e5d-0f3c9b8b4c6d',
         title: '건강',
         color: 'blue',
@@ -289,7 +303,7 @@ describe('GoalService', () => {
           },
         ],
       });
-      expect(userRepository.findOne).toHaveBeenCalledWith({ where: { nickname: '테스트유저' } });
+      expect(userRepository.findOne).toHaveBeenCalledWith({ where: { id: userId } });
       expect(goalRepository.create).toHaveBeenCalledWith({
         title: request.goalTitle,
         color: request.goalColor,
@@ -307,6 +321,7 @@ describe('GoalService', () => {
 
   describe('getGoalBehaviors', () => {
     it('목표의 행동 목록을 반환한다', async () => {
+      const userId = 'user-1';
       const goalId = 'goal-1';
       const behaviors = [
         { id: 'b1', title: 'b1', difficulty: 'easy' },
@@ -320,14 +335,15 @@ describe('GoalService', () => {
 
       const { service } = await createService({ goalRepository });
 
-      await expect(service.getGoalBehaviors(goalId)).resolves.toEqual(behaviors);
+      await expect(service.getGoalBehaviors(userId, goalId)).resolves.toEqual(behaviors);
       expect(goalRepository.findOne).toHaveBeenCalledWith({
-        where: { id: goalId },
+        where: { id: goalId, user: { id: userId } },
         relations: ['behaviors'],
       });
     });
 
     it('존재하지 않는 목표의 행동 목록 조회 시 NotFoundException을 던진다', async () => {
+      const userId = 'user-1';
       const goalId = 'goal-1';
       const goalRepository = {
         findOne: jest.fn().mockResolvedValue(null),
@@ -335,7 +351,9 @@ describe('GoalService', () => {
 
       const { service } = await createService({ goalRepository });
 
-      await expect(service.getGoalBehaviors(goalId)).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.getGoalBehaviors(userId, goalId)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
   });
 });

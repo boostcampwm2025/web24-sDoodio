@@ -70,12 +70,13 @@ describe('BehaviorService', () => {
       todayBehaviorRepository.update.mockResolvedValue({ affected: 1 });
 
       const result = await service.updateTodayBehaviorStatus(
+        'user-1',
         'tb-1',
         'completed' as TodayBehaviorStatus,
       );
 
       expect(todayBehaviorRepository.update).toHaveBeenCalledWith(
-        { id: 'tb-1' },
+        { id: 'tb-1', user: { id: 'user-1' } },
         { status: 'completed' },
       );
       expect(result).toEqual({ id: 'tb-1', status: 'completed' });
@@ -85,13 +86,14 @@ describe('BehaviorService', () => {
       todayBehaviorRepository.update.mockResolvedValue({ affected: 0 });
 
       await expect(
-        service.updateTodayBehaviorStatus('tb-404', 'completed' as TodayBehaviorStatus),
+        service.updateTodayBehaviorStatus('user-1', 'tb-404', 'completed' as TodayBehaviorStatus),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 
   describe('getTodayBehaviors', () => {
     it('기존 오늘 행동이 있으면 매핑해서 반환한다', async () => {
+      const userId = 'user-1';
       const user = { id: 'user-1', nickname: '테스트유저' };
       const existing = [
         {
@@ -121,9 +123,9 @@ describe('BehaviorService', () => {
         work(manager),
       );
 
-      const result = await service.getTodayBehaviors();
+      const result = await service.getTodayBehaviors(userId);
 
-      expect(userRepository.findOne).toHaveBeenCalledWith({ where: { nickname: '테스트유저' } });
+      expect(userRepository.findOne).toHaveBeenCalledWith({ where: { id: userId } });
       expect(todayRepository.find).toHaveBeenCalledWith({
         where: {
           date: expect.any(String),
@@ -147,6 +149,7 @@ describe('BehaviorService', () => {
     });
 
     it('기존 오늘 행동이 없으면 추출 후 저장하고 반환한다', async () => {
+      const userId = 'user-1';
       const user = { id: 'user-1', nickname: '테스트유저' };
       const behaviors = [
         {
@@ -182,9 +185,9 @@ describe('BehaviorService', () => {
       );
       const extractSpy = jest.spyOn(service, 'extractTodayBehaviors').mockReturnValue(behaviors);
 
-      const result = await service.getTodayBehaviors();
+      const result = await service.getTodayBehaviors(userId);
 
-      expect(userRepository.findOne).toHaveBeenCalledWith({ where: { nickname: '테스트유저' } });
+      expect(userRepository.findOne).toHaveBeenCalledWith({ where: { id: userId } });
       expect(todayRepository.find).toHaveBeenCalledWith({
         where: {
           date: expect.any(String),
@@ -193,7 +196,10 @@ describe('BehaviorService', () => {
         },
         relations: { behavior: { goal: true }, user: true },
       });
-      expect(behaviorRepository.find).toHaveBeenCalledWith({ relations: { goal: true } });
+      expect(behaviorRepository.find).toHaveBeenCalledWith({
+        relations: { goal: true },
+        where: { goal: { user: { id: userId } } },
+      });
       expect(extractSpy).toHaveBeenCalledWith(behaviors);
       expect(todayRepository.save).toHaveBeenCalledTimes(1);
       expect(result).toEqual([
@@ -343,6 +349,7 @@ describe('BehaviorService', () => {
 
   describe('getAllBehaviors', () => {
     it('전체 행동 목록을 반환한다', async () => {
+      const userId = 'user-1';
       const behaviors = [
         {
           id: 'b1',
@@ -353,10 +360,11 @@ describe('BehaviorService', () => {
       ];
       repository.find.mockResolvedValue(behaviors);
 
-      const result = await service.getAllBehaviors();
+      const result = await service.getAllBehaviors(userId);
 
       expect(repository.find).toHaveBeenCalledWith({
         relations: ['goal'],
+        where: { goal: { user: { id: userId } } },
       });
 
       expect(result).toEqual([
@@ -372,6 +380,7 @@ describe('BehaviorService', () => {
 
   describe('getAIBehaviors', () => {
     it('AI 행동 목록을 매핑해서 반환한다', async () => {
+      const userId = 'user-1';
       const user = { id: 'user-1', nickname: '테스트유저' };
       const aiBehaviors = [
         {
@@ -395,9 +404,9 @@ describe('BehaviorService', () => {
         work(manager),
       );
 
-      const result = await service.getAIBehaviors();
+      const result = await service.getAIBehaviors(userId);
 
-      expect(userRepository.findOne).toHaveBeenCalledWith({ where: { nickname: '테스트유저' } });
+      expect(userRepository.findOne).toHaveBeenCalledWith({ where: { id: userId } });
       expect(aiBehaviorRepo.find).toHaveBeenCalledWith({
         where: { date: expect.any(String), user: { id: user.id } },
         relations: { goal: true },
@@ -418,6 +427,7 @@ describe('BehaviorService', () => {
 
   describe('createAIBehaviors', () => {
     it('AI 행동을 생성하고 매핑해서 반환한다', async () => {
+      const userId = 'user-1';
       const user = { id: 'user-1', nickname: '테스트유저' };
       const bestGoal = {
         id: 'goal-1',
@@ -456,9 +466,9 @@ describe('BehaviorService', () => {
       );
       aiService.getAIBehaviorTitles.mockResolvedValue(['AI 행동1', 'AI 행동2']);
 
-      const result = await service.createAIBehaviors();
+      const result = await service.createAIBehaviors(userId);
 
-      expect(userRepository.findOne).toHaveBeenCalledWith({ where: { nickname: '테스트유저' } });
+      expect(userRepository.findOne).toHaveBeenCalledWith({ where: { id: userId } });
       expect(todayRepository.find).toHaveBeenCalledWith({
         where: expect.objectContaining({ user: { id: user.id } }),
         relations: { behavior: { goal: true } },
@@ -512,10 +522,14 @@ describe('BehaviorService', () => {
     it('ai behavior 상태를 업데이트한다', async () => {
       aiBehaviorRepository.update.mockResolvedValue({ affected: 1 });
 
-      const result = await service.updateAIBehaviorStatus('ai-1', 'completed' as AIBehaviorStatus);
+      const result = await service.updateAIBehaviorStatus(
+        'user-1',
+        'ai-1',
+        'completed' as AIBehaviorStatus,
+      );
 
       expect(aiBehaviorRepository.update).toHaveBeenCalledWith(
-        { id: 'ai-1' },
+        { id: 'ai-1', user: { id: 'user-1' } },
         { status: 'completed' },
       );
       expect(result).toEqual({ id: 'ai-1', status: 'completed' });
@@ -525,7 +539,7 @@ describe('BehaviorService', () => {
       aiBehaviorRepository.update.mockResolvedValue({ affected: 0 });
 
       await expect(
-        service.updateAIBehaviorStatus('ai-404', 'completed' as AIBehaviorStatus),
+        service.updateAIBehaviorStatus('user-1', 'ai-404', 'completed' as AIBehaviorStatus),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
   });

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, UsePipes } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -13,15 +13,18 @@ import {
   type GoalTemplateListResponse,
 } from '@web24/shared';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
+import { SessionAuthGuard } from '../../common/guards/session-auth.guard';
+import { UserId } from '../../common/decorators/user-id.decorator';
 import { GoalService } from './goal.service';
 
 @Controller('goals')
+@UseGuards(SessionAuthGuard)
 export class GoalController {
   constructor(private readonly goalService: GoalService) {}
 
   @Get()
-  async getGoals(): Promise<GetGoalsResponse> {
-    const goals = await this.goalService.getGoals();
+  async getGoals(@UserId() userId: string): Promise<GetGoalsResponse> {
+    const goals = await this.goalService.getGoals(userId);
     return goals.map((goal) => ({
       id: goal.id,
       createdAt: goal.createdAt.toISOString(),
@@ -46,8 +49,11 @@ export class GoalController {
   }
 
   @Get(':id')
-  async getGoal(@Param('id', ParseUUIDPipe) id: string): Promise<GetGoalResponse> {
-    const goal = await this.goalService.getGoal(id);
+  async getGoal(
+    @UserId() userId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<GetGoalResponse> {
+    const goal = await this.goalService.getGoal(userId, id);
     return {
       id: goal.id,
       title: goal.title,
@@ -56,8 +62,8 @@ export class GoalController {
   }
 
   @Get(':id/behaviors')
-  async getGoalBehaviors(@Param('id', ParseUUIDPipe) id: string) {
-    const behaviors = await this.goalService.getGoalBehaviors(id);
+  async getGoalBehaviors(@UserId() userId: string, @Param('id', ParseUUIDPipe) id: string) {
+    const behaviors = await this.goalService.getGoalBehaviors(userId, id);
     return behaviors.map((b) => ({
       id: b.id,
       title: b.title,
@@ -66,13 +72,18 @@ export class GoalController {
   }
 
   @Get(':id/stamps')
-  async getGoalStamps(@Param('id', ParseUUIDPipe) id: string): Promise<GetGoalStampsResponse> {
-    return this.goalService.getGoalStamps(id);
+  async getGoalStamps(
+    @UserId() userId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<GetGoalStampsResponse> {
+    return this.goalService.getGoalStamps(userId, id);
   }
 
   @Post()
-  @UsePipes(new ZodValidationPipe(CreateGoalRequestSchema))
-  async createGoal(@Body() body: CreateGoalRequest): Promise<CreateGoalResponse> {
-    return this.goalService.createGoal(body);
+  async createGoal(
+    @UserId() userId: string,
+    @Body(new ZodValidationPipe(CreateGoalRequestSchema)) body: CreateGoalRequest,
+  ): Promise<CreateGoalResponse> {
+    return this.goalService.createGoal(userId, body);
   }
 }

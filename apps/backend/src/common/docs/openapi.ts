@@ -1,17 +1,18 @@
 import { OpenAPIRegistry, OpenApiGeneratorV3 } from '@asteasolutions/zod-to-openapi';
 
-import { registerSampleApi } from './sample.docs';
+import { registerCommonSchemas } from './common.docs';
 import { registerBehaviorApi } from '../../features/behavior/behavior.docs';
 import { registerGoalApi } from '../../features/goal/goal.docs';
-import { registerUserApi } from '../../features/user/user.docs';
+import { registerAuthApi } from '../../features/auth/auth.docs';
 
 const registry = new OpenAPIRegistry();
 
+const commonSchemas = registerCommonSchemas(registry);
+
 // Register Feature APIs
-registerSampleApi(registry);
-registerUserApi(registry);
 registerGoalApi(registry);
-registerBehaviorApi(registry);
+registerBehaviorApi(registry, commonSchemas);
+registerAuthApi(registry, commonSchemas);
 
 type OpenApiDocument = ReturnType<OpenApiGeneratorV3['generateDocument']>;
 
@@ -25,3 +26,15 @@ export const openApiDocument: OpenApiDocument = new OpenApiGeneratorV3(
   },
   servers: [{ url: '/api' }],
 });
+
+openApiDocument.components = {
+  ...openApiDocument.components,
+  securitySchemes: {
+    ...openApiDocument.components?.securitySchemes,
+    sessionAuth: {
+      type: 'apiKey',
+      in: 'cookie',
+      name: 'connect.sid',
+    },
+  },
+};
