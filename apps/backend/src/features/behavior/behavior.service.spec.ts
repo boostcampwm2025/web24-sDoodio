@@ -141,6 +141,21 @@ describe('BehaviorService', () => {
   });
 
   describe('getTodayBehaviors', () => {
+    it('user가 없으면 NotFoundException을 던진다', async () => {
+      const userId = 'user-404';
+      const userRepository = { findOne: jest.fn().mockResolvedValue(null) };
+      const manager = {
+        getRepository: () => userRepository,
+      };
+
+      dataSource.transaction.mockImplementation(async (work: (m: typeof manager) => unknown) =>
+        work(manager),
+      );
+
+      await expect(service.getTodayBehaviors(userId)).rejects.toBeInstanceOf(NotFoundException);
+      expect(userRepository.findOne).toHaveBeenCalledWith({ where: { id: userId } });
+    });
+
     it('기존 오늘 행동이 있으면 매핑해서 반환한다', async () => {
       const userId = 'user-1';
       const user = { id: 'user-1', nickname: '테스트유저' };
@@ -645,6 +660,21 @@ describe('BehaviorService', () => {
   });
 
   describe('getAIBehaviors', () => {
+    it('user가 없으면 NotFoundException을 던진다', async () => {
+      const userId = 'user-404';
+      const userRepository = { findOne: jest.fn().mockResolvedValue(null) };
+      const manager = {
+        getRepository: () => userRepository,
+      };
+
+      dataSource.transaction.mockImplementation(async (work: (m: typeof manager) => unknown) =>
+        work(manager),
+      );
+
+      await expect(service.getAIBehaviors(userId)).rejects.toBeInstanceOf(NotFoundException);
+      expect(userRepository.findOne).toHaveBeenCalledWith({ where: { id: userId } });
+    });
+
     it('AI 행동 목록을 매핑해서 반환한다', async () => {
       const userId = 'user-1';
       const user = { id: 'user-1', nickname: '테스트유저' };
@@ -692,6 +722,74 @@ describe('BehaviorService', () => {
   });
 
   describe('createAIBehaviors', () => {
+    it('user가 없으면 NotFoundException을 던진다', async () => {
+      const userId = 'user-404';
+      const userRepository = { findOne: jest.fn().mockResolvedValue(null) };
+      const manager = {
+        getRepository: () => userRepository,
+      };
+
+      dataSource.transaction.mockImplementation(async (work: (m: typeof manager) => unknown) =>
+        work(manager),
+      );
+
+      await expect(service.createAIBehaviors(userId)).rejects.toBeInstanceOf(NotFoundException);
+      expect(userRepository.findOne).toHaveBeenCalledWith({ where: { id: userId } });
+    });
+
+    it('기존 AI 행동이 있으면 재생성하지 않고 반환한다', async () => {
+      const userId = 'user-1';
+      const user = { id: 'user-1', nickname: '테스트유저' };
+      const existingAIBehaviors = [
+        {
+          id: 'ai-1',
+          title: 'AI 행동',
+          status: 'pending',
+          goal: { title: '건강한 생활', color: 'mint' },
+        },
+      ] as AIBehavior[];
+
+      const userRepository = { findOne: jest.fn().mockResolvedValue(user) };
+      const todayRepository = { find: jest.fn() };
+      const goalRepository = { findOne: jest.fn() };
+      const aiBehaviorRepo = {
+        find: jest.fn().mockResolvedValue(existingAIBehaviors),
+      };
+
+      const manager = {
+        getRepository: (entity: unknown) => {
+          if (entity === (AIBehavior as unknown)) return aiBehaviorRepo;
+          if (entity === (TodayBehavior as unknown)) return todayRepository;
+          if (entity === (Goal as unknown)) return goalRepository;
+          return userRepository;
+        },
+      };
+
+      dataSource.transaction.mockImplementation(async (work: (m: typeof manager) => unknown) =>
+        work(manager),
+      );
+
+      const result = await service.createAIBehaviors(userId);
+
+      expect(aiBehaviorRepo.find).toHaveBeenCalledWith({
+        where: { date: expect.any(String), user: { id: user.id } },
+        relations: { goal: true },
+      });
+      expect(todayRepository.find).not.toHaveBeenCalled();
+      expect(aiService.getAIBehaviorTitles).not.toHaveBeenCalled();
+      expect(result).toEqual([
+        {
+          id: 'ai-1',
+          title: 'AI 행동',
+          goalTitle: '건강한 생활',
+          goalColor: 'mint',
+          difficulty: BEHAVIOR_DIFFICULTIES[4],
+          isChecked: false,
+          isRecommended: true,
+        },
+      ]);
+    });
+
     it('AI 행동을 생성하고 매핑해서 반환한다', async () => {
       const userId = 'user-1';
       const user = { id: 'user-1', nickname: '테스트유저' };
@@ -781,6 +879,183 @@ describe('BehaviorService', () => {
           isRecommended: true,
         },
       ]);
+    });
+
+    it('완료율이 높은 목표를 우선 선택한다', async () => {
+      const userId = 'user-1';
+      const user = { id: 'user-1', nickname: '테스트유저' };
+      const bestGoal = {
+        id: 'goal-a',
+        title: '최고 목표',
+        color: 'mint',
+        behaviors: [],
+      };
+      const weekTodayBehaviors = [
+        { behavior: { goal: { id: 'goal-a' } }, status: 'completed' },
+        { behavior: { goal: { id: 'goal-a' } }, status: 'completed' },
+        { behavior: { goal: { id: 'goal-b' } }, status: 'completed' },
+        { behavior: { goal: { id: 'goal-b' } }, status: 'pending' },
+      ] as TodayBehavior[];
+
+      const userRepository = { findOne: jest.fn().mockResolvedValue(user) };
+      const todayRepository = { find: jest.fn().mockResolvedValue(weekTodayBehaviors) };
+      const goalRepository = { findOne: jest.fn().mockResolvedValue(bestGoal) };
+      const aiBehaviorRepo = {
+        find: jest.fn().mockResolvedValue([]),
+        create: jest.fn((value) => value),
+        save: jest.fn().mockResolvedValue([]),
+      };
+
+      const manager = {
+        getRepository: (entity: unknown) => {
+          if (entity === (TodayBehavior as unknown)) return todayRepository;
+          if (entity === (Goal as unknown)) return goalRepository;
+          if (entity === (AIBehavior as unknown)) return aiBehaviorRepo;
+          return userRepository;
+        },
+      };
+
+      dataSource.transaction.mockImplementation(async (work: (m: typeof manager) => unknown) =>
+        work(manager),
+      );
+      aiService.getAIBehaviorTitles.mockResolvedValue([]);
+
+      await service.createAIBehaviors(userId);
+
+      expect(goalRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 'goal-a' },
+        relations: { behaviors: true },
+      });
+    });
+
+    it('완료율이 같으면 총 횟수가 많은 목표를 선택한다', async () => {
+      const userId = 'user-1';
+      const user = { id: 'user-1', nickname: '테스트유저' };
+      const bestGoal = {
+        id: 'goal-b',
+        title: '많이 한 목표',
+        color: 'blue',
+        behaviors: [],
+      };
+      const weekTodayBehaviors = [
+        { behavior: { goal: { id: 'goal-a' } }, status: 'completed' },
+        { behavior: { goal: { id: 'goal-a' } }, status: 'pending' },
+        { behavior: { goal: { id: 'goal-b' } }, status: 'completed' },
+        { behavior: { goal: { id: 'goal-b' } }, status: 'completed' },
+        { behavior: { goal: { id: 'goal-b' } }, status: 'pending' },
+        { behavior: { goal: { id: 'goal-b' } }, status: 'pending' },
+      ] as TodayBehavior[];
+
+      const userRepository = { findOne: jest.fn().mockResolvedValue(user) };
+      const todayRepository = { find: jest.fn().mockResolvedValue(weekTodayBehaviors) };
+      const goalRepository = { findOne: jest.fn().mockResolvedValue(bestGoal) };
+      const aiBehaviorRepo = {
+        find: jest.fn().mockResolvedValue([]),
+        create: jest.fn((value) => value),
+        save: jest.fn().mockResolvedValue([]),
+      };
+
+      const manager = {
+        getRepository: (entity: unknown) => {
+          if (entity === (TodayBehavior as unknown)) return todayRepository;
+          if (entity === (Goal as unknown)) return goalRepository;
+          if (entity === (AIBehavior as unknown)) return aiBehaviorRepo;
+          return userRepository;
+        },
+      };
+
+      dataSource.transaction.mockImplementation(async (work: (m: typeof manager) => unknown) =>
+        work(manager),
+      );
+      aiService.getAIBehaviorTitles.mockResolvedValue([]);
+
+      await service.createAIBehaviors(userId);
+
+      expect(goalRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 'goal-b' },
+        relations: { behaviors: true },
+      });
+    });
+
+    it('주간 기록이 없으면 최신 목표를 선택한다', async () => {
+      const userId = 'user-1';
+      const user = { id: 'user-1', nickname: '테스트유저' };
+      const bestGoal = {
+        id: 'goal-latest',
+        title: '최근 목표',
+        color: 'mint',
+        behaviors: [],
+      };
+
+      const userRepository = { findOne: jest.fn().mockResolvedValue(user) };
+      const todayRepository = { find: jest.fn().mockResolvedValue([]) };
+      const goalRepository = { findOne: jest.fn().mockResolvedValue(bestGoal) };
+      const aiBehaviorRepo = {
+        find: jest.fn().mockResolvedValue([]),
+        create: jest.fn((value) => value),
+        save: jest.fn().mockResolvedValue([{ id: 'ai-1', title: 'AI 행동', goal: bestGoal }]),
+      };
+
+      const manager = {
+        getRepository: (entity: unknown) => {
+          if (entity === (TodayBehavior as unknown)) return todayRepository;
+          if (entity === (Goal as unknown)) return goalRepository;
+          if (entity === (AIBehavior as unknown)) return aiBehaviorRepo;
+          return userRepository;
+        },
+      };
+
+      dataSource.transaction.mockImplementation(async (work: (m: typeof manager) => unknown) =>
+        work(manager),
+      );
+      aiService.getAIBehaviorTitles.mockResolvedValue(['AI 행동']);
+
+      const result = await service.createAIBehaviors(userId);
+
+      expect(goalRepository.findOne).toHaveBeenCalledWith({
+        where: { user: { id: user.id } },
+        order: { createdAt: 'DESC' },
+        relations: { behaviors: true },
+      });
+      expect(result).toEqual([
+        {
+          id: 'ai-1',
+          title: 'AI 행동',
+          goalTitle: '최근 목표',
+          goalColor: 'mint',
+          difficulty: BEHAVIOR_DIFFICULTIES[4],
+          isChecked: false,
+          isRecommended: true,
+        },
+      ]);
+    });
+
+    it('목표가 없으면 빈 배열을 반환한다', async () => {
+      const userId = 'user-1';
+      const user = { id: 'user-1', nickname: '테스트유저' };
+
+      const userRepository = { findOne: jest.fn().mockResolvedValue(user) };
+      const todayRepository = { find: jest.fn().mockResolvedValue([]) };
+      const goalRepository = { findOne: jest.fn().mockResolvedValue(null) };
+      const aiBehaviorRepo = { find: jest.fn().mockResolvedValue([]) };
+
+      const manager = {
+        getRepository: (entity: unknown) => {
+          if (entity === (TodayBehavior as unknown)) return todayRepository;
+          if (entity === (Goal as unknown)) return goalRepository;
+          if (entity === (AIBehavior as unknown)) return aiBehaviorRepo;
+          return userRepository;
+        },
+      };
+
+      dataSource.transaction.mockImplementation(async (work: (m: typeof manager) => unknown) =>
+        work(manager),
+      );
+
+      const result = await service.createAIBehaviors(userId);
+
+      expect(aiService.getAIBehaviorTitles).not.toHaveBeenCalled();
+      expect(result).toEqual([]);
     });
   });
 
