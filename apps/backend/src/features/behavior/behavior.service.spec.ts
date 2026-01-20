@@ -23,6 +23,7 @@ describe('BehaviorService', () => {
     update: jest.Mock;
     findOne?: jest.Mock;
     delete?: jest.Mock;
+    softDelete?: jest.Mock;
   };
   let aiBehaviorRepository: { find: jest.Mock; update: jest.Mock };
   let aiService: { createAIBehaviors: jest.Mock; getAIBehaviorTitles: jest.Mock };
@@ -102,14 +103,14 @@ describe('BehaviorService', () => {
         id: 'tb-1',
         status: 'completed',
       });
-      todayBehaviorRepository.delete = jest.fn();
+      todayBehaviorRepository.softDelete = jest.fn();
 
       await expect(service.deleteTodayBehavior('tb-1')).rejects.toBeInstanceOf(BadRequestException);
     });
 
     it('대상이 없으면 NotFoundException을 던진다', async () => {
       todayBehaviorRepository.findOne = jest.fn().mockResolvedValue(null);
-      todayBehaviorRepository.delete = jest.fn();
+      todayBehaviorRepository.softDelete = jest.fn();
 
       await expect(service.deleteTodayBehavior('tb-404')).rejects.toBeInstanceOf(NotFoundException);
     });
@@ -119,11 +120,15 @@ describe('BehaviorService', () => {
         id: 'tb-1',
         status: 'pending',
       });
-      todayBehaviorRepository.delete = jest.fn().mockResolvedValue({ affected: 1 });
+      todayBehaviorRepository.softDelete = jest.fn().mockResolvedValue({ affected: 1 });
 
       const result = await service.deleteTodayBehavior('tb-1');
 
-      expect(todayBehaviorRepository.delete).toHaveBeenCalledWith({ id: 'tb-1' });
+      expect(todayBehaviorRepository.update).toHaveBeenCalledWith(
+        { id: 'tb-1' },
+        { status: 'deleted' },
+      );
+      expect(todayBehaviorRepository.softDelete).toHaveBeenCalledWith({ id: 'tb-1' });
       expect(result).toEqual({ id: 'tb-1' });
     });
   });
@@ -167,7 +172,7 @@ describe('BehaviorService', () => {
         where: {
           date: expect.any(String),
           user: { id: user.id },
-          status: Not(In(['skipped', 'ignored'])),
+          status: Not(In(['skipped', 'ignored', 'deleted'])),
         },
         relations: { behavior: { goal: true }, user: true },
       });
@@ -229,7 +234,7 @@ describe('BehaviorService', () => {
         where: {
           date: expect.any(String),
           user: { id: user.id },
-          status: Not(In(['skipped', 'ignored'])),
+          status: Not(In(['skipped', 'ignored', 'deleted'])),
         },
         relations: { behavior: { goal: true }, user: true },
       });

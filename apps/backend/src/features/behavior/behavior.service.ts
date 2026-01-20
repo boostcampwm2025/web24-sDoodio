@@ -34,7 +34,11 @@ export class BehaviorService {
       }
 
       const existingTodayBehavior = await manager.getRepository(TodayBehavior).find({
-        where: { date: todayDate, user: { id: user.id }, status: Not(In(['skipped', 'ignored'])) },
+        where: {
+          date: todayDate,
+          user: { id: user.id },
+          status: Not(In(['skipped', 'ignored', 'deleted'])),
+        },
         relations: { behavior: { goal: true }, user: true },
       });
 
@@ -226,7 +230,8 @@ export class BehaviorService {
       throw new BadRequestException('Completed behavior cannot be deleted');
     }
 
-    await this.todayBehaviorRepository.delete({ id });
+    await this.todayBehaviorRepository.update({ id }, { status: 'deleted' });
+    await this.todayBehaviorRepository.softDelete({ id });
     return { id };
   }
 
