@@ -18,6 +18,9 @@ export class Goal extends BaseIdCreatedUpdatedDeletedEntity {
   @Column({ type: 'enum', enum: Object.values(GOAL_COLORS) })
   color!: GoalColor;
 
+  @Column({ type: 'varchar', nullable: true })
+  templateId?: string | null;
+
   @OneToMany(() => Behavior, (behavior) => behavior.goal)
   behaviors!: Behavior[];
 }

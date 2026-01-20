@@ -30,6 +30,7 @@ export const CreateGoalBehaviorSchema = z.object({
 export const CreateGoalRequestSchema = z.object({
   goalTitle: z.string().min(1).max(GOAL_TITLE_MAX_LENGTH),
   goalColor: z.enum(GOAL_COLORS),
+  templateId: z.string().optional(),
   behaviors: z.array(CreateGoalBehaviorSchema).min(1),
 });
 
@@ -43,6 +44,7 @@ export const CreateGoalResponseSchema = z.object({
   id: z.uuid({ version: 'v7' }),
   title: z.string().min(1).max(GOAL_TITLE_MAX_LENGTH),
   color: z.enum(GOAL_COLORS),
+  templateId: z.string().optional(),
   behaviors: z.array(CreateGoalBehaviorResponseSchema),
 });
 
@@ -70,6 +72,7 @@ export const GetGoalSummarySchema = z.object({
   title: z.string().min(1).max(GOAL_TITLE_MAX_LENGTH),
   color: z.enum(GOAL_COLORS),
   behaviorCount: z.number().int().nonnegative(),
+  templateId: z.string().optional(),
 });
 
 export const GetGoalsResponseSchema = z.array(GetGoalSummarySchema);
@@ -81,6 +84,7 @@ export const GoalSchema = z.object({
   id: z.uuid({ version: 'v7' }),
   title: z.string().min(1).max(GOAL_TITLE_MAX_LENGTH),
   color: z.enum(GOAL_COLORS),
+  templateId: z.string().optional(),
 });
 
 export const GetGoalResponseSchema = GoalSchema;

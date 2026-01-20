@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import { DEFAULT, REWARD_LINES } from '@/features/goal/constants/dodo';
 import useDodoChatStore from './useDodoChatStore';
 
-const DEFAULT_QUOTE = '완벽하지 않아도 일단 해보면 재미있을거에요!';
+const DEFAULT_QUOTE = DEFAULT;
 
 describe('useDodoChatStore', () => {
   beforeEach(() => {
     useDodoChatStore.setState({
       quote: DEFAULT_QUOTE,
-      quotes: ['오늘도 하나 해냈어요!', '대단해요!'],
       isFirstStampToday: false,
     });
   });
@@ -16,7 +16,6 @@ describe('useDodoChatStore', () => {
     const state = useDodoChatStore.getState();
 
     expect(state.quote).toBe(DEFAULT_QUOTE);
-    expect(state.quotes.length).toBe(2);
     expect(state.isFirstStampToday).toBe(false);
   });
 
@@ -37,16 +36,12 @@ describe('useDodoChatStore', () => {
     expect(useDodoChatStore.getState().quote).toBe(DEFAULT_QUOTE);
   });
 
-  it('setRandomQuote는 현재 quote와 다른 문구로 설정한다', () => {
-    const { setRandomQuote } = useDodoChatStore.getState();
-    const currentQuote = useDodoChatStore.getState().quote;
-
-    setRandomQuote();
+  it('setRewardQuote는 올바른 칭찬 대사를 설정한다', () => {
+    const { setRewardQuote } = useDodoChatStore.getState();
+    setRewardQuote('goal-template-1');
 
     const newQuote = useDodoChatStore.getState().quote;
-
-    expect(newQuote).not.toBe(currentQuote);
-    expect(['오늘도 하나 해냈어요!', '대단해요!']).toContain(newQuote);
+    expect(REWARD_LINES['goal-template-1']).toContain(newQuote);
   });
 
   it('showFirstStampOverlay는 isFirstStampToday를 true로 설정한다', () => {

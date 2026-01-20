@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Hero } from '@/features/home/components/Hero';
 import useDodoChatStore from '@/stores/useDodoChatStore';
+import { useDodoToast } from '@/shared/hooks/useDodoToast';
+import { REWARD_LINES } from '@/features/goal/constants/dodo';
 import { AIBehaviorContainer } from '@/features/behavior/components/AIBehaviorContainer';
 import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
 import { TodayBehaviorList } from '@/features/behavior/components/TodayBehaviorList';
@@ -14,6 +16,7 @@ import { deleteTodayBehavior } from '@/features/behavior/apis/deleteTodayBehavio
 import { toast } from 'react-toastify';
 import { createTodayBehavior } from '@/features/behavior/apis/createTodayBehavior.api';
 import type { GetGoalSummary } from '@web24/shared';
+import { getRandomElement } from '@/shared/utils/random';
 
 export function IndexPage() {
   const [behaviors, setBehaviors] = useState<Behavior[]>([]);
@@ -25,6 +28,36 @@ export function IndexPage() {
     isLoading,
     isMaking,
   } = useAIBehaviors();
+  const showToast = useDodoToast();
+  const heroRef = useRef<HTMLDivElement>(null);
+  const [isHeroVisible, setIsHeroVisible] = useState(true);
+
+  // Hero 섹션 보이는지 확인
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsHeroVisible(entry.isIntersecting);
+      },
+      { threshold: 0.1 },
+    );
+
+    if (heroRef.current) {
+      observer.observe(heroRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  const handleRewardInteraction = (templateId?: string) => {
+    const lines = (templateId && REWARD_LINES[templateId]) || REWARD_LINES.default;
+    const rewardQuote = getRandomElement(lines) || '';
+
+    if (isHeroVisible) {
+      useDodoChatStore.getState().setQuote(rewardQuote);
+    } else {
+      showToast(rewardQuote, { position: 'top' });
+    }
+  };
 
   const toggleBehaviorIsChecked = (behaviorId: string) => {
     setBehaviors((bs) =>
@@ -45,7 +78,13 @@ export function IndexPage() {
     toggleBehaviorIsChecked(id);
 
     const nextStatus = targetBehavior.isChecked ? 'pending' : 'completed';
-    updateTodayBehaviorStatus(id, nextStatus).catch(() => toggleBehaviorIsChecked(id));
+    updateTodayBehaviorStatus(id, nextStatus)
+      .then(() => {
+        if (nextStatus === 'completed') {
+          handleRewardInteraction(targetBehavior.goalTemplateId);
+        }
+      })
+      .catch(() => toggleBehaviorIsChecked(id));
   };
 
   const removeBehavior = (behaviorId: string) => {
@@ -68,7 +107,13 @@ export function IndexPage() {
     toggleAIBehaviorIsChecked(id);
 
     const nextStatus = targetBehavior.isChecked ? 'pending' : 'completed';
-    updateAIBehaviorStatus(id, nextStatus).catch(() => toggleAIBehaviorIsChecked(id));
+    updateAIBehaviorStatus(id, nextStatus)
+      .then(() => {
+        if (nextStatus === 'completed') {
+          handleRewardInteraction(targetBehavior.goalTemplateId);
+        }
+      })
+      .catch(() => toggleAIBehaviorIsChecked(id));
   };
 
   const handleRefreshTodayBehaviors = () => {
@@ -101,7 +146,9 @@ export function IndexPage() {
   return (
     <div className="bg-bg-normal mx-auto flex max-w-5xl flex-col pt-2">
       {/* 두두의 말 */}
-      <Hero quote={quote} />
+      <div ref={heroRef}>
+        <Hero quote={quote} />
+      </div>
 
       {/* AI 추천 행동 */}
       <AIBehaviorContainer
