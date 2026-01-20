@@ -9,6 +9,7 @@ describe('TodayBehaviorController', () => {
     getTodayBehaviors: jest.Mock;
     refreshTodayBehaviors: jest.Mock;
     deleteTodayBehavior: jest.Mock;
+    createTodayBehavior: jest.Mock;
     getAIBehaviors: jest.Mock;
     createAIBehaviors: jest.Mock;
     updateAIBehaviorStatus: jest.Mock;
@@ -20,6 +21,7 @@ describe('TodayBehaviorController', () => {
       getTodayBehaviors: jest.fn(),
       refreshTodayBehaviors: jest.fn(),
       deleteTodayBehavior: jest.fn(),
+      createTodayBehavior: jest.fn(),
       getAIBehaviors: jest.fn(),
       createAIBehaviors: jest.fn(),
       updateAIBehaviorStatus: jest.fn(),
@@ -70,6 +72,20 @@ describe('TodayBehaviorController', () => {
 
       expect(service.refreshTodayBehaviors).toHaveBeenCalledWith('user-1');
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('createTodayBehavior', () => {
+    it('서비스 결과를 반환한다', async () => {
+      const userId = '019bd5d8-72dc-78ca-af5d-c93358058b32';
+      const body = { behaviorId: '0190fba0-7e6a-7b6b-9e5d-0f3c9b8b4c6d' };
+      const mock = [{ id: 'tb-1' }];
+      service.createTodayBehavior.mockResolvedValue(mock);
+
+      const result = await controller.createTodayBehavior(userId, body);
+
+      expect(service.createTodayBehavior).toHaveBeenCalledWith(userId, body.behaviorId);
+      expect(result).toBe(mock);
     });
   });
 

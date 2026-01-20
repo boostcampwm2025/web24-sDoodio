@@ -281,6 +281,171 @@ describe('BehaviorService', () => {
     });
   });
 
+  describe('createTodayBehavior', () => {
+    it('새 행동을 추가하고 전체 목록을 반환한다', async () => {
+      const user = { id: 'user-1', nickname: '테스트유저' };
+      const behavior = {
+        id: 'b-1',
+        title: '물 1컵 마시기',
+        difficulty: '마음열기',
+        goal: { title: '건강한 생활', color: 'mint' },
+      } as Behavior;
+      const todayBehaviors = [
+        {
+          id: 'tb-1',
+          status: 'pending',
+          behavior,
+          user,
+        },
+      ] as TodayBehavior[];
+
+      const userRepository = { findOne: jest.fn().mockResolvedValue(user) };
+      const behaviorRepository = { findOne: jest.fn().mockResolvedValue(behavior) };
+      const todayRepository = {
+        findOne: jest.fn().mockResolvedValue(null),
+        create: jest.fn((value) => value),
+        save: jest.fn(),
+        find: jest.fn().mockResolvedValue(todayBehaviors),
+        update: jest.fn(),
+      };
+      const manager = {
+        getRepository: (entity: unknown) => {
+          if (entity === (Behavior as unknown)) return behaviorRepository;
+          if (entity === (TodayBehavior as unknown)) return todayRepository;
+          return userRepository;
+        },
+      };
+
+      dataSource.transaction.mockImplementation(async (work: (m: typeof manager) => unknown) =>
+        work(manager),
+      );
+
+      const result = await service.createTodayBehavior(behavior.id);
+
+      expect(behaviorRepository.findOne).toHaveBeenCalledWith({
+        where: { id: behavior.id },
+        relations: { goal: true },
+      });
+      expect(todayRepository.create).toHaveBeenCalledWith({
+        date: expect.any(String),
+        status: 'pending',
+        origin: 'user',
+        user,
+        behavior,
+      });
+      expect(todayRepository.save).toHaveBeenCalledTimes(1);
+      expect(todayRepository.find).toHaveBeenCalledWith({
+        where: {
+          date: expect.any(String),
+          user: { id: user.id },
+          status: Not(In(['skipped', 'ignored'])),
+        },
+        relations: { behavior: { goal: true }, user: true },
+      });
+      expect(result).toEqual([
+        {
+          id: 'tb-1',
+          title: '물 1컵 마시기',
+          goalTitle: '건강한 생활',
+          goalColor: 'mint',
+          difficulty: '마음열기',
+          isChecked: false,
+          isRecommended: false,
+        },
+      ]);
+    });
+
+    it('skipped 행동이면 pending으로 복구한다', async () => {
+      const user = { id: 'user-1', nickname: '테스트유저' };
+      const behavior = {
+        id: 'b-1',
+        title: '물 1컵 마시기',
+        difficulty: '마음열기',
+        goal: { title: '건강한 생활', color: 'mint' },
+      } as Behavior;
+      const todayBehaviors = [
+        {
+          id: 'tb-1',
+          status: 'pending',
+          behavior,
+          user,
+        },
+      ] as TodayBehavior[];
+
+      const userRepository = { findOne: jest.fn().mockResolvedValue(user) };
+      const behaviorRepository = { findOne: jest.fn().mockResolvedValue(behavior) };
+      const todayRepository = {
+        findOne: jest.fn().mockResolvedValue({ id: 'tb-1', status: 'skipped' }),
+        create: jest.fn(),
+        save: jest.fn(),
+        find: jest.fn().mockResolvedValue(todayBehaviors),
+        update: jest.fn(),
+      };
+      const manager = {
+        getRepository: (entity: unknown) => {
+          if (entity === (Behavior as unknown)) return behaviorRepository;
+          if (entity === (TodayBehavior as unknown)) return todayRepository;
+          return userRepository;
+        },
+      };
+
+      dataSource.transaction.mockImplementation(async (work: (m: typeof manager) => unknown) =>
+        work(manager),
+      );
+
+      const result = await service.createTodayBehavior(behavior.id);
+
+      expect(todayRepository.update).toHaveBeenCalledWith(
+        { id: 'tb-1' },
+        { status: 'pending', origin: 'user' },
+      );
+      expect(todayRepository.save).not.toHaveBeenCalled();
+      expect(result).toEqual([
+        {
+          id: 'tb-1',
+          title: '물 1컵 마시기',
+          goalTitle: '건강한 생활',
+          goalColor: 'mint',
+          difficulty: '마음열기',
+          isChecked: false,
+          isRecommended: false,
+        },
+      ]);
+    });
+
+    it('skipped가 아니면 추가를 거부한다', async () => {
+      const user = { id: 'user-1', nickname: '테스트유저' };
+      const behavior = {
+        id: 'b-1',
+        title: '물 1컵 마시기',
+        difficulty: '마음열기',
+        goal: { title: '건강한 생활', color: 'mint' },
+      } as Behavior;
+
+      const userRepository = { findOne: jest.fn().mockResolvedValue(user) };
+      const behaviorRepository = { findOne: jest.fn().mockResolvedValue(behavior) };
+      const todayRepository = {
+        findOne: jest.fn().mockResolvedValue({ id: 'tb-1', status: 'completed' }),
+        update: jest.fn(),
+      };
+      const manager = {
+        getRepository: (entity: unknown) => {
+          if (entity === (Behavior as unknown)) return behaviorRepository;
+          if (entity === (TodayBehavior as unknown)) return todayRepository;
+          return userRepository;
+        },
+      };
+
+      dataSource.transaction.mockImplementation(async (work: (m: typeof manager) => unknown) =>
+        work(manager),
+      );
+
+      await expect(service.createTodayBehavior(behavior.id)).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+    });
+  });
+
   describe('extractTodayBehaviors', () => {
     const scoreMap = {
       마음열기: 1,
