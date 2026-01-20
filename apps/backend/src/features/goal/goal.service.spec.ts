@@ -385,7 +385,7 @@ describe('GoalService', () => {
         color: 'blue',
       };
 
-      const result = await service.updateGoal(goalId, request2);
+      const result = await service.updateGoal(user.id, goalId, request2);
 
       expect(result).toEqual({
         id: goalId,
@@ -436,7 +436,7 @@ describe('GoalService', () => {
         behaviors: [{ title: '물 1컵 마시기', difficulty: '마음열기' }],
       };
 
-      await service.createGoalBehaviors(goalId, request3);
+      await service.createGoalBehaviors(user.id, goalId, request3);
 
       expect(behaviorRepoMock.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -497,7 +497,7 @@ describe('GoalService', () => {
         behaviors: [{ id: 'b1', title: '수정된 행동', difficulty: '시작하기' }],
       };
 
-      await service.updateGoalBehaviors(goalId, request4);
+      await service.updateGoalBehaviors(user.id, goalId, request4);
 
       expect(behaviorRepoMock.find).toHaveBeenCalledWith({
         where: {
@@ -545,7 +545,7 @@ describe('GoalService', () => {
         behaviorIds: ['b1', 'b2'],
       };
 
-      await service.deleteGoalBehaviors(goalId, request5);
+      await service.deleteGoalBehaviors(user.id, goalId, request5);
 
       expect(behaviorRepoMock.softDelete).toHaveBeenCalledWith({
         id: expect.anything(),
