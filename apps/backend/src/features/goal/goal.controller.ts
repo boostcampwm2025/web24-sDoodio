@@ -111,8 +111,9 @@ export class GoalController {
   async updateGoal(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body(new ZodValidationPipe(UpdateGoalRequestSchema)) body: UpdateGoalRequest,
+    @UserId() userId: string,
   ): Promise<UpdateGoalResponse> {
-    return this.goalService.updateGoal(id, body);
+    return this.goalService.updateGoal(userId, id, body);
   }
 
   @Post(':goalId/behaviors')
@@ -120,8 +121,9 @@ export class GoalController {
     @Param('goalId', new ParseUUIDPipe()) goalId: string,
     @Body(new ZodValidationPipe(CreateGoalBehaviorsRequestSchema))
     body: CreateGoalBehaviorsRequest,
+    @UserId() userId: string,
   ): Promise<void> {
-    return this.goalService.createGoalBehaviors(goalId, body);
+    return this.goalService.createGoalBehaviors(userId, goalId, body);
   }
 
   @Patch(':goalId/behaviors')
@@ -129,15 +131,17 @@ export class GoalController {
     @Param('goalId', new ParseUUIDPipe()) goalId: string,
     @Body(new ZodValidationPipe(UpdateGoalBehaviorsRequestSchema))
     body: UpdateGoalBehaviorsRequest,
+    @UserId() userId: string,
   ): Promise<void> {
-    return this.goalService.updateGoalBehaviors(goalId, body);
+    return this.goalService.updateGoalBehaviors(userId, goalId, body);
   }
 
   @Delete(':goalId/behaviors')
   async deleteGoalBehaviors(
     @Param('goalId', new ParseUUIDPipe()) goalId: string,
     @Body(new ZodValidationPipe(DeleteGoalBehaviorsRequestSchema)) body: DeleteGoalBehaviorsRequest,
+    @UserId() userId: string,
   ): Promise<void> {
-    return this.goalService.deleteGoalBehaviors(goalId, body);
+    return this.goalService.deleteGoalBehaviors(userId, goalId, body);
   }
 }
