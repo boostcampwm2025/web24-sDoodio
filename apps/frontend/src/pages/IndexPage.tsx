@@ -47,13 +47,13 @@ export function IndexPage() {
   };
 
   const handleBehaviorDelete = (id: string) => {
-    const previousBehaviors = behaviors;
-    setBehaviors((bs) => bs.filter((b) => b.id !== id));
-
-    deleteTodayBehavior(id).catch(() => {
-      setBehaviors(previousBehaviors);
-      toast('삭제에 실패했습니다.');
-    });
+    deleteTodayBehavior(id)
+      .then(() => {
+        setBehaviors((bs) => bs.filter((b) => b.id !== id));
+      })
+      .catch(() => {
+        toast('삭제에 실패했습니다.');
+      });
   };
 
   const handleAIBehaviorToggle = (id: string) => {
