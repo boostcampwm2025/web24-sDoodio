@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { DEFAULT, REWARD_LINES } from '@/features/goal/constants/dodo';
+import { getRandomElement } from '@/shared/utils/random';
 
 const DEFAULT_QUOTE = DEFAULT;
 
@@ -19,8 +20,7 @@ const useDodoChatStore = create<DodoChatState>((set) => ({
   setQuote: (quote) => set({ quote }),
   setRewardQuote: (goalTitle) => {
     const lines = REWARD_LINES[goalTitle] || REWARD_LINES.default;
-    const randomIndex = Math.floor(Math.random() * lines.length);
-    set({ quote: lines[randomIndex] });
+    set({ quote: getRandomElement(lines) });
   },
   resetQuote: () => set({ quote: DEFAULT_QUOTE }),
   showFirstStampOverlay: () => set({ isFirstStampToday: true }),

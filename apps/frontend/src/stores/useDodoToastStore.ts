@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { getRandomIndex } from '@/shared/utils/random';
 import type { ToastPosition } from '@/shared/components/DodoToast';
 
 interface ToastConfig {
@@ -34,7 +35,7 @@ const useDodoToastStore = create<DodoToastState>((set) => ({
       }
 
       // 새 토스트 추가
-      const id = `toast-${Date.now()}-${Math.random()}`;
+      const id = `toast-${Date.now()}-${getRandomIndex(1)}`;
       const newToast: ToastConfig = { id, message, duration, position };
       return { toasts: [...state.toasts, newToast] };
     });
