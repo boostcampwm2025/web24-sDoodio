@@ -35,8 +35,8 @@ export class TodayBehaviorController {
   }
 
   @Post('/refresh')
-  async refreshTodayBehaviors(): Promise<GetTodayBehaviorsResponse> {
-    return this.behaviorService.refreshTodayBehaviors();
+  async refreshTodayBehaviors(@UserId() userId: string): Promise<GetTodayBehaviorsResponse> {
+    return this.behaviorService.refreshTodayBehaviors(userId);
   }
 
   @Get('/ai')

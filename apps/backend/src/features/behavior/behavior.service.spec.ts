@@ -385,7 +385,7 @@ describe('BehaviorService', () => {
         createQueryBuilder: jest.fn().mockReturnValue(userQueryBuilder),
       };
       const todayRepository = {
-        find: jest.fn().mockResolvedValue(existing),
+        find: jest.fn().mockResolvedValueOnce(existing).mockResolvedValueOnce([]),
         update: jest.fn().mockResolvedValue({ affected: 1 }),
         create: jest.fn((value) => value),
         save: jest.fn(),
@@ -409,10 +409,19 @@ describe('BehaviorService', () => {
         .spyOn(service, 'extractTodayBehaviors')
         .mockReturnValue([behavior1, behavior2]);
 
-      const result = await service.refreshTodayBehaviors();
+      const result = await service.refreshTodayBehaviors(user.id);
 
       expect(userRepository.createQueryBuilder).toHaveBeenCalledWith('user');
       expect(userQueryBuilder.setLock).toHaveBeenCalledWith('pessimistic_write');
+      expect(userQueryBuilder.where).toHaveBeenCalledWith('user.id = :id', { id: user.id });
+      expect(todayRepository.find).toHaveBeenNthCalledWith(1, {
+        where: {
+          date: expect.any(String),
+          user: { id: user.id },
+          status: Not(In(['deleted'])),
+        },
+        relations: { behavior: { goal: true }, user: true },
+      });
       expect(todayRepository.update).toHaveBeenNthCalledWith(
         1,
         { date: expect.any(String), user: { id: user.id }, status: 'pending' },
@@ -481,8 +490,9 @@ describe('BehaviorService', () => {
       );
       const extractSpy = jest.spyOn(service, 'extractTodayBehaviors').mockReturnValue([]);
 
-      const result = await service.refreshTodayBehaviors();
+      const result = await service.refreshTodayBehaviors(user.id);
 
+      expect(userQueryBuilder.where).toHaveBeenCalledWith('user.id = :id', { id: user.id });
       expect(todayRepository.update).toHaveBeenCalledWith(
         { date: expect.any(String), user: { id: user.id }, status: 'pending' },
         { status: 'skipped' },
@@ -532,8 +542,9 @@ describe('BehaviorService', () => {
       );
       const extractSpy = jest.spyOn(service, 'extractTodayBehaviors').mockReturnValue([behavior]);
 
-      const result = await service.refreshTodayBehaviors();
+      const result = await service.refreshTodayBehaviors(user.id);
 
+      expect(userQueryBuilder.where).toHaveBeenCalledWith('user.id = :id', { id: user.id });
       expect(todayRepository.update).toHaveBeenCalledWith(
         { date: expect.any(String), user: { id: user.id }, status: 'pending' },
         { status: 'skipped' },

@@ -55,18 +55,18 @@ describe('TodayBehaviorController', () => {
       const mock = [{ id: 'refreshed-1' }];
       service.refreshTodayBehaviors.mockResolvedValue(mock);
 
-      const result = await controller.refreshTodayBehaviors();
+      const result = await controller.refreshTodayBehaviors('user-1');
 
-      expect(service.refreshTodayBehaviors).toHaveBeenCalledTimes(1);
+      expect(service.refreshTodayBehaviors).toHaveBeenCalledWith('user-1');
       expect(result).toBe(mock);
     });
 
     it('행동이 없으면 빈 배열을 반환한다', async () => {
       service.refreshTodayBehaviors.mockResolvedValue([]);
 
-      const result = await controller.refreshTodayBehaviors();
+      const result = await controller.refreshTodayBehaviors('user-1');
 
-      expect(service.refreshTodayBehaviors).toHaveBeenCalledTimes(1);
+      expect(service.refreshTodayBehaviors).toHaveBeenCalledWith('user-1');
       expect(result).toEqual([]);
     });
   });

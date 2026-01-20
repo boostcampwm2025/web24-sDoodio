@@ -92,7 +92,7 @@ export class BehaviorService {
     return { id, status };
   }
 
-  async refreshTodayBehaviors() {
+  async refreshTodayBehaviors(userId: string) {
     return this.dataSource.transaction(async (manager) => {
       const todayDate = getKstDayKey();
 
@@ -101,7 +101,7 @@ export class BehaviorService {
         .getRepository(User)
         .createQueryBuilder('user')
         .setLock('pessimistic_write')
-        .where('user.nickname = :nickname', { nickname: '테스트유저' })
+        .where('user.id = :id', { id: userId })
         .getOne();
       if (!user) {
         throw new NotFoundException('User not found');
