@@ -1,18 +1,21 @@
-import { useState, useMemo } from 'react';
 import { BehaviorCard } from '@/shared/components/behavior/BehaviorCard';
 import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
 import { Plus, Info, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
 import { ICON_SIZE } from '@/shared/constants/icon';
+import type { GetGoalSummary } from '@web24/shared';
+import { useTodayBehaviorAdd } from '@/features/behavior/hooks/useTodayBehaviorAdd';
+import { useFilteredTodayBehaviors } from '@/features/behavior/hooks/useFilteredTodayBehaviors';
+import { TodayBehaviorAddModal } from '@/features/behavior/components/TodayBehaviorAddModal';
 import { SwiperTabs } from './SwiperTabs';
 
 interface BehaviorListProps {
-  goals: string[];
+  goals: GetGoalSummary[];
   behaviors: Behavior[];
   onToggle: (id: string) => void;
   onRefresh?: () => void;
   onDelete?: (id: string) => void;
+  onAddBehavior: (behaviorId: string) => Promise<void>;
 }
 
 export function TodayBehaviorList({
@@ -21,14 +24,24 @@ export function TodayBehaviorList({
   onToggle,
   onRefresh,
   onDelete,
+  onAddBehavior,
 }: BehaviorListProps) {
-  const [activeGoal, setActiveGoal] = useState<string>('ALL');
   const navigate = useNavigate();
-
-  const filteredBehaviors = useMemo(() => {
-    if (activeGoal === 'ALL') return behaviors;
-    return behaviors.filter((behavior) => behavior.goalTitle === activeGoal);
-  }, [behaviors, activeGoal]);
+  const { setActiveGoal, goalTabs, filteredBehaviors } = useFilteredTodayBehaviors(
+    goals,
+    behaviors,
+  );
+  const {
+    isAddOpen,
+    openAddModal,
+    closeAddModal,
+    selectedGoal,
+    isLoadingBehaviors,
+    goalBehaviors,
+    handleGoalSelect,
+    handleBehaviorSelect,
+    resetGoalSelection,
+  } = useTodayBehaviorAdd({ goals, onAddBehavior });
 
   return (
     <div className="mb-4 flex-col items-center justify-between px-4">
@@ -59,7 +72,7 @@ export function TodayBehaviorList({
             onClick={onRefresh}
             className="text-label-disable hover:text-label-normal inline-flex items-center gap-1 text-sm font-semibold transition"
           >
-            <RefreshCw size={16} />
+            <RefreshCw size={ICON_SIZE.xxs} />
             새로고침
           </button>
         )}
@@ -70,7 +83,7 @@ export function TodayBehaviorList({
         {/* Tabs */}
         <div className="relative flex-1 overflow-hidden">
           {/* slideOffsetAfter : 슬라이더 맨 오른쪽 여백으로 오른쪽 그라데이션 오버레이의 너비랑 맞춤 */}
-          <SwiperTabs tabs={goals} onChange={setActiveGoal} slideOffsetAfter={48} />
+          <SwiperTabs tabs={goalTabs} onChange={setActiveGoal} slideOffsetAfter={48} />
           {/* 오른쪽 그라데이션 오버레이 */}
           <div className="from-bg-normal via-bg-normal/80 pointer-events-none absolute top-0 right-0 z-10 h-full w-12 bg-linear-to-l to-transparent" />
         </div>
@@ -100,7 +113,7 @@ export function TodayBehaviorList({
         {/* 행동 추가 버튼 */}
         <button
           onClick={() => {
-            toast('구현 예정입니다.');
+            openAddModal();
           }}
           type="button"
           className="group border-primary-weak text-primary-normal hover:border-primary-strong hover:text-primary-strong hover:bg-primary-weak/30 relative flex min-h-30 cursor-pointer items-center justify-center rounded-3xl border-2 border-dashed bg-transparent p-5 transition-all"
@@ -113,6 +126,18 @@ export function TodayBehaviorList({
           </div>
         </button>
       </div>
+
+      <TodayBehaviorAddModal
+        isOpen={isAddOpen}
+        goals={goals}
+        selectedGoal={selectedGoal}
+        isLoadingBehaviors={isLoadingBehaviors}
+        goalBehaviors={goalBehaviors}
+        onClose={closeAddModal}
+        onBack={resetGoalSelection}
+        onSelectGoal={handleGoalSelect}
+        onSelectBehavior={handleBehaviorSelect}
+      />
     </div>
   );
 }

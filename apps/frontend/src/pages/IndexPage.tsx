@@ -12,10 +12,12 @@ import { updateAIBehaviorStatus } from '@/features/behavior/apis/updateAIBehavio
 import { refreshTodayBehaviors } from '@/features/behavior/apis/refreshTodayBehaviors.api';
 import { deleteTodayBehavior } from '@/features/behavior/apis/deleteTodayBehavior.api';
 import { toast } from 'react-toastify';
+import { createTodayBehavior } from '@/features/behavior/apis/createTodayBehavior.api';
+import type { GetGoalSummary } from '@web24/shared';
 
 export function IndexPage() {
   const [behaviors, setBehaviors] = useState<Behavior[]>([]);
-  const [goalTitles, setGoalTitles] = useState<string[]>([]);
+  const [goals, setGoals] = useState<GetGoalSummary[]>([]);
   const { quote, resetQuote } = useDodoChatStore();
   const {
     behaviors: aiBehaviors,
@@ -77,10 +79,15 @@ export function IndexPage() {
       });
   };
 
+  const handleBehaviorAdd = async (behaviorId: string) => {
+    const nextBehaviors = await createTodayBehavior(behaviorId);
+    setBehaviors(nextBehaviors);
+  };
+
   useEffect(() => {
     Promise.all([fetchTodayBehaviors(), fetchGoals()]).then(([behaviorsData, goalsData]) => {
       setBehaviors(behaviorsData);
-      setGoalTitles(['ALL', ...goalsData.map((g) => g.title)]);
+      setGoals(goalsData);
     });
   }, []);
 
@@ -106,9 +113,10 @@ export function IndexPage() {
 
       {/* 오늘의 행동 */}
       <TodayBehaviorList
-        goals={goalTitles}
+        goals={goals}
         behaviors={behaviors}
         onToggle={handleBehaviorToggle}
+        onAddBehavior={handleBehaviorAdd}
         onRefresh={handleRefreshTodayBehaviors}
         onDelete={handleBehaviorDelete}
       />

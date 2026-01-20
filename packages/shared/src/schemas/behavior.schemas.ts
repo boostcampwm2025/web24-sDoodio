@@ -37,6 +37,14 @@ export type GetGoalBehaviorsResponse = Behavior[];
 export const GetTodayBehaviorsResponseSchema = z.array(TodayBehaviorSchema);
 export type GetTodayBehaviorsResponse = z.infer<typeof GetTodayBehaviorsResponseSchema>;
 
+export const PostTodayBehaviorRequestSchema = z.object({
+  behaviorId: z.uuid({ version: 'v7' }),
+});
+export type PostTodayBehaviorRequest = z.infer<typeof PostTodayBehaviorRequestSchema>;
+
+export const PostTodayBehaviorResponseSchema = GetTodayBehaviorsResponseSchema;
+export type PostTodayBehaviorResponse = GetTodayBehaviorsResponse;
+
 export const PatchTodayBehaviorStatusRequestSchema = z.object({
   status: z.enum(TODAY_BEHAVIOR_STATUS),
 });

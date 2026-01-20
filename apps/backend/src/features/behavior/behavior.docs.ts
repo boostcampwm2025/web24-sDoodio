@@ -4,6 +4,8 @@ import {
   GetAllBehaviorsResponseSchema,
   GetAIBehaviorResponseSchema,
   GetTodayBehaviorsResponseSchema,
+  PostTodayBehaviorRequestSchema,
+  PostTodayBehaviorResponseSchema,
   PatchAIBehaviorStatusRequestSchema,
   PatchAIBehaviorStatusResponseSchema,
   PostAIBehaviorResponseSchema,
@@ -27,6 +29,14 @@ export function registerBehaviorApi(registry: OpenAPIRegistry, common: CommonSch
   const patchTodayBehaviorStatusResponse = registry.register(
     'PatchTodayBehaviorStatusResponse',
     PatchTodayBehaviorStatusResponseSchema,
+  );
+  const postTodayBehaviorRequest = registry.register(
+    'PostTodayBehaviorRequest',
+    PostTodayBehaviorRequestSchema,
+  );
+  const postTodayBehaviorResponse = registry.register(
+    'PostTodayBehaviorResponse',
+    PostTodayBehaviorResponseSchema,
   );
   const getAllBehaviorsResponse = registry.register(
     'GetAllBehaviorsResponse',
@@ -83,6 +93,46 @@ export function registerBehaviorApi(registry: OpenAPIRegistry, common: CommonSch
         content: {
           'application/json': {
             schema: getTodayBehaviorsResponse,
+          },
+        },
+      },
+    },
+  });
+
+  registry.registerPath({
+    method: 'post',
+    path: '/today-behaviors',
+    request: {
+      body: {
+        content: {
+          'application/json': {
+            schema: postTodayBehaviorRequest,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: '오늘 행동을 추가하고 전체 목록을 반환',
+        content: {
+          'application/json': {
+            schema: postTodayBehaviorResponse,
+          },
+        },
+      },
+      400: {
+        description: '이미 존재하거나 완료/AI 행동인 경우',
+        content: {
+          'application/json': {
+            schema: errorResponse,
+          },
+        },
+      },
+      404: {
+        description: 'User 또는 Behavior를 찾을 수 없음',
+        content: {
+          'application/json': {
+            schema: errorResponse,
           },
         },
       },

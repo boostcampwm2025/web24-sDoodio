@@ -16,6 +16,9 @@ import {
   type PatchAIBehaviorStatusRequest,
   PatchAIBehaviorStatusRequestSchema,
   PatchAIBehaviorStatusResponse,
+  type PostTodayBehaviorRequest,
+  PostTodayBehaviorRequestSchema,
+  type PostTodayBehaviorResponse,
   type PatchTodayBehaviorStatusRequest,
   PatchTodayBehaviorStatusRequestSchema,
   PatchTodayBehaviorStatusResponse,
@@ -39,6 +42,15 @@ export class TodayBehaviorController {
   @Post('/refresh')
   async refreshTodayBehaviors(@UserId() userId: string): Promise<GetTodayBehaviorsResponse> {
     return this.behaviorService.refreshTodayBehaviors(userId);
+  }
+
+  @Post()
+  async createTodayBehavior(
+    @UserId() userId: string,
+    @Body(new ZodValidationPipe(PostTodayBehaviorRequestSchema))
+    body: PostTodayBehaviorRequest,
+  ): Promise<PostTodayBehaviorResponse> {
+    return this.behaviorService.createTodayBehavior(userId, body.behaviorId);
   }
 
   @Get('/ai')
