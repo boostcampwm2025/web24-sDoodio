@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import {
   type GetAIBehaviorResponse,
+  type GetTodayBehaviorsResponse,
   type PatchAIBehaviorStatusRequest,
   PatchAIBehaviorStatusRequestSchema,
   PatchAIBehaviorStatusResponse,
@@ -31,6 +32,11 @@ export class TodayBehaviorController {
   @Get()
   async getTodayBehaviors(@UserId() userId: string) {
     return this.behaviorService.getTodayBehaviors(userId);
+  }
+
+  @Post('/refresh')
+  async refreshTodayBehaviors(@UserId() userId: string): Promise<GetTodayBehaviorsResponse> {
+    return this.behaviorService.refreshTodayBehaviors(userId);
   }
 
   @Get('/ai')

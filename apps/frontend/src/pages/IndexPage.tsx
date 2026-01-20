@@ -9,6 +9,8 @@ import { fetchGoals } from '@/features/goal/apis/fetchGoals.api';
 import { updateTodayBehaviorStatus } from '@/features/behavior/apis/updateTodayBehaviorStatus.api';
 import { useAIBehaviors } from '@/features/behavior/hooks/useAIBehaviors';
 import { updateAIBehaviorStatus } from '@/features/behavior/apis/updateAIBehaviorStatus.api';
+import { refreshTodayBehaviors } from '@/features/behavior/apis/refreshTodayBehaviors.api';
+import { toast } from 'react-toastify';
 
 export function IndexPage() {
   const [behaviors, setBehaviors] = useState<Behavior[]>([]);
@@ -53,6 +55,14 @@ export function IndexPage() {
     updateAIBehaviorStatus(id, nextStatus).catch(() => toggleAIBehaviorIsChecked(id));
   };
 
+  const handleRefreshTodayBehaviors = () => {
+    refreshTodayBehaviors()
+      .then((refreshedBehaviors) => setBehaviors(refreshedBehaviors))
+      .catch(() => {
+        toast('새로고침에 실패했습니다.');
+      });
+  };
+
   useEffect(() => {
     Promise.all([fetchTodayBehaviors(), fetchGoals()]).then(([behaviorsData, goalsData]) => {
       setBehaviors(behaviorsData);
@@ -81,7 +91,12 @@ export function IndexPage() {
       />
 
       {/* 오늘의 행동 */}
-      <TodayBahaviorList goals={goalTitles} behaviors={behaviors} onToggle={handleBehaviorToggle} />
+      <TodayBahaviorList
+        goals={goalTitles}
+        behaviors={behaviors}
+        onToggle={handleBehaviorToggle}
+        onRefresh={handleRefreshTodayBehaviors}
+      />
     </div>
   );
 }

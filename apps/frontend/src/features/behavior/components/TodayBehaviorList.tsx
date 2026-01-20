@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { BehaviorCard } from '@/shared/components/behavior/BehaviorCard';
 import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
-import { Plus, Info } from 'lucide-react';
+import { Plus, Info, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { ICON_SIZE } from '@/shared/constants/icon';
@@ -11,9 +11,10 @@ interface BehaviorListProps {
   goals: string[];
   behaviors: Behavior[];
   onToggle: (id: string) => void;
+  onRefresh?: () => void;
 }
 
-export function TodayBahaviorList({ goals, behaviors, onToggle }: BehaviorListProps) {
+export function TodayBahaviorList({ goals, behaviors, onToggle, onRefresh }: BehaviorListProps) {
   const [activeGoal, setActiveGoal] = useState<string>('ALL');
   const navigate = useNavigate();
 
@@ -45,6 +46,16 @@ export function TodayBahaviorList({ goals, behaviors, onToggle }: BehaviorListPr
             </span>
           </span>
         </h3>
+        {onRefresh && (
+          <button
+            type="button"
+            onClick={onRefresh}
+            className="text-label-disable hover:text-label-normal inline-flex items-center gap-1 text-sm font-semibold transition"
+          >
+            <RefreshCw size={16} />
+            새로고침
+          </button>
+        )}
       </div>
 
       {/* 목표 필터 탭 스와이퍼 */}

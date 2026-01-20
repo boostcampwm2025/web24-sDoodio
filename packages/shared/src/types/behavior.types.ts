@@ -8,7 +8,13 @@ export const BEHAVIOR_DIFFICULTIES = [
 
 export type BehaviorDifficulty = (typeof BEHAVIOR_DIFFICULTIES)[number];
 
-export const TODAY_BEHAVIOR_STATUS = ['pending', 'completed', 'skipped', 'ignored'] as const;
+export const TODAY_BEHAVIOR_STATUS = [
+  'pending',
+  'completed',
+  'skipped',
+  'ignored',
+  'deleted',
+] as const;
 
 export type TodayBehaviorStatus = (typeof TODAY_BEHAVIOR_STATUS)[number];
 

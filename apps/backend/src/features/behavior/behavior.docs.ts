@@ -67,6 +67,22 @@ export function registerBehaviorApi(registry: OpenAPIRegistry, common: CommonSch
   });
 
   registry.registerPath({
+    method: 'post',
+    path: '/today-behaviors/refresh',
+    responses: {
+      200: {
+        description:
+          '오늘 행동을 새로 추출해 반환한다. 기존 pending은 skipped 처리하고, completed는 유지한다.',
+        content: {
+          'application/json': {
+            schema: getTodayBehaviorsResponse,
+          },
+        },
+      },
+    },
+  });
+
+  registry.registerPath({
     method: 'get',
     path: '/today-behaviors/ai',
     security: [{ sessionAuth: [] }],

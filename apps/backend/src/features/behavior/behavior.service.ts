@@ -92,6 +92,131 @@ export class BehaviorService {
     return { id, status };
   }
 
+  async refreshTodayBehaviors(userId: string) {
+    return this.dataSource.transaction(async (manager) => {
+      const todayDate = getKstDayKey();
+
+      // 같은 사용자에 대한 새로고침을 직렬화해 중복 생성을 방지한다.
+      const user = await manager
+        .getRepository(User)
+        .createQueryBuilder('user')
+        .setLock('pessimistic_write')
+        .where('user.id = :id', { id: userId })
+        .getOne();
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      const todayBehaviorRepository = manager.getRepository(TodayBehavior);
+      const behaviorRepository = manager.getRepository(Behavior);
+
+      const existingTodayBehaviors = await todayBehaviorRepository.find({
+        where: {
+          date: todayDate,
+          user: { id: user.id },
+          status: Not(In(['deleted'])),
+        },
+        relations: { behavior: { goal: true }, user: true },
+      });
+
+      // 새로고침 전에 기존 pending을 skipped로 변경한다.
+      await todayBehaviorRepository.update(
+        { date: todayDate, user: { id: user.id }, status: 'pending' },
+        { status: 'skipped' },
+      );
+
+      const behaviors = await behaviorRepository.find({
+        relations: { goal: true },
+      });
+
+      const deletedTodayBehaviors = await todayBehaviorRepository.find({
+        where: { date: todayDate, user: { id: user.id }, status: 'deleted' },
+        relations: { behavior: true },
+      });
+
+      const deletedBehaviorIds = new Set(
+        deletedTodayBehaviors.map((todayBehavior) => todayBehavior.behavior.id),
+      );
+
+      const candidateBehaviors = behaviors.filter(
+        (behavior) => !deletedBehaviorIds.has(behavior.id),
+      );
+
+      const extractedTodayBehavior = this.extractTodayBehaviors(candidateBehaviors);
+      if (extractedTodayBehavior.length === 0) {
+        return [];
+      }
+
+      // behaviorId 기준으로 중복을 제거하고, 기존 row를 재사용한다.
+      const existingByBehaviorId = new Map(
+        existingTodayBehaviors.map((todayBehavior) => [todayBehavior.behavior.id, todayBehavior]),
+      );
+
+      // 새로 삽입할 today-behaviors row
+      const toInsert: TodayBehavior[] = [];
+      // pending으로 되돌릴 기존 today-behaviors id 목록
+      const toRestoreIds: string[] = [];
+      // 이번 새로고침에 포함된 기존 today-behaviors
+      const selectedExisting: TodayBehavior[] = [];
+
+      extractedTodayBehavior.forEach((behavior) => {
+        const existing = existingByBehaviorId.get(behavior.id);
+        if (existing) {
+          // completed는 유지하고, 나머지는 pending으로 복구한다.
+          if (existing.status !== 'completed') {
+            toRestoreIds.push(existing.id);
+            existing.status = 'pending';
+          }
+          selectedExisting.push(existing);
+          return;
+        }
+
+        // 새로 선택된 행동은 today-behaviors row를 생성한다.
+        toInsert.push(
+          todayBehaviorRepository.create({
+            date: todayDate,
+            status: 'pending',
+            origin: 'system',
+            user,
+            behavior,
+          }),
+        );
+      });
+
+      if (toRestoreIds.length > 0) {
+        await todayBehaviorRepository.update({ id: In(toRestoreIds) }, { status: 'pending' });
+      }
+
+      const newTodayBehaviors =
+        toInsert.length > 0 ? await todayBehaviorRepository.save(toInsert) : [];
+
+      // TodayBehavior를 응답 형태로 매핑한다(관계 누락 시 fallback 사용).
+      const mapToResponse = (todayBehavior: TodayBehavior, fallbackBehavior?: Behavior) => {
+        const behavior = todayBehavior.behavior ?? fallbackBehavior;
+        if (!behavior) {
+          throw new NotFoundException('Behavior not found');
+        }
+
+        return {
+          id: todayBehavior.id,
+          title: behavior.title,
+          goalTitle: behavior.goal.title,
+          goalColor: behavior.goal.color,
+          difficulty: behavior.difficulty,
+          isChecked: todayBehavior.status === 'completed',
+          isRecommended: false,
+        };
+      };
+
+      return [
+        ...selectedExisting.map((behavior) => mapToResponse(behavior)),
+        ...newTodayBehaviors.map((behavior, index) =>
+          mapToResponse(behavior, toInsert[index]?.behavior),
+        ),
+      ];
+    });
+  }
+
   extractTodayBehaviors(behaviors: Behavior[]): Behavior[] {
     const LEVEL_SCORE = {
       마음열기: 1,
