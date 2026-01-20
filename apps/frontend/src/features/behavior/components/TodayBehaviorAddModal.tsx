@@ -35,8 +35,8 @@ export function TodayBehaviorAddModal({
         className="absolute inset-0 bg-black/30"
         onClick={onClose}
       />
-      <div
-        role="dialog"
+      <dialog
+        open
         aria-modal="true"
         className="bg-bg-light relative z-50 w-full rounded-t-2xl p-4 md:w-[520px] md:rounded-2xl"
       >
@@ -75,7 +75,7 @@ export function TodayBehaviorAddModal({
             onSelectBehavior={onSelectBehavior}
           />
         </div>
-      </div>
+      </dialog>
     </div>
   );
 }
