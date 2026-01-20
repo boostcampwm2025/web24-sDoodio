@@ -2,11 +2,17 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   CreateGoalResponseSchema,
+  type UpdateGoalRequest,
   type CreateGoalRequest,
   type CreateGoalResponse,
   type GoalStamp,
+  type UpdateGoalResponse,
+  UpdateGoalResponseSchema,
+  type CreateGoalBehaviorsRequest,
+  type UpdateGoalBehaviorsRequest,
+  type DeleteGoalBehaviorsRequest,
 } from '@web24/shared';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Behavior } from '../behavior/behavior.entity';
 import { User } from '../user/user.entity';
 import { Goal } from './goal.entity';
@@ -146,6 +152,132 @@ export class GoalService {
           title: behavior.title,
           difficulty: behavior.difficulty,
         })),
+      });
+    });
+  }
+
+  async updateGoal(
+    userId: string,
+    goalId: string,
+    request: UpdateGoalRequest,
+  ): Promise<UpdateGoalResponse> {
+    const goal = await this.goalRepository.findOne({
+      where: { id: goalId, user: { id: userId } },
+      relations: ['user'],
+    });
+
+    if (!goal) {
+      throw new NotFoundException('Goal not found');
+    }
+
+    goal.title = request.title;
+    goal.color = request.color;
+
+    const savedGoal = await this.goalRepository.save(goal);
+
+    return UpdateGoalResponseSchema.parse({
+      id: savedGoal.id,
+      title: savedGoal.title,
+      color: savedGoal.color,
+    });
+  }
+
+  async createGoalBehaviors(
+    userId: string,
+    goalId: string,
+    request: CreateGoalBehaviorsRequest,
+  ): Promise<void> {
+    await this.goalRepository.manager.transaction(async (manager) => {
+      const goal = await this.goalRepository.findOne({
+        where: { id: goalId, user: { id: userId } },
+        relations: ['user'],
+      });
+
+      if (!goal) {
+        throw new NotFoundException('Goal not found');
+      }
+
+      const newBehaviors = request.behaviors.map((behavior) =>
+        manager.getRepository(Behavior).create({
+          title: behavior.title,
+          difficulty: behavior.difficulty,
+          goal,
+        }),
+      );
+
+      // 일괄 저장
+      await manager.getRepository(Behavior).save(newBehaviors);
+    });
+  }
+
+  async updateGoalBehaviors(
+    userId: string,
+    goalId: string,
+    request: UpdateGoalBehaviorsRequest,
+  ): Promise<void> {
+    await this.goalRepository.manager.transaction(async (manager) => {
+      const goal = await this.goalRepository.findOne({
+        where: { id: goalId, user: { id: userId } },
+        relations: ['user'],
+      });
+
+      if (!goal) {
+        throw new NotFoundException('Goal not found');
+      }
+
+      const behaviorIds = request.behaviors.map((b) => b.id);
+
+      if (behaviorIds.length === 0) {
+        throw new NotFoundException('No behaviors provided');
+      }
+
+      const behaviorRepo = manager.getRepository(Behavior);
+
+      const behaviors = await behaviorRepo.find({
+        where: {
+          id: In(behaviorIds),
+          goal: { id: goalId },
+        },
+      });
+
+      // id -> dto 매핑
+      const behaviorMap = new Map(request.behaviors.map((dto) => [dto.id, dto]));
+
+      const updatedBehaviors = behaviors.map((behavior) => {
+        const dto = behaviorMap.get(behavior.id);
+        if (!dto) return behavior;
+
+        return behaviorRepo.merge(behavior, {
+          title: dto.title,
+          difficulty: dto.difficulty,
+        });
+      });
+
+      await behaviorRepo.save(updatedBehaviors);
+    });
+  }
+
+  async deleteGoalBehaviors(
+    userId: string,
+    goalId: string,
+    request: DeleteGoalBehaviorsRequest,
+  ): Promise<void> {
+    if (request.behaviorIds.length === 0) return;
+
+    await this.goalRepository.manager.transaction(async (manager) => {
+      const goal = await this.goalRepository.findOne({
+        where: { id: goalId, user: { id: userId } },
+        relations: ['user'],
+      });
+
+      if (!goal) {
+        throw new NotFoundException('Goal not found');
+      }
+
+      // goalId와 behaviorIds가 모두 일치하는 것만 삭제
+      await manager.getRepository(Behavior).softDelete({
+        id: In(request.behaviorIds),
+        goal: { id: goalId },
       });
     });
   }

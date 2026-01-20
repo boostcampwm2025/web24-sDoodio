@@ -10,6 +10,7 @@ import { NewGoal } from '@/features/goal/components/NewGoal';
 import { createGoal } from '@/features/goal/apis/createGoal.api';
 import { v7 } from 'uuid';
 import { toast } from 'react-toastify';
+import { SummaryView } from '@/features/goal/components/SummaryView';
 
 export function NewGoalPage() {
   const navigate = useNavigate();
@@ -25,6 +26,13 @@ export function NewGoalPage() {
   const [startBehaviors, setStartBehaviors] = useState<BehaviorItem[]>([]);
   const [continueBehaviors, setContinueBehaviors] = useState<BehaviorItem[]>([]);
   const [deepBehaviors, setDeepBehaviors] = useState<BehaviorItem[]>([]);
+
+  const behaviorsMap = {
+    [BEHAVIOR_DIFFICULTIES[0]]: openBehaviors,
+    [BEHAVIOR_DIFFICULTIES[1]]: startBehaviors,
+    [BEHAVIOR_DIFFICULTIES[2]]: continueBehaviors,
+    [BEHAVIOR_DIFFICULTIES[3]]: deepBehaviors,
+  };
 
   const newGoalFrameSteps: NewGoalFrameStep[] = [
     {
@@ -179,9 +187,25 @@ export function NewGoalPage() {
         />
       ),
     },
+    {
+      step: 7,
+      headerText: '최종 확인',
+      unskippable: true,
+      dialogue: DODO_LINES.summary,
+      content: (
+        <SummaryView
+          goalTitle={newGoalTitle}
+          goalColor={newGoalColor}
+          behaviorsMap={behaviorsMap}
+          onEditStep={(stepIdx) => setCurrentStepIndex(stepIdx)}
+        />
+      ),
+    },
   ];
 
-  const handleSkip = () => {};
+  const handleSkip = () => {
+    setCurrentStepIndex(newGoalFrameSteps.length - 1);
+  };
 
   const handleComplete = async () => {
     const isDemoBlocked = import.meta.env.VITE_DEMO_LOCK_CREATE_GOAL === 'true';
@@ -222,10 +246,13 @@ export function NewGoalPage() {
     <NewGoalFrame
       currStepIdx={currentStepIndex}
       steps={newGoalFrameSteps}
-      progressSteps={[2, 3, 4, 5, 6]}
+      progressSteps={[2, 3, 4, 5, 6, 7]}
       onMove={(targetIdx) => setCurrentStepIndex(targetIdx)}
       onSkip={handleSkip}
-      onComplete={handleComplete}
+      onComplete={() => {
+        if (currentStepIndex === newGoalFrameSteps.length - 1) handleComplete();
+        else setCurrentStepIndex((prev) => prev + 1);
+      }}
     />
   );
 }

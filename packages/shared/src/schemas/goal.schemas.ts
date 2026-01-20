@@ -48,6 +48,21 @@ export const CreateGoalResponseSchema = z.object({
 
 export type CreateGoalResponse = z.infer<typeof CreateGoalResponseSchema>;
 
+export const UpdateGoalRequestSchema = z.object({
+  title: z.string().min(1).max(GOAL_TITLE_MAX_LENGTH),
+  color: z.enum(GOAL_COLORS),
+});
+
+export type UpdateGoalRequest = z.infer<typeof UpdateGoalRequestSchema>;
+
+export const UpdateGoalResponseSchema = z.object({
+  id: z.uuid({ version: 'v7' }),
+  title: z.string().min(1).max(GOAL_TITLE_MAX_LENGTH),
+  color: z.enum(GOAL_COLORS),
+});
+
+export type UpdateGoalResponse = z.infer<typeof UpdateGoalResponseSchema>;
+
 export const GetGoalSummarySchema = z.object({
   id: z.uuid(),
   createdAt: z.iso.datetime(),
@@ -80,3 +95,18 @@ export const GoalStampSchema = z.object({
 
 export const GetGoalStampsResponseSchema = z.array(GoalStampSchema);
 export type GetGoalStampsResponse = z.infer<typeof GetGoalStampsResponseSchema>;
+
+export const CreateGoalBehaviorsRequestSchema = z.object({
+  behaviors: z.array(CreateGoalBehaviorSchema).min(1),
+});
+export type CreateGoalBehaviorsRequest = z.infer<typeof CreateGoalBehaviorsRequestSchema>;
+
+export const UpdateGoalBehaviorsRequestSchema = z.object({
+  behaviors: z.array(CreateGoalBehaviorResponseSchema),
+});
+export type UpdateGoalBehaviorsRequest = z.infer<typeof UpdateGoalBehaviorsRequestSchema>;
+
+export const DeleteGoalBehaviorsRequestSchema = z.object({
+  behaviorIds: z.array(z.uuid({ version: 'v7' })).min(1),
+});
+export type DeleteGoalBehaviorsRequest = z.infer<typeof DeleteGoalBehaviorsRequestSchema>;
