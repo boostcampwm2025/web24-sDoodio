@@ -1,4 +1,5 @@
 export const DEFAULT = '완벽하지 않아도 일단 해보면 재미있을거야!';
+export const DEFAULT_TOAST_DURATION = 3000;
 
 export const DODO_LINES = {
   select: [

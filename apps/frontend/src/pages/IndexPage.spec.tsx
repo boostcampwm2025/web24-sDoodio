@@ -36,8 +36,21 @@ vi.mock('@/features/goal/apis/fetchGoals.api', () => ({
   ]),
 }));
 
+// useDodoToastStore 모킹
+vi.mock('@/stores/useDodoToastStore', () => ({
+  default: vi.fn(),
+}));
+
 describe('IndexPage', () => {
   it('IndexPage가 크래시 없이 렌더링된다', async () => {
+    // useDodoToastStore가 반환할 showToast 모킹
+    const showToastMock = vi.fn();
+    (
+      (await import('@/stores/useDodoToastStore')).default as unknown as ReturnType<typeof vi.fn>
+    ).mockReturnValue({
+      showToast: showToastMock,
+    });
+
     render(
       <MemoryRouter>
         <IndexPage />
