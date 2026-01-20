@@ -3,7 +3,7 @@ import { Hero } from '@/features/home/components/Hero';
 import useDodoChatStore from '@/stores/useDodoChatStore';
 import { AIBehaviorContainer } from '@/features/behavior/components/AIBehaviorContainer';
 import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
-import { TodayBahaviorList } from '@/features/behavior/components/TodayBehaviorList';
+import { TodayBehaviorList } from '@/features/behavior/components/TodayBehaviorList';
 import { fetchTodayBehaviors } from '@/features/behavior/apis/fetchBehaviors.api';
 import { fetchGoals } from '@/features/goal/apis/fetchGoals.api';
 import { updateTodayBehaviorStatus } from '@/features/behavior/apis/updateTodayBehaviorStatus.api';
@@ -102,7 +102,7 @@ export function IndexPage() {
       />
 
       {/* 오늘의 행동 */}
-      <TodayBahaviorList
+      <TodayBehaviorList
         goals={goalTitles}
         behaviors={behaviors}
         onToggle={handleBehaviorToggle}
