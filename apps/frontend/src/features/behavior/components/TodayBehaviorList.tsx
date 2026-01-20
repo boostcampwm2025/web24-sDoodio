@@ -4,6 +4,7 @@ import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
 import { Plus, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { ICON_SIZE } from '@/shared/constants/icon';
 import { SwiperTabs } from './SwiperTabs';
 
 interface BehaviorListProps {
@@ -33,14 +34,14 @@ export function TodayBahaviorList({ goals, behaviors, onToggle }: BehaviorListPr
               aria-label="오늘의 행동 안내"
               aria-describedby="today-behavior-tooltip"
             >
-              <Info size={16} />
+              <Info size={ICON_SIZE.xxs} />
             </button>
             <span
               id="today-behavior-tooltip"
               role="tooltip"
-              className="bg-bg-light text-label-normal border-bg-alternative pointer-events-none absolute top-1/2 left-full z-10 ml-2 w-max max-w-[50vw] -translate-y-1/2 rounded-xl border px-3 py-2 text-xs font-medium break-words whitespace-normal opacity-0 shadow-(--shadow-normal) transition-opacity duration-200 group-focus-within:opacity-100 group-hover:opacity-100"
+              className="bg-bg-light text-label-normal border-bg-alternative pointer-events-none absolute top-1/2 left-full z-20 ml-2 w-max max-w-[50vw] -translate-y-1/2 rounded-xl border px-3 py-2 text-xs font-medium break-words whitespace-normal opacity-0 shadow-(--shadow-normal) transition-opacity duration-200 group-focus-within:opacity-100 group-hover:opacity-100"
             >
-              오늘의 행동은 전체 목표들에서 추출된 행동입니다
+              오늘을 위해 추출된 행동만 보여줍니다
             </span>
           </span>
         </h3>
