@@ -84,17 +84,19 @@ export function GoalCard({
         </div>
       </div>
       {/* 펼치기/접기 버튼 */}
-      <button
-        aria-label={isOpen ? '접기' : '펼치기'}
-        type="button"
-        className="mt-3 flex w-full justify-center border-t border-white/30 pt-2 opacity-80 transition-transform hover:animate-bounce hover:opacity-100"
-        onClick={(e) => {
-          e.stopPropagation();
-          onToggle();
-        }}
-      >
-        {isOpen ? <ChevronsUp size={ICON_SIZE.md} /> : <ChevronsDown size={ICON_SIZE.md} />}
-      </button>
+      <div className="mt-3 border-t border-white/30 pt-2">
+        <button
+          aria-label={isOpen ? '접기' : '펼치기'}
+          type="button"
+          className="flex w-full justify-center opacity-80 transition-transform hover:animate-bounce hover:opacity-100"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggle();
+          }}
+        >
+          {isOpen ? <ChevronsUp size={ICON_SIZE.md} /> : <ChevronsDown size={ICON_SIZE.md} />}
+        </button>
+      </div>
     </div>
   );
 }
