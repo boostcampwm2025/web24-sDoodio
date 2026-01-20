@@ -240,7 +240,6 @@ export class BehaviorService {
   async createTodayBehavior(userId: string, behaviorId: string) {
     return this.dataSource.transaction(async (manager) => {
       const todayDate = getKstDayKey();
-
       const user = await manager.getRepository(User).findOne({ where: { id: userId } });
       if (!user) {
         throw new NotFoundException('User not found');
@@ -304,6 +303,7 @@ export class BehaviorService {
       }));
     });
   }
+
   extractTodayBehaviors(behaviors: Behavior[]): Behavior[] {
     const LEVEL_SCORE = {
       마음열기: 1,

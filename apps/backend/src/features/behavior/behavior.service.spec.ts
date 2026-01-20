@@ -320,10 +320,10 @@ describe('BehaviorService', () => {
         work(manager),
       );
 
-      const result = await service.createTodayBehavior(behavior.id);
+      const result = await service.createTodayBehavior(user.id, behavior.id);
 
       expect(behaviorRepository.findOne).toHaveBeenCalledWith({
-        where: { id: behavior.id },
+        where: { id: behavior.id, goal: { user: { id: user.id } } },
         relations: { goal: true },
       });
       expect(todayRepository.create).toHaveBeenCalledWith({
@@ -393,7 +393,7 @@ describe('BehaviorService', () => {
         work(manager),
       );
 
-      const result = await service.createTodayBehavior(behavior.id);
+      const result = await service.createTodayBehavior(user.id, behavior.id);
 
       expect(todayRepository.update).toHaveBeenCalledWith(
         { id: 'tb-1' },
@@ -440,7 +440,7 @@ describe('BehaviorService', () => {
         work(manager),
       );
 
-      await expect(service.createTodayBehavior(behavior.id)).rejects.toBeInstanceOf(
+      await expect(service.createTodayBehavior(user.id, behavior.id)).rejects.toBeInstanceOf(
         BadRequestException,
       );
     });
