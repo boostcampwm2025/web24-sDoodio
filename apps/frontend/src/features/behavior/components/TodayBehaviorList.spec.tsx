@@ -2,7 +2,7 @@ import { render, screen, fireEvent, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
-import { TodayBahaviorList } from './TodayBehaviorList';
+import { TodayBehaviorList } from './TodayBehaviorList';
 
 const mockNavigate = vi.fn();
 
@@ -58,7 +58,7 @@ describe('TodayBehaviorList', () => {
 
   it('헤더에 올바른 제목과 행동 개수를 표시한다', () => {
     renderWithRouter(
-      <TodayBahaviorList goals={mockGoals} behaviors={mockBehaviors} onToggle={vi.fn()} />,
+      <TodayBehaviorList goals={mockGoals} behaviors={mockBehaviors} onToggle={vi.fn()} />,
     );
     expect(screen.getByText('오늘의 행동')).toBeInTheDocument();
     expect(screen.getByText('2')).toBeInTheDocument();
@@ -66,7 +66,7 @@ describe('TodayBehaviorList', () => {
 
   it('전체 행동 리스트를 기본으로 렌더링한다', () => {
     renderWithRouter(
-      <TodayBahaviorList goals={mockGoals} behaviors={mockBehaviors} onToggle={vi.fn()} />,
+      <TodayBehaviorList goals={mockGoals} behaviors={mockBehaviors} onToggle={vi.fn()} />,
     );
     expect(screen.getByText('Behavior 1')).toBeInTheDocument();
     expect(screen.getByText('Behavior 2')).toBeInTheDocument();
@@ -74,7 +74,7 @@ describe('TodayBehaviorList', () => {
 
   it('목표 탭을 클릭하면 필터링된 행동 리스트를 보여준다', () => {
     renderWithRouter(
-      <TodayBahaviorList goals={mockGoals} behaviors={mockBehaviors} onToggle={vi.fn()} />,
+      <TodayBehaviorList goals={mockGoals} behaviors={mockBehaviors} onToggle={vi.fn()} />,
     );
 
     const swiperTabs = screen.getByTestId('swiper-tabs');
@@ -88,7 +88,7 @@ describe('TodayBehaviorList', () => {
   it('행동 카드를 클릭하면 onToggle이 호출된다', () => {
     const onToggleMock = vi.fn();
     renderWithRouter(
-      <TodayBahaviorList goals={mockGoals} behaviors={mockBehaviors} onToggle={onToggleMock} />,
+      <TodayBehaviorList goals={mockGoals} behaviors={mockBehaviors} onToggle={onToggleMock} />,
     );
 
     const toggleButton = screen.getByLabelText('Behavior 1 완료 토글');
@@ -99,7 +99,7 @@ describe('TodayBehaviorList', () => {
 
   it('추가 버튼 클릭 시 새 목표 페이지로 이동한다', () => {
     renderWithRouter(
-      <TodayBahaviorList goals={mockGoals} behaviors={mockBehaviors} onToggle={vi.fn()} />,
+      <TodayBehaviorList goals={mockGoals} behaviors={mockBehaviors} onToggle={vi.fn()} />,
     );
 
     const addButton = screen.getByRole('button', { name: '목표' });

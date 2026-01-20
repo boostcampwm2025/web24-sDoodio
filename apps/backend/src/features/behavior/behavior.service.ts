@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Between, DataSource, In, Not, Repository } from 'typeorm';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { AIBehaviorStatus, BEHAVIOR_DIFFICULTIES, TodayBehaviorStatus } from '@web24/shared';
@@ -34,7 +34,11 @@ export class BehaviorService {
       }
 
       const existingTodayBehavior = await manager.getRepository(TodayBehavior).find({
-        where: { date: todayDate, user: { id: user.id }, status: Not(In(['skipped', 'ignored'])) },
+        where: {
+          date: todayDate,
+          user: { id: user.id },
+          status: Not(In(['skipped', 'ignored', 'deleted'])),
+        },
         relations: { behavior: { goal: true }, user: true },
       });
 
@@ -215,6 +219,22 @@ export class BehaviorService {
         ),
       ];
     });
+  }
+
+  async deleteTodayBehavior(userId: string, id: string) {
+    const todayBehavior = await this.todayBehaviorRepository.findOne({
+      where: { id, user: { id: userId } },
+    });
+    if (!todayBehavior) {
+      throw new NotFoundException('TodayBehavior not found');
+    }
+    if (todayBehavior.status === 'completed') {
+      throw new BadRequestException('Completed behavior cannot be deleted');
+    }
+
+    await this.todayBehaviorRepository.update({ id, user: { id: userId } }, { status: 'deleted' });
+    await this.todayBehaviorRepository.softDelete({ id, user: { id: userId } });
+    return { id };
   }
 
   extractTodayBehaviors(behaviors: Behavior[]): Behavior[] {

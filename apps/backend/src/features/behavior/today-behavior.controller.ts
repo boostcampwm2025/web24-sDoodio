@@ -1,4 +1,5 @@
 import {
+  Delete,
   Get,
   Body,
   Controller,
@@ -9,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
+  type DeleteTodayBehaviorResponse,
   type GetAIBehaviorResponse,
   type GetTodayBehaviorsResponse,
   type PatchAIBehaviorStatusRequest,
@@ -67,5 +69,13 @@ export class TodayBehaviorController {
     body: PatchTodayBehaviorStatusRequest,
   ): Promise<PatchTodayBehaviorStatusResponse> {
     return this.behaviorService.updateTodayBehaviorStatus(userId, id, body.status);
+  }
+
+  @Delete(':id')
+  async deleteTodayBehavior(
+    @UserId() userId: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ): Promise<DeleteTodayBehaviorResponse> {
+    return this.behaviorService.deleteTodayBehavior(userId, id);
   }
 }

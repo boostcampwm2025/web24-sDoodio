@@ -3,13 +3,14 @@ import { Hero } from '@/features/home/components/Hero';
 import useDodoChatStore from '@/stores/useDodoChatStore';
 import { AIBehaviorContainer } from '@/features/behavior/components/AIBehaviorContainer';
 import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
-import { TodayBahaviorList } from '@/features/behavior/components/TodayBehaviorList';
+import { TodayBehaviorList } from '@/features/behavior/components/TodayBehaviorList';
 import { fetchTodayBehaviors } from '@/features/behavior/apis/fetchBehaviors.api';
 import { fetchGoals } from '@/features/goal/apis/fetchGoals.api';
 import { updateTodayBehaviorStatus } from '@/features/behavior/apis/updateTodayBehaviorStatus.api';
 import { useAIBehaviors } from '@/features/behavior/hooks/useAIBehaviors';
 import { updateAIBehaviorStatus } from '@/features/behavior/apis/updateAIBehaviorStatus.api';
 import { refreshTodayBehaviors } from '@/features/behavior/apis/refreshTodayBehaviors.api';
+import { deleteTodayBehavior } from '@/features/behavior/apis/deleteTodayBehavior.api';
 import { toast } from 'react-toastify';
 
 export function IndexPage() {
@@ -43,6 +44,19 @@ export function IndexPage() {
 
     const nextStatus = targetBehavior.isChecked ? 'pending' : 'completed';
     updateTodayBehaviorStatus(id, nextStatus).catch(() => toggleBehaviorIsChecked(id));
+  };
+
+  const removeBehavior = (behaviorId: string) => {
+    setBehaviors((bs) => bs.filter((b) => b.id !== behaviorId));
+  };
+
+  const handleBehaviorDelete = async (id: string) => {
+    try {
+      await deleteTodayBehavior(id);
+      removeBehavior(id);
+    } catch {
+      toast('삭제에 실패했습니다.');
+    }
   };
 
   const handleAIBehaviorToggle = (id: string) => {
@@ -91,11 +105,12 @@ export function IndexPage() {
       />
 
       {/* 오늘의 행동 */}
-      <TodayBahaviorList
+      <TodayBehaviorList
         goals={goalTitles}
         behaviors={behaviors}
         onToggle={handleBehaviorToggle}
         onRefresh={handleRefreshTodayBehaviors}
+        onDelete={handleBehaviorDelete}
       />
     </div>
   );
