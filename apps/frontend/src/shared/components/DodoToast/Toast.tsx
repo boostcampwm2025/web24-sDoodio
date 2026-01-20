@@ -78,9 +78,6 @@ function DodoToast({ message, duration = 3000, position = 'bottom', onClose }: D
     return () => clearTimeout(timer);
   }, [duration, onClose, message]);
 
-  const isVertical = position === 'top' || position === 'bottom';
-  const isHorizontal = position === 'left' || position === 'right';
-
   const getContainerClasses = () => {
     const base = 'fixed z-50 pointer-events-none';
     const safeArea = {
@@ -103,12 +100,6 @@ function DodoToast({ message, duration = 3000, position = 'bottom', onClose }: D
           visible: { y: 0, opacity: 1 },
           exit: { y: -animDist, opacity: 0 },
         };
-      case 'bottom':
-        return {
-          hidden: { y: animDist, opacity: 0 },
-          visible: { y: 0, opacity: 1 },
-          exit: { y: animDist, opacity: 0 },
-        };
       case 'left':
         return {
           hidden: { x: -animDist, opacity: 0 },
@@ -121,6 +112,7 @@ function DodoToast({ message, duration = 3000, position = 'bottom', onClose }: D
           visible: { x: 0, opacity: 1 },
           exit: { x: animDist, opacity: 0 },
         };
+      case 'bottom':
       default:
         return {
           hidden: { y: animDist, opacity: 0 },
@@ -149,6 +141,13 @@ function DodoToast({ message, duration = 3000, position = 'bottom', onClose }: D
   const characterVariants = getCharacterVariants();
   const tailClasses = getTailClasses();
 
+  const layoutClasses = {
+    top: 'flex-col gap-3',
+    bottom: 'flex-col-reverse gap-3',
+    left: 'flex-row gap-4',
+    right: 'flex-row-reverse gap-4',
+  };
+
   return (
     <motion.div
       className={getContainerClasses()}
@@ -161,39 +160,10 @@ function DodoToast({ message, duration = 3000, position = 'bottom', onClose }: D
         exit: { opacity: 0 },
       }}
     >
-      {/* top/bottom */}
-      {isVertical && (
-        <div className="flex flex-col items-center gap-3">
-          {position === 'top' ? (
-            <>
-              <DodoCharacter variants={characterVariants} />
-              <SpeechBubble message={message} tailClasses={tailClasses} />
-            </>
-          ) : (
-            <>
-              <SpeechBubble message={message} tailClasses={tailClasses} />
-              <DodoCharacter variants={characterVariants} />
-            </>
-          )}
-        </div>
-      )}
-
-      {/* left/right */}
-      {isHorizontal && (
-        <div className="flex items-center gap-4">
-          {position === 'left' ? (
-            <>
-              <DodoCharacter variants={characterVariants} />
-              <SpeechBubble message={message} tailClasses={tailClasses} />
-            </>
-          ) : (
-            <>
-              <SpeechBubble message={message} tailClasses={tailClasses} />
-              <DodoCharacter variants={characterVariants} />
-            </>
-          )}
-        </div>
-      )}
+      <div className={`flex items-center ${layoutClasses[position]}`}>
+        <DodoCharacter variants={characterVariants} />
+        <SpeechBubble message={message} tailClasses={tailClasses} />
+      </div>
     </motion.div>
   );
 }

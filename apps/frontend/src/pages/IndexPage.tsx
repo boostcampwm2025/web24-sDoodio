@@ -16,6 +16,7 @@ import { deleteTodayBehavior } from '@/features/behavior/apis/deleteTodayBehavio
 import { toast } from 'react-toastify';
 import { createTodayBehavior } from '@/features/behavior/apis/createTodayBehavior.api';
 import type { GetGoalSummary } from '@web24/shared';
+import { getRandomElement } from '@/shared/utils/random';
 
 export function IndexPage() {
   const [behaviors, setBehaviors] = useState<Behavior[]>([]);
@@ -48,11 +49,8 @@ export function IndexPage() {
   }, []);
 
   const handleRewardInteraction = (templateId?: string) => {
-    // templateId가 있으면 우선적으로 매칭, 없으면 default 매칭
-    const lines = templateId ? REWARD_LINES[templateId] : REWARD_LINES.default;
-
-    const randomIndex = Math.floor(Math.random() * lines.length);
-    const rewardQuote = lines[randomIndex];
+    const lines = (templateId && REWARD_LINES[templateId]) || REWARD_LINES.default;
+    const rewardQuote = getRandomElement(lines) || '';
 
     if (isHeroVisible) {
       useDodoChatStore.getState().setQuote(rewardQuote);
