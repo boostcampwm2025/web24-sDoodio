@@ -46,14 +46,17 @@ export function IndexPage() {
     updateTodayBehaviorStatus(id, nextStatus).catch(() => toggleBehaviorIsChecked(id));
   };
 
-  const handleBehaviorDelete = (id: string) => {
-    deleteTodayBehavior(id)
-      .then(() => {
-        setBehaviors((bs) => bs.filter((b) => b.id !== id));
-      })
-      .catch(() => {
-        toast('삭제에 실패했습니다.');
-      });
+  const removeBehavior = (behaviorId: string) => {
+    setBehaviors((bs) => bs.filter((b) => b.id !== behaviorId));
+  };
+
+  const handleBehaviorDelete = async (id: string) => {
+    try {
+      await deleteTodayBehavior(id);
+      removeBehavior(id);
+    } catch {
+      toast('삭제에 실패했습니다.');
+    }
   };
 
   const handleAIBehaviorToggle = (id: string) => {
