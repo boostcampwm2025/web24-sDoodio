@@ -111,7 +111,11 @@ export class BehaviorService {
       const behaviorRepository = manager.getRepository(Behavior);
 
       const existingTodayBehaviors = await todayBehaviorRepository.find({
-        where: { date: todayDate, user: { id: user.id } },
+        where: {
+          date: todayDate,
+          user: { id: user.id },
+          status: Not(In(['deleted'])),
+        },
         relations: { behavior: { goal: true }, user: true },
       });
 
@@ -125,7 +129,20 @@ export class BehaviorService {
         relations: { goal: true },
       });
 
-      const extractedTodayBehavior = this.extractTodayBehaviors(behaviors);
+      const deletedTodayBehaviors = await todayBehaviorRepository.find({
+        where: { date: todayDate, user: { id: user.id }, status: 'deleted' },
+        relations: { behavior: true },
+      });
+
+      const deletedBehaviorIds = new Set(
+        deletedTodayBehaviors.map((todayBehavior) => todayBehavior.behavior.id),
+      );
+
+      const candidateBehaviors = behaviors.filter(
+        (behavior) => !deletedBehaviorIds.has(behavior.id),
+      );
+
+      const extractedTodayBehavior = this.extractTodayBehaviors(candidateBehaviors);
       if (extractedTodayBehavior.length === 0) {
         return [];
       }
