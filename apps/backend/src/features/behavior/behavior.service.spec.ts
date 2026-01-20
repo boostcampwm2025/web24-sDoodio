@@ -338,7 +338,7 @@ describe('BehaviorService', () => {
         where: {
           date: expect.any(String),
           user: { id: user.id },
-          status: Not(In(['skipped', 'ignored'])),
+          status: Not(In(['skipped', 'ignored', 'deleted'])),
         },
         relations: { behavior: { goal: true }, user: true },
       });
