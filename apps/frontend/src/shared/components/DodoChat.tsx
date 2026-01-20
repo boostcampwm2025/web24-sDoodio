@@ -32,9 +32,9 @@ function DodoChat({ quote }: DodoChatProps) {
       </div>
 
       {/* 말풍선 */}
-      <div className="bg-bg-light text-label-normal relative w-fit max-w-2xl rounded-2xl px-6 py-6 shadow-[var(--shadow-emphasize)]">
+      <div className="bg-bg-light text-label-normal shadow-emphasize relative w-fit max-w-2xl rounded-2xl px-6 py-6">
         <div className="border-r-bg-light absolute top-1/2 -left-3 h-0 w-0 -translate-y-1/2 border-y-[10px] border-r-[12px] border-y-transparent" />
-        <p className="leading-relaxed font-medium">
+        <p className="text-center leading-relaxed font-medium break-keep">
           {displayedQuote}
           <span className="ml-0.5 animate-pulse">▍</span>
         </p>

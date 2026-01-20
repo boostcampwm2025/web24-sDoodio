@@ -1,3 +1,4 @@
+import { AnimatePresence } from 'framer-motion';
 import useDodoToastStore from '@/stores/useDodoToastStore';
 import DodoToast from './Toast';
 
@@ -5,7 +6,7 @@ function DodoToastContainer() {
   const { toasts, removeToast } = useDodoToastStore();
 
   return (
-    <>
+    <AnimatePresence>
       {toasts.map((toast) => (
         <DodoToast
           key={toast.id}
@@ -15,7 +16,7 @@ function DodoToastContainer() {
           onClose={() => removeToast(toast.id)}
         />
       ))}
-    </>
+    </AnimatePresence>
   );
 }
 

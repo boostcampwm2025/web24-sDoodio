@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { motion, AnimatePresence, type Variants } from 'framer-motion';
+import { useEffect } from 'react';
+import { motion, type Variants } from 'framer-motion';
 
 export type ToastPosition = 'top' | 'bottom' | 'left' | 'right';
 
@@ -47,7 +47,7 @@ const bubbleVariants: Variants = {
 function SpeechBubble({ message, tailClasses }: SpeechBubbleProps) {
   return (
     <motion.div
-      className="bg-bg-light shadow-emphasize relative rounded-2xl px-6 py-4"
+      className="bg-bg-light shadow-emphasize relative w-full rounded-2xl px-6 py-4"
       variants={bubbleVariants}
       initial="hidden"
       animate="visible"
@@ -62,27 +62,27 @@ function SpeechBubble({ message, tailClasses }: SpeechBubbleProps) {
       <div className={`absolute h-0 w-0 ${tailClasses}`} />
 
       {/* 메시지 */}
-      <p className="text-label-normal leading-relaxed font-medium whitespace-pre-wrap">{message}</p>
+      <p className="text-label-normal text-center leading-relaxed font-medium break-keep whitespace-pre-wrap">
+        {message}
+      </p>
     </motion.div>
   );
 }
 
 function DodoToast({ message, duration = 3000, position = 'bottom', onClose }: DodoToastProps) {
-  const [isVisible, setIsVisible] = useState(true);
-
   useEffect(() => {
     const timer = setTimeout(() => {
-      setIsVisible(false);
+      onClose?.();
     }, duration);
 
     return () => clearTimeout(timer);
-  }, [duration]);
+  }, [duration, onClose, message]);
 
   const isVertical = position === 'top' || position === 'bottom';
   const isHorizontal = position === 'left' || position === 'right';
 
   const getContainerClasses = () => {
-    const base = 'fixed z-50';
+    const base = 'fixed z-50 pointer-events-none';
     const safeArea = {
       top: 'top-20 md:top-28 left-1/2 -translate-x-1/2',
       bottom: 'bottom-20 md:bottom-4 left-1/2 -translate-x-1/2',
@@ -150,45 +150,51 @@ function DodoToast({ message, duration = 3000, position = 'bottom', onClose }: D
   const tailClasses = getTailClasses();
 
   return (
-    <AnimatePresence mode="wait" onExitComplete={onClose}>
-      {isVisible && (
-        <div className={getContainerClasses()}>
-          {/* top/bottom */}
-          {isVertical && (
-            <div className="flex flex-col items-center gap-3">
-              {position === 'top' ? (
-                <>
-                  <DodoCharacter variants={characterVariants} />
-                  <SpeechBubble message={message} tailClasses={tailClasses} />
-                </>
-              ) : (
-                <>
-                  <SpeechBubble message={message} tailClasses={tailClasses} />
-                  <DodoCharacter variants={characterVariants} />
-                </>
-              )}
-            </div>
-          )}
-
-          {/* left/right */}
-          {isHorizontal && (
-            <div className="flex items-center gap-4">
-              {position === 'left' ? (
-                <>
-                  <DodoCharacter variants={characterVariants} />
-                  <SpeechBubble message={message} tailClasses={tailClasses} />
-                </>
-              ) : (
-                <>
-                  <SpeechBubble message={message} tailClasses={tailClasses} />
-                  <DodoCharacter variants={characterVariants} />
-                </>
-              )}
-            </div>
+    <motion.div
+      className={getContainerClasses()}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      variants={{
+        hidden: { opacity: 0 },
+        visible: { opacity: 1 },
+        exit: { opacity: 0 },
+      }}
+    >
+      {/* top/bottom */}
+      {isVertical && (
+        <div className="flex flex-col items-center gap-3">
+          {position === 'top' ? (
+            <>
+              <DodoCharacter variants={characterVariants} />
+              <SpeechBubble message={message} tailClasses={tailClasses} />
+            </>
+          ) : (
+            <>
+              <SpeechBubble message={message} tailClasses={tailClasses} />
+              <DodoCharacter variants={characterVariants} />
+            </>
           )}
         </div>
       )}
-    </AnimatePresence>
+
+      {/* left/right */}
+      {isHorizontal && (
+        <div className="flex items-center gap-4">
+          {position === 'left' ? (
+            <>
+              <DodoCharacter variants={characterVariants} />
+              <SpeechBubble message={message} tailClasses={tailClasses} />
+            </>
+          ) : (
+            <>
+              <SpeechBubble message={message} tailClasses={tailClasses} />
+              <DodoCharacter variants={characterVariants} />
+            </>
+          )}
+        </div>
+      )}
+    </motion.div>
   );
 }
 
