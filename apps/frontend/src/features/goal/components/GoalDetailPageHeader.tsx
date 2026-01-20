@@ -55,8 +55,9 @@ function ViewHeader({ goal, onStartEdit }: ViewHeaderProps) {
         </button>
 
         <button
+          disabled
           type="button"
-          className="cursor-pointer rounded-lg bg-[#c94949] px-4 py-1 font-medium text-white hover:bg-[#c77777]"
+          className="cursor-not-allowed rounded-lg bg-[#c94949] px-4 py-1 font-medium text-white"
         >
           삭제
         </button>

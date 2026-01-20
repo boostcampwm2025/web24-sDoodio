@@ -8,6 +8,7 @@ import {
 import { DifficultyBadge } from '@/shared/components/behavior/DifficultyBadge';
 import { Minus, Plus } from 'lucide-react';
 import { DIFFICULTY_COLOR_STYLES } from '@/shared/constants/difficultyColor';
+import { toast } from 'react-toastify';
 import { createGoalBehaviors } from '../apis/createGoalBehaviors.api';
 import { updateGoalBehaviors } from '../apis/updateGoalBehaviors.api';
 import { deleteGoalBehaviors } from '../apis/deleteGoalBehaviors.api';
@@ -111,7 +112,7 @@ export function GoalBehaviorList({
       onRefetch();
       setIsEditing(false);
     } catch (e) {
-      console.error(e);
+      toast.error(`저장에 실패했습니다. 다시 시도해주세요: ${e}`);
     }
   };
 
@@ -195,7 +196,7 @@ export function GoalBehaviorList({
               onClick={toggleEditMode}
               className="bg-secondary-strong text-bg-light cursor-pointer rounded-full px-3 py-1 text-[12px] font-bold"
             >
-              수정
+              행동 수정
             </button>
           )}
         </div>

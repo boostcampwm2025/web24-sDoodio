@@ -203,7 +203,9 @@ export function NewGoalPage() {
     },
   ];
 
-  const handleSkip = () => {};
+  const handleSkip = () => {
+    setCurrentStepIndex(newGoalFrameSteps.length - 1);
+  };
 
   const handleComplete = async () => {
     const isDemoBlocked = import.meta.env.VITE_DEMO_LOCK_CREATE_GOAL === 'true';

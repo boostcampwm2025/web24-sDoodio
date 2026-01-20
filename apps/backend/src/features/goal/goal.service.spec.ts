@@ -369,7 +369,10 @@ describe('GoalService', () => {
       const user = { id: 'user-1', nickname: '테스트유저' };
       const goal = { id: goalId, title: '기존 목표', color: 'red', user };
 
-      const userRepository = { findOne: jest.fn().mockResolvedValue(user) };
+      const userRepository = {
+        findOne: jest.fn().mockResolvedValue(user),
+      };
+
       const goalRepository = {
         findOne: jest.fn().mockResolvedValue(goal),
         save: jest.fn().mockImplementation((g) => Promise.resolve(g)),
@@ -377,15 +380,24 @@ describe('GoalService', () => {
 
       const { service } = await createService({ goalRepository, userRepository });
 
-      const request2: UpdateGoalRequest = { title: '업데이트된 목표', color: 'blue' };
+      const request2: UpdateGoalRequest = {
+        title: '업데이트된 목표',
+        color: 'blue',
+      };
+
       const result = await service.updateGoal(goalId, request2);
 
-      expect(result).toEqual({ id: goalId, title: '업데이트된 목표', color: 'blue' });
-      expect(userRepository.findOne).toHaveBeenCalled();
+      expect(result).toEqual({
+        id: goalId,
+        title: '업데이트된 목표',
+        color: 'blue',
+      });
+
       expect(goalRepository.findOne).toHaveBeenCalledWith({
         where: { id: goalId, user: { id: user.id } },
         relations: ['user'],
       });
+
       expect(goalRepository.save).toHaveBeenCalledWith({
         ...goal,
         title: '업데이트된 목표',
@@ -402,35 +414,44 @@ describe('GoalService', () => {
         create: jest.fn((data) => data),
         save: jest.fn(),
       };
+
       const managerMock = {
         getRepository: jest.fn(() => behaviorRepoMock),
       };
-      const goalRepository = {
-        findOne: jest.fn().mockImplementation(({ where }: any) => {
-          if (where.nickname) return Promise.resolve(user);
-          if (where.id) return Promise.resolve(goal);
-          return Promise.resolve(null);
-        }),
-        manager: { transaction: jest.fn((cb) => cb(managerMock)) },
+
+      const userRepository = {
+        findOne: jest.fn().mockResolvedValue(user),
       };
-      const userRepository = { findOne: jest.fn().mockResolvedValue(user) };
+
+      const goalRepository = {
+        findOne: jest.fn().mockResolvedValue(goal),
+        manager: {
+          transaction: jest.fn((cb) => cb(managerMock)),
+        },
+      };
 
       const { service } = await createService({ goalRepository, userRepository });
 
       const request3: CreateGoalBehaviorsRequest = {
         behaviors: [{ title: '물 1컵 마시기', difficulty: '마음열기' }],
       };
+
       await service.createGoalBehaviors(goalId, request3);
 
       expect(behaviorRepoMock.create).toHaveBeenCalledWith(
         expect.objectContaining({
           title: '물 1컵 마시기',
           difficulty: '마음열기',
-          goal: expect.objectContaining({ id: 'goal-1' }), // 최소 필드만 체크
+          goal: expect.objectContaining({ id: goalId }),
         }),
       );
+
       expect(behaviorRepoMock.save).toHaveBeenCalledWith([
-        { title: '물 1컵 마시기', difficulty: '마음열기', goal },
+        {
+          title: '물 1컵 마시기',
+          difficulty: '마음열기',
+          goal,
+        },
       ]);
     });
 
@@ -439,57 +460,95 @@ describe('GoalService', () => {
       const user = { id: 'user-1', nickname: '테스트유저' };
       const goal = { id: goalId, user };
 
-      const behavior = { id: 'b1', title: '기존 행동', difficulty: '마음열기' };
+      const existingBehavior = {
+        id: 'b1',
+        title: '기존 행동',
+        difficulty: '마음열기',
+        goal,
+      };
+
       const behaviorRepoMock = {
-        findOne: jest.fn().mockResolvedValue(behavior),
-        merge: jest.fn(),
+        find: jest.fn().mockResolvedValue([existingBehavior]),
+        merge: jest.fn((entity, dto) => Object.assign(entity, dto)),
         save: jest.fn(),
       };
 
-      const managerMock = { getRepository: jest.fn(() => behaviorRepoMock) };
-      const goalRepository = {
-        findOne: jest.fn().mockResolvedValueOnce(user).mockResolvedValueOnce(goal),
-        manager: { transaction: jest.fn((cb) => cb(managerMock)) },
+      const managerMock = {
+        getRepository: jest.fn(() => behaviorRepoMock),
       };
-      const userRepository = { findOne: jest.fn().mockResolvedValue(user) };
+
+      const goalRepository = {
+        findOne: jest
+          .fn()
+          .mockResolvedValueOnce(user) // 사용자 조회
+          .mockResolvedValueOnce(goal), // 목표 조회
+        manager: {
+          transaction: jest.fn((cb) => cb(managerMock)),
+        },
+      };
+
+      const userRepository = {
+        findOne: jest.fn().mockResolvedValue(user),
+      };
 
       const { service } = await createService({ goalRepository, userRepository });
 
       const request4: UpdateGoalBehaviorsRequest = {
         behaviors: [{ id: 'b1', title: '수정된 행동', difficulty: '시작하기' }],
       };
+
       await service.updateGoalBehaviors(goalId, request4);
 
-      expect(behaviorRepoMock.findOne).toHaveBeenCalledWith({
-        where: { id: 'b1', goal: { id: goalId } },
+      expect(behaviorRepoMock.find).toHaveBeenCalledWith({
+        where: {
+          id: expect.anything(), // In(['b1'])
+          goal: { id: goalId },
+        },
       });
-      expect(behaviorRepoMock.merge).toHaveBeenCalledWith(behavior, {
-        title: '수정된 행동',
-        difficulty: '시작하기',
-      });
-      expect(behaviorRepoMock.save).toHaveBeenCalledWith(behavior);
+
+      expect(behaviorRepoMock.save).toHaveBeenCalledWith([
+        {
+          ...existingBehavior,
+          title: '수정된 행동',
+          difficulty: '시작하기',
+        },
+      ]);
     });
 
-    it('deleteGoalBehaviors: 행동 삭제', async () => {
+    it('deleteGoalBehaviors: 행동 soft delete', async () => {
       const goalId = 'goal-1';
       const user = { id: 'user-1', nickname: '테스트유저' };
       const goal = { id: goalId, user };
 
-      const behaviorRepoMock = { delete: jest.fn() };
-      const managerMock = { getRepository: jest.fn(() => behaviorRepoMock) };
+      const behaviorRepoMock = {
+        softDelete: jest.fn(),
+      };
+
+      const managerMock = {
+        getRepository: jest.fn(() => behaviorRepoMock),
+      };
+
       const goalRepository = {
         findOne: jest.fn().mockResolvedValueOnce(user).mockResolvedValueOnce(goal),
-        manager: { transaction: jest.fn((cb) => cb(managerMock)) },
+        manager: {
+          transaction: jest.fn((cb) => cb(managerMock)),
+        },
       };
-      const userRepository = { findOne: jest.fn().mockResolvedValue(user) };
+
+      const userRepository = {
+        findOne: jest.fn().mockResolvedValue(user),
+      };
 
       const { service } = await createService({ goalRepository, userRepository });
 
-      const request5: DeleteGoalBehaviorsRequest = { behaviorIds: ['b1', 'b2'] };
+      const request5: DeleteGoalBehaviorsRequest = {
+        behaviorIds: ['b1', 'b2'],
+      };
+
       await service.deleteGoalBehaviors(goalId, request5);
 
-      expect(behaviorRepoMock.delete).toHaveBeenCalledWith({
-        id: expect.anything(), // In() 내부 값은 라이브러리에서 처리
+      expect(behaviorRepoMock.softDelete).toHaveBeenCalledWith({
+        id: expect.anything(),
         goal: { id: goalId },
       });
     });

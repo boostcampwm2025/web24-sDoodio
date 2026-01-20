@@ -233,23 +233,35 @@ export class GoalService {
         throw new NotFoundException('Goal not found');
       }
 
-      const updatePromises = request.behaviors.map(async (dto) => {
-        const behaviorRepo = manager.getRepository(Behavior);
-        const behavior = await behaviorRepo.findOne({
-          where: { id: dto.id, goal: { id: goalId } },
-        });
+      const behaviorIds = request.behaviors.map((b) => b.id);
 
-        if (!behavior) return;
+      if (behaviorIds.length === 0) {
+        throw new NotFoundException('No behaviors provided');
+      }
 
-        // 변경된 필드만 업데이트
-        behaviorRepo.merge(behavior, {
+      const behaviorRepo = manager.getRepository(Behavior);
+
+      const behaviors = await behaviorRepo.find({
+        where: {
+          id: In(behaviorIds),
+          goal: { id: goalId },
+        },
+      });
+
+      // id -> dto 매핑
+      const behaviorMap = new Map(request.behaviors.map((dto) => [dto.id, dto]));
+
+      const updatedBehaviors = behaviors.map((behavior) => {
+        const dto = behaviorMap.get(behavior.id);
+        if (!dto) return behavior;
+
+        return behaviorRepo.merge(behavior, {
           title: dto.title,
           difficulty: dto.difficulty,
         });
-        await behaviorRepo.save(behavior);
       });
 
-      await Promise.all(updatePromises);
+      await behaviorRepo.save(updatedBehaviors);
     });
   }
 
@@ -273,7 +285,7 @@ export class GoalService {
       }
 
       // goalId와 behaviorIds가 모두 일치하는 것만 삭제
-      await manager.getRepository(Behavior).delete({
+      await manager.getRepository(Behavior).softDelete({
         id: In(request.behaviorIds),
         goal: { id: goalId },
       });
