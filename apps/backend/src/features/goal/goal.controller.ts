@@ -52,6 +52,7 @@ export class GoalController {
       title: goal.title,
       color: goal.color,
       behaviorCount: goal.behaviorCount,
+      templateId: goal.templateId ?? undefined,
     }));
   }
 
@@ -78,6 +79,7 @@ export class GoalController {
       id: goal.id,
       title: goal.title,
       color: goal.color,
+      templateId: goal.templateId ?? undefined,
     };
   }
 

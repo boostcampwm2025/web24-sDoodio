@@ -47,8 +47,10 @@ export function IndexPage() {
     return () => observer.disconnect();
   }, []);
 
-  const handleRewardInteraction = (goalTitle: string) => {
-    const lines = REWARD_LINES[goalTitle] || REWARD_LINES.default;
+  const handleRewardInteraction = (templateId?: string) => {
+    // templateId가 있으면 우선적으로 매칭, 없으면 default 매칭
+    const lines = templateId ? REWARD_LINES[templateId] : REWARD_LINES.default;
+
     const randomIndex = Math.floor(Math.random() * lines.length);
     const rewardQuote = lines[randomIndex];
 
@@ -81,7 +83,7 @@ export function IndexPage() {
     updateTodayBehaviorStatus(id, nextStatus)
       .then(() => {
         if (nextStatus === 'completed') {
-          handleRewardInteraction(targetBehavior.goalTitle);
+          handleRewardInteraction(targetBehavior.goalTemplateId);
         }
       })
       .catch(() => toggleBehaviorIsChecked(id));
@@ -110,7 +112,7 @@ export function IndexPage() {
     updateAIBehaviorStatus(id, nextStatus)
       .then(() => {
         if (nextStatus === 'completed') {
-          handleRewardInteraction(targetBehavior.goalTitle);
+          handleRewardInteraction(targetBehavior.goalTemplateId);
         }
       })
       .catch(() => toggleAIBehaviorIsChecked(id));

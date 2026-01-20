@@ -234,6 +234,8 @@ export function NewGoalPage() {
       await createGoal({
         goalTitle: newGoalTitle.trim(),
         goalColor: newGoalColor,
+        templateId:
+          selectedTemplateId === customTemplateId ? undefined : (selectedTemplateId ?? undefined),
         behaviors,
       });
       navigate('/', { replace: true });

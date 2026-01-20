@@ -198,6 +198,7 @@ describe('NewGoalPage', () => {
     expect(createGoalMock).toHaveBeenCalledWith({
       goalTitle: '새 목표',
       goalColor: 'blue',
+      templateId: 'template-1',
       behaviors: expect.arrayContaining([
         expect.objectContaining({ title: '물 한 컵 마시기', difficulty: '마음열기' }),
         expect.objectContaining({ title: '스트레칭 5분', difficulty: '시작하기' }),

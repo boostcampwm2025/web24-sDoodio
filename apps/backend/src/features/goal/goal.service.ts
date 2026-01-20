@@ -47,6 +47,7 @@ export class GoalService {
     return goals.map((goal) => ({
       ...goal,
       behaviorCount: goal.behaviors ? goal.behaviors.length : 0,
+      templateId: goal.templateId ?? undefined,
     }));
   }
 
@@ -130,6 +131,7 @@ export class GoalService {
       const goal = manager.getRepository(Goal).create({
         title: request.goalTitle,
         color: request.goalColor,
+        templateId: request.templateId,
         user,
       });
       const savedGoal = await manager.getRepository(Goal).save(goal);
@@ -147,6 +149,7 @@ export class GoalService {
         id: savedGoal.id,
         title: savedGoal.title,
         color: savedGoal.color,
+        templateId: savedGoal.templateId ?? undefined,
         behaviors: savedBehaviors.map((behavior) => ({
           id: behavior.id,
           title: behavior.title,
