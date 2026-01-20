@@ -105,14 +105,18 @@ describe('BehaviorService', () => {
       });
       todayBehaviorRepository.softDelete = jest.fn();
 
-      await expect(service.deleteTodayBehavior('tb-1')).rejects.toBeInstanceOf(BadRequestException);
+      await expect(service.deleteTodayBehavior('user-1', 'tb-1')).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
     });
 
     it('대상이 없으면 NotFoundException을 던진다', async () => {
       todayBehaviorRepository.findOne = jest.fn().mockResolvedValue(null);
       todayBehaviorRepository.softDelete = jest.fn();
 
-      await expect(service.deleteTodayBehavior('tb-404')).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.deleteTodayBehavior('user-1', 'tb-404')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
 
     it('삭제 후 id를 반환한다', async () => {
@@ -122,13 +126,16 @@ describe('BehaviorService', () => {
       });
       todayBehaviorRepository.softDelete = jest.fn().mockResolvedValue({ affected: 1 });
 
-      const result = await service.deleteTodayBehavior('tb-1');
+      const result = await service.deleteTodayBehavior('user-1', 'tb-1');
 
       expect(todayBehaviorRepository.update).toHaveBeenCalledWith(
-        { id: 'tb-1' },
+        { id: 'tb-1', user: { id: 'user-1' } },
         { status: 'deleted' },
       );
-      expect(todayBehaviorRepository.softDelete).toHaveBeenCalledWith({ id: 'tb-1' });
+      expect(todayBehaviorRepository.softDelete).toHaveBeenCalledWith({
+        id: 'tb-1',
+        user: { id: 'user-1' },
+      });
       expect(result).toEqual({ id: 'tb-1' });
     });
   });

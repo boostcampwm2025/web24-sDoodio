@@ -221,8 +221,10 @@ export class BehaviorService {
     });
   }
 
-  async deleteTodayBehavior(id: string) {
-    const todayBehavior = await this.todayBehaviorRepository.findOne({ where: { id } });
+  async deleteTodayBehavior(userId: string, id: string) {
+    const todayBehavior = await this.todayBehaviorRepository.findOne({
+      where: { id, user: { id: userId } },
+    });
     if (!todayBehavior) {
       throw new NotFoundException('TodayBehavior not found');
     }
@@ -230,8 +232,8 @@ export class BehaviorService {
       throw new BadRequestException('Completed behavior cannot be deleted');
     }
 
-    await this.todayBehaviorRepository.update({ id }, { status: 'deleted' });
-    await this.todayBehaviorRepository.softDelete({ id });
+    await this.todayBehaviorRepository.update({ id, user: { id: userId } }, { status: 'deleted' });
+    await this.todayBehaviorRepository.softDelete({ id, user: { id: userId } });
     return { id };
   }
 

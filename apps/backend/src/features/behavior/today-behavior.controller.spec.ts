@@ -90,13 +90,14 @@ describe('TodayBehaviorController', () => {
 
   describe('deleteTodayBehavior', () => {
     it('서비스 결과를 반환한다', async () => {
+      const userId = '019bd5d8-72dc-78ca-af5d-c93358058b32';
       const id = '01890fba-7e6a-7b6b-9e5d-0f3c9b8b4c6d';
       const mock = { id };
       service.deleteTodayBehavior.mockResolvedValue(mock);
 
-      const result = await controller.deleteTodayBehavior(id);
+      const result = await controller.deleteTodayBehavior(userId, id);
 
-      expect(service.deleteTodayBehavior).toHaveBeenCalledWith(id);
+      expect(service.deleteTodayBehavior).toHaveBeenCalledWith(userId, id);
       expect(result).toBe(mock);
     });
   });

@@ -73,8 +73,9 @@ export class TodayBehaviorController {
 
   @Delete(':id')
   async deleteTodayBehavior(
+    @UserId() userId: string,
     @Param('id', new ParseUUIDPipe()) id: string,
   ): Promise<DeleteTodayBehaviorResponse> {
-    return this.behaviorService.deleteTodayBehavior(id);
+    return this.behaviorService.deleteTodayBehavior(userId, id);
   }
 }
