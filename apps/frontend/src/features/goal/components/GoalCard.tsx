@@ -31,7 +31,6 @@ export function GoalCard({
       <div
         role="link"
         tabIndex={0}
-        className="cursor-pointer"
         onClick={() => onNavigate?.(goal.id)}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
