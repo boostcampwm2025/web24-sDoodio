@@ -69,34 +69,34 @@ export class DailyUserStat extends BaseIdCreatedEntity {
   @Column({ type: 'bigint', default: 0 })
   totalCompletedCounts!: number; // 누적: 총 수행 행동 횟수
 
-  @Column({ type: 'jsonb', default: "'[]'::jsonb" })
+  @Column({ type: 'jsonb', default: () => "'[]'::jsonb" })
   behaviorCompletedTopNCounts!: BehaviorCompletedCount[]; // 누적: TOP N 행동 수행 횟수 통계
 
-  @Column({ type: 'jsonb', default: "'[]'::jsonb" })
+  @Column({ type: 'jsonb', default: () => "'[]'::jsonb" })
   goalCompletedTopNCounts!: GoalCompletedTopNCount[]; // 누적: 목표 별 수행 Top N 행동 통계
 
-  @Column({ type: 'jsonb', default: "'[]'::jsonb" })
+  @Column({ type: 'jsonb', default: () => "'[]'::jsonb" })
   goalCompletedCounts!: GoalCompletedCount[]; // 누적 목표 별 수행 행동 통계
 
-  @Column({ type: 'jsonb', default: "'[]'::jsonb" })
+  @Column({ type: 'jsonb', default: () => "'[]'::jsonb" })
   difficultyRatios!: Record<BehaviorDifficulty, number>[]; // 일간/주간: 일간 난이도 별 비율 통계
 
-  @Column({ type: 'jsonb', default: {} })
+  @Column({ type: 'jsonb', default: () => "'{}'::jsonb" })
   dailyDifficultyCompletedCounts!: Record<BehaviorDifficulty, number>; // 일간 난이도 별 수행 횟수
 
-  @Column({ type: 'jsonb', default: {} })
+  @Column({ type: 'jsonb', default: () => "'{}'::jsonb" })
   weeklyDifficultyCompletedCounts!: Record<BehaviorDifficulty, number>; // 주간 난이도 별 수행 횟수
 
-  @Column({ type: 'jsonb', default: {} })
+  @Column({ type: 'jsonb', default: () => "'{}'::jsonb" })
   totalDifficultyCompletedCounts!: Record<BehaviorDifficulty, number>; // 누적 난이도별 수행 횟수
 
   @Column({ type: 'numeric', precision: 4, scale: 2, default: 0 })
   originCompletedCounts!: number; // 주간: 추출로 오늘행동 완료와 자신이 직접 추가한 오늘 행동 완료 비율 (선택 / 추출)
 
-  @Column({ type: 'jsonb', default: {} })
+  @Column({ type: 'jsonb', default: () => "'{}'::jsonb" })
   notDoneCounts!: Record<TodayBehaviorOrigin, number>; // 주간: 안 한 오늘 행동 수
 
-  @Column({ type: 'jsonb', default: {} })
+  @Column({ type: 'jsonb', default: () => "'{}'::jsonb" })
   completionTimeBuckets!: Record<CompletionTimeBucket, number>; // 수행 완료 체크 시간 변화 추이
 
   // B: stat_event_logs 기반
@@ -113,10 +113,10 @@ export class DailyUserStat extends BaseIdCreatedEntity {
   @Column({ type: 'enum', enum: Object.values(COUNT_DEGREE) })
   behaviorCountDegree!: CountDegreeType; // 절대값 대비 행동 개수
 
-  // 평균/비율 (필요 시)
-  @Column({ type: 'numeric', precision: 6, scale: 2, nullable: true })
-  avgRefreshPerDay!: number | null; // 주간: 일 평균 새로고침 횟수
+  // 평균/비율
+  @Column({ type: 'numeric', precision: 6, scale: 2, default: 0 })
+  avgRefreshPerDay!: number; // 주간: 일 평균 새로고침 횟수
 
-  @Column({ type: 'numeric', precision: 6, scale: 2, nullable: true })
-  avgCompletedPerDay!: number | null; // 주간: 일 평균 수행 행동 횟수
+  @Column({ type: 'numeric', precision: 6, scale: 2, default: 0 })
+  avgCompletedPerDay!: number; // 주간: 일 평균 수행 행동 횟수
 }
