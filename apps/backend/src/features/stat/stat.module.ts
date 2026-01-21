@@ -8,13 +8,14 @@ import { User } from '../user/user.entity';
 import { TodayBehavior } from '../behavior/today-behavior.entity';
 import { Goal } from '../goal/goal.entity';
 import { Behavior } from '../behavior/behavior.entity';
+import { StatController } from './stat.controller';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, TodayBehavior, DailyUserStat, StatEventLog, Goal, Behavior]),
     ScheduleModule.forRoot(),
   ],
-  controllers: [],
+  controllers: [StatController],
   providers: [StatService],
 })
 export class StatModule {}
