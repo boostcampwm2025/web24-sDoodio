@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, FindOptionsWhere, Repository } from 'typeorm';
+import { Between, FindOptionsWhere, LessThanOrEqual, Repository } from 'typeorm';
 import { BehaviorDifficulty, TodayBehaviorOrigin } from '@web24/shared';
+import { Cron } from '@nestjs/schedule';
 import { addDays, getKstDayKey, toKstBoundary } from '../../common/utils/time.utils';
 import {
   BEHAVIOR_COUNT_THRESHOLD,
@@ -41,6 +42,7 @@ export class StatService {
     private readonly behaviorRepository: Repository<Behavior>,
   ) {}
 
+  @Cron('0 0 4 * * *', { name: 'daily_user_stat_batch', timeZone: 'Asia/Seoul' })
   async calculateDailyUserStats() {
     const users = await this.userRepository.find();
 
@@ -69,16 +71,16 @@ export class StatService {
           goalCount,
           behaviorCount,
         ] = await Promise.all([
-          this.calcTotalCompledCounts(user),
-          this.calcBehaviorCompletedTopNCounts(user),
-          this.calcGoalCompltedTopNCounts(user),
+          this.calcTotalCompledCounts(user, yesterDayKey),
+          this.calcBehaviorCompletedTopNCounts(user, yesterDayKey),
+          this.calcGoalCompltedTopNCounts(user, yesterDayKey),
 
           this.countByDifficulty(user.id, yesterDayKey, yesterDayKey),
           this.countByDifficulty(user.id, weekStartKey, yesterDayKey),
-          this.countByDifficulty(user.id),
+          this.countByDifficulty(user.id, undefined, yesterDayKey),
 
           this.calcweeklyDailyDifficultyCompletedCounts(user.id, weekStartKey, yesterDayKey),
-          this.calcGoalCompletedCounts(user.id),
+          this.calcGoalCompletedCounts(user.id, yesterDayKey),
 
           this.calcOriginCompletedRatio(user.id, weekStartKey, yesterDayKey),
           this.calcNotDoneCounts(user.id, weekStartKey, yesterDayKey),
@@ -128,15 +130,17 @@ export class StatService {
     );
   }
 
-  private async calcTotalCompledCounts(user: User) {
-    const totalCompletedCounts = await this.todayBehaviorRepository.count({
-      where: { user: { id: user.id }, status: 'completed' },
-    });
+  private async calcTotalCompledCounts(user: User, end?: string) {
+    const where = { user: { id: user.id }, status: 'completed' } as FindOptionsWhere<TodayBehavior>;
+    if (end) {
+      where.date = LessThanOrEqual(end);
+    }
+    const totalCompletedCounts = await this.todayBehaviorRepository.count({ where });
     return totalCompletedCounts;
   }
 
-  private async calcBehaviorCompletedTopNCounts(user: User) {
-    const topRows = await this.todayBehaviorRepository
+  private async calcBehaviorCompletedTopNCounts(user: User, end?: string) {
+    const topRowsQuery = this.todayBehaviorRepository
       .createQueryBuilder('tb')
       .innerJoin('tb.behavior', 'behavior')
       .select('behavior.id', 'behaviorId')
@@ -147,8 +151,11 @@ export class StatService {
       .groupBy('behavior.id')
       .addGroupBy('behavior.title')
       .orderBy('COUNT(*)', 'DESC')
-      .limit(this.TOP_N)
-      .getRawMany();
+      .limit(this.TOP_N);
+    if (end) {
+      topRowsQuery.andWhere('tb.date <= :end', { end });
+    }
+    const topRows = await topRowsQuery.getRawMany();
 
     const behaviorCompletedTopNCounts: BehaviorCompletedCount[] = topRows.map((row) => ({
       behaviorId: row.behaviorId,
@@ -159,8 +166,8 @@ export class StatService {
     return behaviorCompletedTopNCounts;
   }
 
-  private async calcGoalCompltedTopNCounts(user: User) {
-    const rows = await this.todayBehaviorRepository
+  private async calcGoalCompltedTopNCounts(user: User, end?: string) {
+    const rowsQuery = this.todayBehaviorRepository
       .createQueryBuilder('tb')
       .innerJoin('tb.behavior', 'behavior')
       .innerJoin('behavior.goal', 'goal')
@@ -176,8 +183,11 @@ export class StatService {
       .addGroupBy('behavior.id')
       .addGroupBy('behavior.title')
       .orderBy('goal.id', 'ASC')
-      .addOrderBy('COUNT(*)', 'DESC')
-      .getRawMany();
+      .addOrderBy('COUNT(*)', 'DESC');
+    if (end) {
+      rowsQuery.andWhere('tb.date <= :end', { end });
+    }
+    const rows = await rowsQuery.getRawMany();
 
     // goal별로 Top N 행동만 추리기
     const goalMap = new Map<string, GoalCompletedTopNCount>();
@@ -207,6 +217,7 @@ export class StatService {
   private async countCompletedInRange(userId: string, start?: string, end?: string) {
     const where = { user: { id: userId }, status: 'completed' } as FindOptionsWhere<TodayBehavior>;
     if (start && end) where.date = Between(start, end);
+    else if (end) where.date = LessThanOrEqual(end);
     return this.todayBehaviorRepository.count({ where });
   }
 
@@ -220,6 +231,7 @@ export class StatService {
       .andWhere('tb.status = :status', { status: 'completed' })
       .groupBy('behavior.difficulty');
     if (start && end) qb.andWhere('tb.date BETWEEN :start AND :end', { start, end });
+    else if (end) qb.andWhere('tb.date <= :end', { end });
     /**
        *
         SELECT b.difficulty, COUNT(*) AS count
@@ -275,8 +287,8 @@ export class StatService {
     return Array.from(byDate.values());
   }
 
-  private async calcGoalCompletedCounts(userId: string) {
-    const rows = await this.todayBehaviorRepository
+  private async calcGoalCompletedCounts(userId: string, end?: string) {
+    const rowsQuery = this.todayBehaviorRepository
       .createQueryBuilder('tb')
       .innerJoin('tb.behavior', 'behavior')
       .innerJoin('behavior.goal', 'goal')
@@ -287,8 +299,11 @@ export class StatService {
       .andWhere('tb.status = :status', { status: 'completed' })
       .groupBy('goal.id')
       .addGroupBy('goal.title')
-      .orderBy('COUNT(*)', 'DESC')
-      .getRawMany();
+      .orderBy('COUNT(*)', 'DESC');
+    if (end) {
+      rowsQuery.andWhere('tb.date <= :end', { end });
+    }
+    const rows = await rowsQuery.getRawMany();
 
     return rows.map((row) => ({
       goalId: row.goalId,

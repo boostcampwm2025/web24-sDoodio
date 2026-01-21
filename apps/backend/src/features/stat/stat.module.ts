@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 import { StatEventLog } from './stat-event-log.entity';
 import { DailyUserStat } from './daily-user-stat.entity';
 import { StatService } from './stat.service';
@@ -11,6 +12,7 @@ import { Behavior } from '../behavior/behavior.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, TodayBehavior, DailyUserStat, StatEventLog, Goal, Behavior]),
+    ScheduleModule.forRoot(),
   ],
   controllers: [],
   providers: [StatService],
