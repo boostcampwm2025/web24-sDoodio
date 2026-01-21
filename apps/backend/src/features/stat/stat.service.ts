@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, FindOptionsWhere, Repository } from 'typeorm';
 import { BehaviorDifficulty, TodayBehaviorOrigin } from '@web24/shared';
-import { addDays, getKstDayKey, toKstBoundary } from 'src/common/utils/time.utils';
+import { addDays, getKstDayKey, toKstBoundary } from '../../common/utils/time.utils';
 import {
   BEHAVIOR_COUNT_THRESHOLD,
   BehaviorCompletedCount,
@@ -48,110 +48,84 @@ export class StatService {
     const todayKey = getKstDayKey(new Date());
     const weekStartKey = getKstDayKey(addDays(new Date(), -this.WEEK_DAYS));
 
-    users.forEach(async (user) => {
-      const totalCompletedCounts = await this.calcTotalCompledCounts(user);
-
-      const behaviorCompletedTopNCounts = await this.calcBehaviorCompletedTopNCounts(user);
-
-      const goalCompletedTopNCounts = await this.calcGoalCompltedTopNCounts(user);
-
-      const dailyDifficultyCompletedCounts = await this.countByDifficulty(
-        user.id,
-        yesterDayKey,
-        yesterDayKey,
-      );
-
-      const weeklyDifficultyCompletedCounts = await this.countByDifficulty(
-        user.id,
-        weekStartKey,
-        yesterDayKey,
-      );
-
-      const totalDifficultyCompletedCounts = await this.countByDifficulty(user.id);
-
-      const weeklyDailyDifficultyCompletedCounts =
-        await this.calcweeklyDailyDifficultyCompletedCounts(user.id, weekStartKey, yesterDayKey);
-
-      const goalCompletedCounts = await this.calcGoalCompletedCounts(user.id);
-
-      const originCompletedRatio = await this.calcOriginCompletedRatio(
-        user.id,
-        weekStartKey,
-        yesterDayKey,
-      );
-
-      const notDoneCounts = await this.calcNotDoneCounts(user.id, weekStartKey, yesterDayKey);
-
-      const completionTimeBuckets = await this.calcCompletionTimeBuckets(
-        user.id,
-        weekStartKey,
-        yesterDayKey,
-      );
-
-      const checkInTotal = await this.countEvent(
-        user.id,
-        EVENT_TYPES.CHECK_IN,
-        weekStartKey,
-        yesterDayKey,
-      );
-
-      const duduCatchTotal = await this.countEvent(
-        user.id,
-        EVENT_TYPES.DUDU_CATCH,
-        weekStartKey,
-        yesterDayKey,
-      );
-
-      const refreshTotal = await this.countEvent(
-        user.id,
-        EVENT_TYPES.REFRESH_TODAY_BEHAVIORS,
-        weekStartKey,
-        yesterDayKey,
-      );
-
-      const avgRefreshPerDay = Number((refreshTotal / this.WEEK_DAYS).toFixed(2));
-
-      const avgCompletedPerDay = Number(
-        (
-          (await this.countCompletedInRange(user.id, weekStartKey, yesterDayKey)) / this.WEEK_DAYS
-        ).toFixed(2),
-      );
-
-      const goalCount = await this.goalRepository.count({ where: { user: { id: user.id } } });
-
-      const behaviorCount = await this.behaviorRepository.count({
-        where: { goal: { user: { id: user.id } } },
-      });
-
-      const goalCountDegree = this.calcGoalDegree(goalCount);
-
-      const behaviorCountDegree = this.calcBehaviorDegree(behaviorCount);
-
-      await this.dailyUserStatRepository.upsert(
-        {
-          user: { id: user.id },
-          statDate: todayKey,
+    await Promise.all(
+      users.map(async (user) => {
+        const [
           totalCompletedCounts,
           behaviorCompletedTopNCounts,
           goalCompletedTopNCounts,
-          goalCompletedCounts,
-          weeklyDailyDifficultyCompletedCounts,
           dailyDifficultyCompletedCounts,
           weeklyDifficultyCompletedCounts,
           totalDifficultyCompletedCounts,
+          weeklyDailyDifficultyCompletedCounts,
+          goalCompletedCounts,
           originCompletedRatio,
           notDoneCounts,
           completionTimeBuckets,
           checkInTotal,
           duduCatchTotal,
-          goalCountDegree,
-          behaviorCountDegree,
-          avgRefreshPerDay,
-          avgCompletedPerDay,
-        },
-        ['user', 'statDate'],
-      );
-    });
+          refreshTotal,
+          completedInWeek,
+          goalCount,
+          behaviorCount,
+        ] = await Promise.all([
+          this.calcTotalCompledCounts(user),
+          this.calcBehaviorCompletedTopNCounts(user),
+          this.calcGoalCompltedTopNCounts(user),
+
+          this.countByDifficulty(user.id, yesterDayKey, yesterDayKey),
+          this.countByDifficulty(user.id, weekStartKey, yesterDayKey),
+          this.countByDifficulty(user.id),
+
+          this.calcweeklyDailyDifficultyCompletedCounts(user.id, weekStartKey, yesterDayKey),
+          this.calcGoalCompletedCounts(user.id),
+
+          this.calcOriginCompletedRatio(user.id, weekStartKey, yesterDayKey),
+          this.calcNotDoneCounts(user.id, weekStartKey, yesterDayKey),
+          this.calcCompletionTimeBuckets(user.id, weekStartKey, yesterDayKey),
+
+          this.countEvent(user.id, EVENT_TYPES.CHECK_IN, weekStartKey, yesterDayKey),
+          this.countEvent(user.id, EVENT_TYPES.DUDU_CATCH, weekStartKey, yesterDayKey),
+          this.countEvent(user.id, EVENT_TYPES.REFRESH_TODAY_BEHAVIORS, weekStartKey, yesterDayKey),
+
+          this.countCompletedInRange(user.id, weekStartKey, yesterDayKey),
+
+          this.goalRepository.count({ where: { user: { id: user.id } } }),
+          this.behaviorRepository.count({ where: { goal: { user: { id: user.id } } } }),
+        ]);
+
+        const avgRefreshPerDay = Number((refreshTotal / this.WEEK_DAYS).toFixed(2));
+        const avgCompletedPerDay = Number((completedInWeek / this.WEEK_DAYS).toFixed(2));
+
+        const goalCountDegree = this.calcGoalDegree(goalCount);
+        const behaviorCountDegree = this.calcBehaviorDegree(behaviorCount);
+
+        await this.dailyUserStatRepository.upsert(
+          {
+            user: { id: user.id },
+            statDate: todayKey,
+            totalCompletedCounts,
+            behaviorCompletedTopNCounts,
+            goalCompletedTopNCounts,
+            goalCompletedCounts,
+            weeklyDailyDifficultyCompletedCounts,
+            dailyDifficultyCompletedCounts,
+            weeklyDifficultyCompletedCounts,
+            totalDifficultyCompletedCounts,
+            originCompletedRatio,
+            notDoneCounts,
+            completionTimeBuckets,
+            checkInTotal,
+            duduCatchTotal,
+            goalCountDegree,
+            behaviorCountDegree,
+            avgRefreshPerDay,
+            avgCompletedPerDay,
+          },
+          ['user', 'statDate'],
+        );
+      }),
+    );
   }
 
   private async calcTotalCompledCounts(user: User) {
