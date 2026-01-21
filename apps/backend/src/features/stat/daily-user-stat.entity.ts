@@ -65,6 +65,9 @@ export class DailyUserStat extends BaseIdCreatedEntity {
   @JoinColumn({ name: 'userId' })
   user!: User;
 
+  @Column({ type: 'date' })
+  statDate!: string; // YYYY-MM-DD
+
   // A: today_behaviors 기반
   @Column({ type: 'bigint', default: 0 })
   totalCompletedCounts!: number; // 누적: 총 수행 행동 횟수
@@ -79,7 +82,7 @@ export class DailyUserStat extends BaseIdCreatedEntity {
   goalCompletedCounts!: GoalCompletedCount[]; // 누적 목표 별 수행 행동 통계
 
   @Column({ type: 'jsonb', default: () => "'[]'::jsonb" })
-  difficultyRatios!: Record<BehaviorDifficulty, number>[]; // 일간/주간: 일간 난이도 별 비율 통계
+  weeklyDailyDifficultyCompletedCounts!: Record<BehaviorDifficulty, number>[]; // 주간을 일간으로 나눠서 난이도 별 수행 횟수
 
   @Column({ type: 'jsonb', default: () => "'{}'::jsonb" })
   dailyDifficultyCompletedCounts!: Record<BehaviorDifficulty, number>; // 일간 난이도 별 수행 횟수
@@ -91,10 +94,10 @@ export class DailyUserStat extends BaseIdCreatedEntity {
   totalDifficultyCompletedCounts!: Record<BehaviorDifficulty, number>; // 누적 난이도별 수행 횟수
 
   @Column({ type: 'numeric', precision: 4, scale: 2, default: 0 })
-  originCompletedCounts!: number; // 주간: 추출로 오늘행동 완료와 자신이 직접 추가한 오늘 행동 완료 비율 (선택 / 추출)
+  originCompletedRatio!: number; // 주간: 추출로 오늘행동 완료와 자신이 직접 추가한 오늘 행동 완료 비율 (선택 / 추출)
 
   @Column({ type: 'jsonb', default: () => "'{}'::jsonb" })
-  notDoneCounts!: Record<TodayBehaviorOrigin, number>; // 주간: 안 한 오늘 행동 수
+  notDoneCounts!: Record<TodayBehaviorOrigin, number>; // 주간: 안 한 오늘 행동 수행
 
   @Column({ type: 'jsonb', default: () => "'{}'::jsonb" })
   completionTimeBuckets!: Record<CompletionTimeBucket, number>; // 수행 완료 체크 시간 변화 추이
