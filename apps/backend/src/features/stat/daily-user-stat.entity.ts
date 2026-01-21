@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { BehaviorDifficulty, TodayBehaviorOrigin } from '@web24/shared';
 import { BaseIdCreatedEntity } from '../../common/entities/base.entity';
 import { User } from '../user/user.entity';
@@ -57,6 +57,7 @@ export interface GoalCompletedCount {
   count: number;
 }
 
+@Index(['user', 'statDate'], { unique: true })
 @Entity({ name: 'daily_user_stats' })
 export class DailyUserStat extends BaseIdCreatedEntity {
   @ManyToOne(() => User, {
