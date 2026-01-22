@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, FindOptionsWhere, LessThanOrEqual, Repository } from 'typeorm';
-import { BehaviorDifficulty, TodayBehaviorOrigin } from '@web24/shared';
+import { BEHAVIOR_DIFFICULTIES, BehaviorDifficulty, TodayBehaviorOrigin } from '@web24/shared';
 import { Cron } from '@nestjs/schedule';
 import pLimit from 'p-limit';
 import { addDays, getKstDayKey, toKstBoundary } from '../../common/utils/time.utils';
@@ -42,6 +42,37 @@ export class StatService {
     @InjectRepository(Behavior)
     private readonly behaviorRepository: Repository<Behavior>,
   ) {}
+
+  async getDifficultyStats(userId: string) {
+    const todayKey = getKstDayKey(new Date());
+    const stat = await this.dailyUserStatRepository.findOne({
+      where: { user: { id: userId }, statDate: todayKey },
+    });
+
+    if (!stat?.weeklyDailyDifficultyCompletedCounts?.length) {
+      return [];
+    }
+
+    const normalized = stat.weeklyDailyDifficultyCompletedCounts.map((day) =>
+      BEHAVIOR_DIFFICULTIES.reduce(
+        (acc, difficulty) => {
+          acc[difficulty] = difficulty === 'AI' ? 0 : (day?.[difficulty] ?? 0);
+          return acc;
+        },
+        {} as Record<BehaviorDifficulty, number>,
+      ),
+    );
+
+    const total = normalized.reduce(
+      (sum, day) => sum + Object.values(day).reduce((daySum, value) => daySum + value, 0),
+      0,
+    );
+    if (total === 0) {
+      return [];
+    }
+
+    return normalized;
+  }
 
   @Cron('0 0 4 * * *', { name: 'daily_user_stat_batch', timeZone: 'Asia/Seoul' })
   async calculateDailyUserStats() {
