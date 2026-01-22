@@ -1,3 +1,5 @@
+import { DifficultyGraph } from '@/features/stats/DifficultyGraph';
+
 interface StatsContainerProps {
   title: string;
   children: React.ReactNode;
@@ -36,10 +38,7 @@ export function StatsPage() {
       </StatsContainer>
       {/* 난이도 통계 */}
       <StatsContainer title="요즘 이런 흐름으로 행동했어요">
-        <div className="flex flex-col gap-4">
-          <div className="w-full border p-2">그래프 영역</div>
-          <div className="flex w-full flex-col border p-2">문장 영역</div>
-        </div>
+        <DifficultyGraph />
       </StatsContainer>
       {/* 랜덤 통계 */}
       <StatsContainer title="이런 점이 눈에 띄었어요">
