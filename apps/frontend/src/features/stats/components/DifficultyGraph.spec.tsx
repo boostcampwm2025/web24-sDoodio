@@ -1,9 +1,9 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DifficultyGraph } from './DifficultyGraph';
-import { fetchDifficultyStats } from './apis/fetchDifficultyStats.api';
+import { fetchDifficultyStats } from '../apis/fetchDifficultyStats.api';
 
-vi.mock('./apis/fetchDifficultyStats.api', () => ({
+vi.mock('../apis/fetchDifficultyStats.api', () => ({
   fetchDifficultyStats: vi.fn(),
 }));
 

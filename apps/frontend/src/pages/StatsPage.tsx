@@ -1,4 +1,4 @@
-import { DifficultyGraph } from '@/features/stats/DifficultyGraph';
+import { DifficultyGraph } from '@/features/stats/components/DifficultyGraph';
 
 interface StatsContainerProps {
   title: string;

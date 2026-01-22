@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BEHAVIOR_DIFFICULTIES, type GetDifficultyStatsResponse } from '@web24/shared';
 import { DIFFICULTY_COLOR_STYLES } from '@/shared/constants/difficultyColor';
-import { fetchDifficultyStats } from './apis/fetchDifficultyStats.api';
+import { fetchDifficultyStats } from '../apis/fetchDifficultyStats.api';
 
 export function DifficultyGraph() {
   const [stats, setStats] = useState<GetDifficultyStatsResponse>([]);
