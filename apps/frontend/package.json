@@ -18,6 +18,8 @@
     "format:check": "pnpm exec prettier --check ."
   },
   "dependencies": {
+    "@nivo/core": "^0.99.0",
+    "@nivo/pie": "^0.99.0",
     "@web24/shared": "workspace:*",
     "framer-motion": "^12.27.1",
     "lucide-react": "^0.562.0",
