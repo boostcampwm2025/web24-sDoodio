@@ -4,6 +4,7 @@ import { registerCommonSchemas } from './common.docs';
 import { registerBehaviorApi } from '../../features/behavior/behavior.docs';
 import { registerGoalApi } from '../../features/goal/goal.docs';
 import { registerAuthApi } from '../../features/auth/auth.docs';
+import { registerStatApi } from '../../features/stat/stat.docs';
 
 const registry = new OpenAPIRegistry();
 
@@ -13,6 +14,7 @@ const commonSchemas = registerCommonSchemas(registry);
 registerGoalApi(registry);
 registerBehaviorApi(registry, commonSchemas);
 registerAuthApi(registry, commonSchemas);
+registerStatApi(registry, commonSchemas);
 
 type OpenApiDocument = ReturnType<OpenApiGeneratorV3['generateDocument']>;
 
