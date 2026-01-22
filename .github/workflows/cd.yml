@@ -95,20 +95,22 @@ jobs:
             git fetch --all
             git checkout develop
             git pull
-            echo "DB_HOST=${{ secrets.STAGING_DB_HOST }}" > .env
-            echo "DB_PORT=${{ secrets.STAGING_DB_PORT }}" >> .env
-            echo "DB_USER=${{ secrets.STAGING_DB_USER }}" >> .env
-            echo "DB_PASS=${{ secrets.STAGING_DB_PASS }}" >> .env
-            echo "DB_NAME=${{ secrets.STAGING_DB_NAME }}" >> .env
-            echo "CLOVA_API_KEY=${{ secrets.STAGING_CLOVA_API_KEY }}" >> .env
-            echo "SESSION_SECRET=${{ secrets.STAGING_SESSION_SECRET }}" >> .env
-            echo "SESSION_MAX_AGE_MS=${{ secrets.STAGING_SESSION_MAX_AGE_MS }}" >> .env
-            chmod 600 .env
+            cat <<EOF > infra/staging/.env
+            DB_HOST=${{ secrets.STAGING_DB_HOST }}
+            DB_PORT=${{ secrets.STAGING_DB_PORT }}
+            DB_USER=${{ secrets.STAGING_DB_USER }}
+            DB_PASS=${{ secrets.STAGING_DB_PASS }}
+            DB_NAME=${{ secrets.STAGING_DB_NAME }}
+            CLOVA_API_KEY=${{ secrets.STAGING_CLOVA_API_KEY }}
+            SESSION_SECRET=${{ secrets.STAGING_SESSION_SECRET }}
+            SESSION_MAX_AGE_MS=${{ secrets.STAGING_SESSION_MAX_AGE_MS }}
+            EOF
+            chmod 600 infra/staging/.env
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
-            docker compose -f infra/staging/docker-compose.staging.yml pull
-            docker compose -f infra/staging/docker-compose.staging.yml up -d backend
-            docker compose -f infra/staging/docker-compose.staging.yml run --rm backend node ./node_modules/typeorm/cli.js -d ./dist/common/database/data-source.js migration:run
-            docker compose -f infra/staging/docker-compose.staging.yml up -d
+            docker compose -f infra/staging/docker-compose.staging.yml --env-file infra/staging/.env pull
+            docker compose -f infra/staging/docker-compose.staging.yml --env-file infra/staging/.env up -d backend
+            docker compose -f infra/staging/docker-compose.staging.yml --env-file infra/staging/.env run --rm backend node ./node_modules/typeorm/cli.js -d ./dist/common/database/data-source.js migration:run
+            docker compose -f infra/staging/docker-compose.staging.yml --env-file infra/staging/.env up -d
 
   deploy-production:
     if: github.ref == 'refs/heads/main' && (github.event_name != 'workflow_dispatch' || inputs.target == 'all' || inputs.target == 'deploy-production')
@@ -130,17 +132,19 @@ jobs:
             git fetch --all
             git checkout main
             git pull
-            echo "DB_HOST=${{ secrets.PROD_DB_HOST }}" > .env
-            echo "DB_PORT=${{ secrets.PROD_DB_PORT }}" >> .env
-            echo "DB_USER=${{ secrets.PROD_DB_USER }}" >> .env
-            echo "DB_PASS=${{ secrets.PROD_DB_PASS }}" >> .env
-            echo "DB_NAME=${{ secrets.PROD_DB_NAME }}" >> .env
-            echo "CLOVA_API_KEY=${{ secrets.PROD_CLOVA_API_KEY }}" >> .env
-            echo "SESSION_SECRET=${{ secrets.PROD_SESSION_SECRET }}" >> .env
-            echo "SESSION_MAX_AGE_MS=${{ secrets.PROD_SESSION_MAX_AGE_MS }}" >> .env
-            chmod 600 .env
+            cat <<EOF > infra/prod/.env
+            DB_HOST=${{ secrets.PROD_DB_HOST }}
+            DB_PORT=${{ secrets.PROD_DB_PORT }}
+            DB_USER=${{ secrets.PROD_DB_USER }}
+            DB_PASS=${{ secrets.PROD_DB_PASS }}
+            DB_NAME=${{ secrets.PROD_DB_NAME }}
+            CLOVA_API_KEY=${{ secrets.PROD_CLOVA_API_KEY }}
+            SESSION_SECRET=${{ secrets.PROD_SESSION_SECRET }}
+            SESSION_MAX_AGE_MS=${{ secrets.PROD_SESSION_MAX_AGE_MS }}
+            EOF
+            chmod 600 infra/prod/.env
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
-            docker compose -f infra/prod/docker-compose.prod.yml pull
-            docker compose -f infra/prod/docker-compose.prod.yml up -d backend
-            docker compose -f infra/prod/docker-compose.prod.yml run --rm backend node ./node_modules/typeorm/cli.js -d ./dist/common/database/data-source.js migration:run
-            docker compose -f infra/prod/docker-compose.prod.yml up -d
+            docker compose -f infra/prod/docker-compose.prod.yml --env-file infra/prod/.env pull
+            docker compose -f infra/prod/docker-compose.prod.yml --env-file infra/prod/.env up -d backend
+            docker compose -f infra/prod/docker-compose.prod.yml --env-file infra/prod/.env run --rm backend node ./node_modules/typeorm/cli.js -d ./dist/common/database/data-source.js migration:run
+            docker compose -f infra/prod/docker-compose.prod.yml --env-file infra/prod/.env up -d
