@@ -237,8 +237,8 @@ describe('StatService', () => {
       expect(qb.andWhere).toHaveBeenCalledWith('tb.date <= :end', { end: '2026-01-20' });
       const goalOne = result.find((entry: any) => entry.goalId === 'g1');
       const goalTwo = result.find((entry: any) => entry.goalId === 'g2');
-      expect(goalOne.behaviorCounts).toHaveLength(5);
-      expect(goalTwo.behaviorCounts).toHaveLength(1);
+      expect(goalOne.behaviors).toHaveLength(5);
+      expect(goalTwo.behaviors).toHaveLength(1);
     });
     it('countByDifficulty는 난이도별 카운트를 매핑한다', async () => {
       const rows = [

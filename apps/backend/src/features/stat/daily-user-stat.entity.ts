@@ -48,7 +48,7 @@ export interface BehaviorCompletedCount {
 export interface GoalCompletedTopNCount {
   goalId: string;
   goalTitle: string;
-  behaviorCounts: BehaviorCompletedCount[];
+  behaviors: BehaviorCompletedCount[];
 }
 
 export interface GoalCompletedCount {

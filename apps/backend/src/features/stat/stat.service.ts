@@ -167,13 +167,13 @@ export class StatService {
     }
     const topRows = await topRowsQuery.getRawMany();
 
-    const behaviorCompletedTopNCounts: BehaviorCompletedCount[] = topRows.map((row) => ({
+    const behaviorCompletedTopN: BehaviorCompletedCount[] = topRows.map((row) => ({
       behaviorId: row.behaviorId,
       behaviorTitle: row.behaviorTitle,
       count: Number(row.count),
     }));
 
-    return behaviorCompletedTopNCounts;
+    return behaviorCompletedTopN;
   }
 
   private async calcGoalCompletedTopNCounts(user: User, end?: string) {
@@ -207,11 +207,11 @@ export class StatService {
       const entry = goalMap.get(goalId) ?? {
         goalId,
         goalTitle: row.goalTitle,
-        behaviorCounts: [] as BehaviorCompletedCount[],
+        behaviors: [] as BehaviorCompletedCount[],
       };
 
-      if (entry.behaviorCounts.length < this.TOP_N) {
-        entry.behaviorCounts.push({
+      if (entry.behaviors.length < this.TOP_N) {
+        entry.behaviors.push({
           behaviorId: row.behaviorId,
           behaviorTitle: row.behaviorTitle,
           count: Number(row.count),
