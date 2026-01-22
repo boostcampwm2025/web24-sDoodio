@@ -20,7 +20,16 @@ export function DifficultyGraph() {
     return <div className="flex h-40 items-center justify-center">데이터를 불러오는 중...</div>;
   }
 
-  if (error || stats.length === 0) {
+  if (error) {
+    return (
+      <div className="text-label-disable flex h-40 flex-col items-center justify-center gap-2">
+        <p className="text-body-1 font-semibold">에러가 발생했어요.</p>
+        <p className="text-sm">{error.message}</p>
+      </div>
+    );
+  }
+
+  if (stats.length === 0) {
     return (
       <div className="text-label-disable flex h-40 flex-col items-center justify-center gap-2">
         <p className="text-body-1 font-semibold">조금 더 쌓이면 보여줄 수 있어요.</p>
