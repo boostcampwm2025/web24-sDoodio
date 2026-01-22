@@ -37,7 +37,7 @@ export function DifficultyGraph() {
     );
   }
 
-  const currentData = selectedIndex !== null ? stats[selectedIndex] : null;
+  const currentData = selectedIndex === null ? null : stats[selectedIndex];
   const totalCounts = stats.reduce(
     (acc, day) => {
       BEHAVIOR_DIFFICULTIES.forEach((diff) => {
@@ -53,7 +53,7 @@ export function DifficultyGraph() {
   const displayTotal =
     selectedIndex !== null && currentData
       ? BEHAVIOR_DIFFICULTIES.reduce((sum, diff) => sum + currentData[diff], 0)
-      : (totalCounts.total as number);
+      : totalCounts.total;
 
   // 일주일 간의 날짜 레이블 (가상)
   const labels = ['7일 전', '6일 전', '5일 전', '4일 전', '3일 전', '2일 전', '어제'].slice(
@@ -85,7 +85,7 @@ export function DifficultyGraph() {
 
                     return (
                       <div
-                        key={`${day}-${diff}`}
+                        key={`${labels[idx]}-${diff}`}
                         style={{ height: `${ratioHeight}%` }}
                         className={`${DIFFICULTY_COLOR_STYLES[diff].bg} w-full transition-opacity ${
                           isSelected ? 'opacity-100' : 'opacity-30 grayscale'
@@ -112,15 +112,15 @@ export function DifficultyGraph() {
       {/* 하단 문구 영역 */}
       <div className="flex flex-col gap-4 p-5">
         <h4 className="text-headline-2 text-label-alternative font-semibold">
-          {selectedIndex !== null
-            ? `${labels[selectedIndex]}에는 이만큼 해내셨네요!`
-            : '일주일 동안 이만큼 해내셨네요!'}
+          {selectedIndex === null
+            ? '일주일 동안 이만큼 해내셨네요!'
+            : `${labels[selectedIndex]}에는 이만큼 해내셨네요!`}
         </h4>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {BEHAVIOR_DIFFICULTIES.filter((diff) => diff !== 'AI').map((diff) => (
             <div
               key={diff}
-              className={`flex flex-col gap-1 ${DIFFICULTY_COLOR_STYLES[diff].bg} border-di items-center justify-center rounded-2xl p-1`}
+              className={`flex flex-col gap-1 ${DIFFICULTY_COLOR_STYLES[diff].bg} items-center justify-center rounded-2xl p-1`}
             >
               <span className="text-label-2 text-label-alternative font-semibold">{diff}</span>
               <span className="text-headline-2 font-semibold">{displayData[diff] || 0}회</span>
