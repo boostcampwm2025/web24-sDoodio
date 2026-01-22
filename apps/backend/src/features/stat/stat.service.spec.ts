@@ -43,7 +43,11 @@ describe('StatService', () => {
   } = {}) => {
     const userRepository = { find: jest.fn(), ...userRepositoryOverride };
     const todayBehaviorRepository = { count: jest.fn(), ...todayBehaviorRepositoryOverride };
-    const dailyUserStatRepository = { upsert: jest.fn(), ...dailyUserStatRepositoryOverride };
+    const dailyUserStatRepository = {
+      upsert: jest.fn(),
+      findOne: jest.fn(),
+      ...dailyUserStatRepositoryOverride,
+    };
     const statEventLogRepository = {
       createQueryBuilder: jest.fn(),
       ...statEventLogRepositoryOverride,
@@ -165,6 +169,61 @@ describe('StatService', () => {
         yesterDayKey,
       );
       expect(countCompletedInRange).toHaveBeenCalledWith(user.id, weekStartKey, yesterDayKey);
+    });
+  });
+
+  describe('getDifficultyStats', () => {
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('오늘 통계가 없으면 빈 배열을 반환한다', async () => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-01-21T03:00:00.000Z'));
+      const userId = 'user-1';
+      const dailyUserStatRepository = { findOne: jest.fn().mockResolvedValue(null) };
+      const { service } = await createService({ dailyUserStatRepository });
+
+      const result = await service.getDifficultyStats(userId);
+
+      const todayKey = getKstDayKey(new Date());
+      expect(dailyUserStatRepository.findOne).toHaveBeenCalledWith({
+        where: { user: { id: userId }, statDate: todayKey },
+      });
+      expect(result).toEqual([]);
+    });
+
+    it('주간 데이터가 비어있으면 빈 배열을 반환한다', async () => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-01-21T03:00:00.000Z'));
+      const userId = 'user-1';
+      const dailyUserStatRepository = {
+        findOne: jest.fn().mockResolvedValue({ weeklyDailyDifficultyCompletedCounts: [] }),
+      };
+      const { service } = await createService({ dailyUserStatRepository });
+
+      const result = await service.getDifficultyStats(userId);
+
+      expect(result).toEqual([]);
+    });
+
+    it('AI는 0으로 고정하고 난이도 키를 정규화한다', async () => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-01-21T03:00:00.000Z'));
+      const userId = 'user-1';
+      const dailyUserStatRepository = {
+        findOne: jest.fn().mockResolvedValue({
+          weeklyDailyDifficultyCompletedCounts: [
+            { 마음열기: 1, 이어가기: 2, AI: 5 },
+            { 시작하기: 3, 몰입하기: 1 },
+          ],
+        }),
+      };
+      const { service } = await createService({ dailyUserStatRepository });
+
+      const result = await service.getDifficultyStats(userId);
+
+      expect(result).toEqual([
+        { 마음열기: 1, 시작하기: 0, 이어가기: 2, 몰입하기: 0, AI: 0 },
+        { 마음열기: 0, 시작하기: 3, 이어가기: 0, 몰입하기: 1, AI: 0 },
+      ]);
     });
   });
 

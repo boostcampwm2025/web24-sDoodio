@@ -4,6 +4,7 @@ import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import { IndexPage } from '@/pages/IndexPage';
 import { AllGoalsPage } from '@/pages/AllGoalsPage';
 import { GoalDetailPage } from '@/pages/GoalDetailPage';
+import { StatsPage } from '@/pages/StatsPage';
 import { LoginPage } from '@/pages/LoginPage';
 import useAuthStore from '@/stores/useAuthStore';
 
@@ -37,6 +38,7 @@ export function AppRoutes() {
         <Route element={<NewGoalPage />} path="/goals/new" />
         <Route element={<AllGoalsPage />} path="/all-goals" />
         <Route element={<GoalDetailPage />} path="/goals/:goalId" />
+        <Route element={<StatsPage />} path="/stats" />
       </Route>
       <Route
         element={<div className="text-label-disable text-center">구현 예정입니다</div>}

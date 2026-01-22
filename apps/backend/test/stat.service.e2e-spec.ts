@@ -185,7 +185,7 @@ describeIf('StatService integration', () => {
       {
         goalId: goal.id,
         goalTitle: '건강 목표',
-        behaviorCounts: expect.arrayContaining([
+        behaviors: expect.arrayContaining([
           {
             behaviorId: behavior.id,
             behaviorTitle: '물 1컵 마시기',
