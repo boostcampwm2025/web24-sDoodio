@@ -11,6 +11,7 @@ import { GoalModule } from './features/goal/goal.module';
 import { BehaviorModule } from './features/behavior/behavior.module';
 import { AIModule } from './features/ai/ai.module';
 import { AuthModule } from './features/auth/auth.module';
+import { StatModule } from './features/stat/stat.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { AuthModule } from './features/auth/auth.module';
     BehaviorModule,
     AIModule,
     AuthModule,
+    StatModule,
   ],
   controllers: [],
   providers: [
