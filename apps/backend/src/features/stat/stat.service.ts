@@ -65,7 +65,7 @@ export class StatService {
             totalDifficultyCompletedCounts,
             weeklyDailyDifficultyCompletedCounts,
             goalCompletedCounts,
-            originCompletedRatio,
+            originCompletedCounts,
             notDoneCounts,
             completionTimeBuckets,
             checkInTotal,
@@ -86,7 +86,7 @@ export class StatService {
             this.calcweeklyDailyDifficultyCompletedCounts(user.id, weekStartKey, yesterDayKey),
             this.calcGoalCompletedCounts(user.id, yesterDayKey),
 
-            this.calcOriginCompletedRatio(user.id, weekStartKey, yesterDayKey),
+            this.calcOriginCompletedCounts(user.id, weekStartKey, yesterDayKey),
             this.calcNotDoneCounts(user.id, weekStartKey, yesterDayKey),
             this.calcCompletionTimeBuckets(user.id, weekStartKey, yesterDayKey),
 
@@ -123,7 +123,7 @@ export class StatService {
               dailyDifficultyCompletedCounts,
               weeklyDifficultyCompletedCounts,
               totalDifficultyCompletedCounts,
-              originCompletedRatio,
+              originCompletedCounts,
               notDoneCounts,
               completionTimeBuckets,
               checkInTotal,
@@ -323,7 +323,7 @@ export class StatService {
   }
 
   // MEMO: systemCount가 0인 경우와 userCount가 0인 경우를 구분 불가
-  private async calcOriginCompletedRatio(userId: string, start: string, end: string) {
+  private async calcOriginCompletedCounts(userId: string, start: string, end: string) {
     const rows = await this.todayBehaviorRepository
       .createQueryBuilder('tb')
       .select('tb.origin', 'origin')
@@ -342,9 +342,10 @@ export class StatService {
       {} as Record<TodayBehaviorOrigin, number>,
     );
 
-    const userCount = map.user ?? 0;
-    const systemCount = map.system ?? 0;
-    return systemCount === 0 ? 0 : Number((userCount / systemCount).toFixed(2));
+    return {
+      system: map.system ?? 0,
+      user: map.user ?? 0,
+    };
   }
 
   private async calcNotDoneCounts(userId: string, start: string, end: string) {

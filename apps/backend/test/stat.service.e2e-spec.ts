@@ -225,7 +225,7 @@ describeIf('StatService integration', () => {
         expect.objectContaining({ totalCount: 1 }),
       ]),
     );
-    expect(Number(stats[0].originCompletedRatio)).toBe(0.5);
+    expect(stats[0].originCompletedCounts).toEqual({ system: 2, user: 1 });
     expect(stats[0].notDoneCounts).toMatchObject({ system: 1, user: 1 });
     // Then-검증: 완료 시간대 버킷 합계
     const completionBucketTotal = Object.values(stats[0].completionTimeBuckets).reduce(

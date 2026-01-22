@@ -41,7 +41,7 @@ describe('DailyUserStat', () => {
         'dailyDifficultyCompletedCounts',
         'weeklyDifficultyCompletedCounts',
         'totalDifficultyCompletedCounts',
-        'originCompletedRatio',
+        'originCompletedCounts',
         'notDoneCounts',
         'completionTimeBuckets',
         'checkInTotal',
@@ -106,11 +106,11 @@ describe('DailyUserStat', () => {
       getColumn(DailyUserStat, 'totalDifficultyCompletedCounts')?.options?.default,
     ).toBeDefined();
 
+    expect(getColumn(DailyUserStat, 'originCompletedCounts')?.options?.default).toBeDefined();
     expect(getColumn(DailyUserStat, 'notDoneCounts')?.options?.default).toBeDefined();
     expect(getColumn(DailyUserStat, 'completionTimeBuckets')?.options?.default).toBeDefined();
 
     // numeric default
-    expect(getColumn(DailyUserStat, 'originCompletedRatio')?.options?.default).toBe(0);
     expect(getColumn(DailyUserStat, 'avgRefreshPerDay')?.options?.default).toBe(0);
     expect(getColumn(DailyUserStat, 'avgCompletedPerDay')?.options?.default).toBe(0);
   });
@@ -121,11 +121,6 @@ describe('DailyUserStat', () => {
   });
 
   it('numeric 컬럼 precision/scale 설정이 있다', () => {
-    const originCompletedRatio = getColumn(DailyUserStat, 'originCompletedRatio');
-    expect(originCompletedRatio?.options?.type).toBe('numeric');
-    expect(originCompletedRatio?.options?.precision).toBe(4);
-    expect(originCompletedRatio?.options?.scale).toBe(2);
-
     const avgRefreshPerDay = getColumn(DailyUserStat, 'avgRefreshPerDay');
     expect(avgRefreshPerDay?.options?.type).toBe('numeric');
     expect(avgRefreshPerDay?.options?.precision).toBe(6);

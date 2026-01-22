@@ -94,8 +94,8 @@ export class DailyUserStat extends BaseIdCreatedEntity {
   @Column({ type: 'jsonb', default: () => "'{}'::jsonb" })
   totalDifficultyCompletedCounts!: Record<BehaviorDifficulty, number>; // 누적 난이도별 수행 횟수
 
-  @Column({ type: 'numeric', precision: 4, scale: 2, default: 0 })
-  originCompletedRatio!: number; // 주간: 추출로 오늘행동 완료와 자신이 직접 추가한 오늘 행동 완료 비율 (선택 / 추출)
+  @Column({ type: 'jsonb', default: () => "'{}'::jsonb" })
+  originCompletedCounts!: Record<TodayBehaviorOrigin, number>; // 주간: 추출/직접 추가 완료 횟수
 
   @Column({ type: 'jsonb', default: () => "'{}'::jsonb" })
   notDoneCounts!: Record<TodayBehaviorOrigin, number>; // 주간: 안 한 오늘 행동 수행

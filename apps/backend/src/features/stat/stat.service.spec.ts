@@ -97,12 +97,14 @@ describe('StatService', () => {
       });
 
       const svc = service as any;
-      const calcTotalCompledCounts = jest.spyOn(svc, 'calcTotalCompledCounts').mockResolvedValue(0);
+      const calcTotalCompletedCounts = jest
+        .spyOn(svc, 'calcTotalCompletedCounts')
+        .mockResolvedValue(0);
       const calcBehaviorCompletedTopNCounts = jest
         .spyOn(svc, 'calcBehaviorCompletedTopNCounts')
         .mockResolvedValue([]);
-      const calcGoalCompltedTopNCounts = jest
-        .spyOn(svc, 'calcGoalCompltedTopNCounts')
+      const calcGoalCompletedTopNCounts = jest
+        .spyOn(svc, 'calcGoalCompletedTopNCounts')
         .mockResolvedValue([]);
       const countByDifficulty = jest.spyOn(svc, 'countByDifficulty').mockResolvedValue({});
       const calcweeklyDailyDifficultyCompletedCounts = jest
@@ -111,9 +113,9 @@ describe('StatService', () => {
       const calcGoalCompletedCounts = jest
         .spyOn(svc, 'calcGoalCompletedCounts')
         .mockResolvedValue([]);
-      const calcOriginCompletedRatio = jest
-        .spyOn(svc, 'calcOriginCompletedRatio')
-        .mockResolvedValue(0);
+      const calcOriginCompletedCounts = jest
+        .spyOn(svc, 'calcOriginCompletedCounts')
+        .mockResolvedValue({ system: 0, user: 0 });
       const calcNotDoneCounts = jest.spyOn(svc, 'calcNotDoneCounts').mockResolvedValue({});
       const calcCompletionTimeBuckets = jest
         .spyOn(svc, 'calcCompletionTimeBuckets')
@@ -126,9 +128,9 @@ describe('StatService', () => {
       const yesterDayKey = getKstDayKey(addDays(new Date(), -1));
       const weekStartKey = getKstDayKey(addDays(new Date(), -7));
 
-      expect(calcTotalCompledCounts).toHaveBeenCalledWith(user, yesterDayKey);
+      expect(calcTotalCompletedCounts).toHaveBeenCalledWith(user, yesterDayKey);
       expect(calcBehaviorCompletedTopNCounts).toHaveBeenCalledWith(user, yesterDayKey);
-      expect(calcGoalCompltedTopNCounts).toHaveBeenCalledWith(user, yesterDayKey);
+      expect(calcGoalCompletedTopNCounts).toHaveBeenCalledWith(user, yesterDayKey);
       expect(countByDifficulty).toHaveBeenNthCalledWith(1, user.id, yesterDayKey, yesterDayKey);
       expect(countByDifficulty).toHaveBeenNthCalledWith(2, user.id, weekStartKey, yesterDayKey);
       expect(countByDifficulty).toHaveBeenNthCalledWith(3, user.id, undefined, yesterDayKey);
@@ -138,7 +140,7 @@ describe('StatService', () => {
         yesterDayKey,
       );
       expect(calcGoalCompletedCounts).toHaveBeenCalledWith(user.id, yesterDayKey);
-      expect(calcOriginCompletedRatio).toHaveBeenCalledWith(user.id, weekStartKey, yesterDayKey);
+      expect(calcOriginCompletedCounts).toHaveBeenCalledWith(user.id, weekStartKey, yesterDayKey);
       expect(calcNotDoneCounts).toHaveBeenCalledWith(user.id, weekStartKey, yesterDayKey);
       expect(calcCompletionTimeBuckets).toHaveBeenCalledWith(user.id, weekStartKey, yesterDayKey);
       expect(countEvent).toHaveBeenNthCalledWith(
@@ -167,11 +169,11 @@ describe('StatService', () => {
   });
 
   describe('private methods', () => {
-    it('calcTotalCompledCounts는 기준 날짜까지 누적을 조회한다', async () => {
+    it('calcTotalCompletedCounts는 기준 날짜까지 누적을 조회한다', async () => {
       const todayBehaviorRepository = { count: jest.fn().mockResolvedValue(5) };
       const { service } = await createService({ todayBehaviorRepository });
 
-      const result = await (service as any).calcTotalCompledCounts(
+      const result = await (service as any).calcTotalCompletedCounts(
         { id: 'user-1' } as User,
         '2026-01-20',
       );
@@ -210,7 +212,7 @@ describe('StatService', () => {
       ]);
     });
 
-    it('calcGoalCompltedTopNCounts는 goal별 TOP N 행동을 제한한다', async () => {
+    it('calcGoalCompletedTopNCounts는 goal별 TOP N 행동을 제한한다', async () => {
       const rows = [
         { goalId: 'g1', goalTitle: '목표1', behaviorId: 'b1', behaviorTitle: '행동1', count: '5' },
         { goalId: 'g1', goalTitle: '목표1', behaviorId: 'b2', behaviorTitle: '행동2', count: '4' },
@@ -227,7 +229,7 @@ describe('StatService', () => {
 
       const { service } = await createService({ todayBehaviorRepository });
 
-      const result = await (service as any).calcGoalCompltedTopNCounts(
+      const result = await (service as any).calcGoalCompletedTopNCounts(
         { id: 'user-1' } as User,
         '2026-01-20',
       );
@@ -304,7 +306,7 @@ describe('StatService', () => {
       ]);
     });
 
-    it('calcOriginCompletedRatio는 system 기준 비율을 계산한다', async () => {
+    it('calcOriginCompletedCounts는 origin별 완료 횟수를 반환한다', async () => {
       const rows = [
         { origin: 'system', count: '4' },
         { origin: 'user', count: '2' },
@@ -316,13 +318,13 @@ describe('StatService', () => {
 
       const { service } = await createService({ todayBehaviorRepository });
 
-      const result = await (service as any).calcOriginCompletedRatio(
+      const result = await (service as any).calcOriginCompletedCounts(
         'user-1',
         '2026-01-13',
         '2026-01-20',
       );
 
-      expect(result).toBe(0.5);
+      expect(result).toEqual({ system: 4, user: 2 });
     });
 
     it('calcNotDoneCounts는 origin별 미완료 카운트를 반환한다', async () => {
