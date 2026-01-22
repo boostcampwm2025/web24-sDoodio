@@ -44,3 +44,8 @@ export const GetTopBehaviorsStatResponseSchema = z.object({
   goals: z.array(GoalBehaviorStatSchema),
 });
 export type GetTopBehaviorsStatResponse = z.infer<typeof GetTopBehaviorsStatResponseSchema>;
+
+export const GetTotalCompletedCountResponseSchema = z.object({
+  count: z.number(),
+});
+export type GetTotalCompletedCountResponse = z.infer<typeof GetTotalCompletedCountResponseSchema>;

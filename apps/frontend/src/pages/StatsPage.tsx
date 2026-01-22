@@ -1,6 +1,7 @@
 import { DifficultyGraph } from '@/features/stats/components/DifficultyGraph';
 import { SwiperTabs } from '@/features/behavior/components/SwiperTabs';
 import { fetchTopBehaviors } from '@/features/stat/apis/fetchTopBehaviors.api';
+import { fetchTotalCompletedCount } from '@/features/stat/apis/fetchTotalCompletedCount.api';
 import { DifficultyBadge } from '@/shared/components/behavior/DifficultyBadge';
 import { ResponsivePie, type DatumId, type PieTooltipProps } from '@nivo/pie';
 import type { AllBehaviorStatItem, BehaviorStatItem, GoalBehaviorStat } from '@web24/shared';
@@ -43,11 +44,17 @@ export function StatsPage() {
     items: [],
   });
   const [goalTopBehaviors, setGoalTopBehaviors] = useState<GoalBehaviorStat[]>([]);
+  const [totalCompletedCount, setTotalCompletedCount] = useState<number>(0);
 
   useEffect(() => {
     fetchTopBehaviors().then((data) => {
       setAllTopBehaviors(data.all);
       setGoalTopBehaviors(data.goals);
+    });
+  }, []);
+  useEffect(() => {
+    fetchTotalCompletedCount().then((data) => {
+      setTotalCompletedCount(data.count);
     });
   }, []);
 
@@ -92,7 +99,8 @@ export function StatsPage() {
       {/* 총 횟수 */}
       <section>
         <h2 className="text-headline-1 font-semibold">
-          지금까지 행동을 총 <span className="text-primary-strong text-3xl font-bold">184</span>번
+          지금까지 행동을 총{' '}
+          <span className="text-primary-strong text-3xl font-bold">{totalCompletedCount}</span>번
           해냈어요!
         </h2>
       </section>
