@@ -88,7 +88,7 @@ export function DifficultyGraph() {
                         key={`${labels[idx]}-${diff}`}
                         style={{ height: `${ratioHeight}%` }}
                         className={`${DIFFICULTY_COLOR_STYLES[diff].bg} w-full transition-opacity ${
-                          isSelected ? 'opacity-100' : 'opacity-30 grayscale'
+                          isSelected ? 'opacity-100' : 'opacity-40'
                         }`}
                       />
                     );
