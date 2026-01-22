@@ -1,101 +1,10 @@
 import { DifficultyGraph } from '@/features/stats/components/DifficultyGraph';
 import { SwiperTabs } from '@/features/behavior/components/SwiperTabs';
+import { fetchTopBehaviors } from '@/features/stat/apis/fetchTopBehaviors.api';
 import { DifficultyBadge } from '@/shared/components/behavior/DifficultyBadge';
 import { ResponsivePie, type DatumId, type PieTooltipProps } from '@nivo/pie';
-import type { BehaviorDifficulty, GoalColor } from '@web24/shared';
-import { MoreHorizontal } from 'lucide-react';
-import { useMemo, useState } from 'react';
-
-interface BehaviorStatItem {
-  id: string;
-  behaviorTitle: string;
-  behaviorDifficulty: BehaviorDifficulty;
-  goalTitle: string;
-  goalColor: GoalColor;
-  count: number;
-}
-
-type GoalSpecificBehaviorItem = Omit<BehaviorStatItem, 'goalTitle' | 'goalColor'>;
-
-interface GoalStat {
-  goalTitle: string;
-  goalColor: GoalColor;
-  totalCount: number;
-  items: GoalSpecificBehaviorItem[];
-}
-
-// --- Mock Data ---
-const MOCK_TOTAL_STATS = {
-  totalCount: 184,
-  items: [
-    {
-      id: 'b1',
-      behaviorTitle: '물 한 잔 마시기',
-      behaviorDifficulty: '마음열기',
-      goalTitle: '건강 관리',
-      goalColor: 'blue',
-      count: 45,
-    },
-    {
-      id: 'b2',
-      behaviorTitle: '책 10분 읽기',
-      behaviorDifficulty: '시작하기',
-      goalTitle: '독서 습관',
-      goalColor: 'beige',
-      count: 38,
-    },
-    {
-      id: 'b3',
-      behaviorTitle: '스쿼트 20회',
-      behaviorDifficulty: '이어가기',
-      goalTitle: '운동',
-      goalColor: 'yellow',
-      count: 32,
-    },
-    {
-      id: 'b4',
-      behaviorTitle: '일기 쓰기',
-      behaviorDifficulty: '몰입하기',
-      goalTitle: '기록',
-      goalColor: 'sand',
-      count: 25,
-    },
-    {
-      id: 'b5',
-      behaviorTitle: '영단어 5개 암기',
-      behaviorDifficulty: '시작하기',
-      goalTitle: '영어 공부',
-      goalColor: 'pink',
-      count: 18,
-    },
-    {
-      id: 'b6',
-      behaviorTitle: '명상하기',
-      behaviorDifficulty: '마음열기',
-      goalTitle: '멘탈 케어',
-      goalColor: 'mint',
-      count: 14,
-    },
-  ] as BehaviorStatItem[],
-};
-
-const MOCK_GOAL_STATS: Record<string, GoalStat> = {
-  'goal-1': {
-    goalTitle: '건강 관리',
-    goalColor: 'blue',
-    totalCount: 59,
-    items: [
-      { id: 'b1', behaviorTitle: '물 한 잔 마시기', behaviorDifficulty: '마음열기', count: 45 },
-      { id: 'b6', behaviorTitle: '명상하기', behaviorDifficulty: '마음열기', count: 14 },
-    ],
-  },
-  'goal-2': {
-    goalTitle: '독서 습관',
-    goalColor: 'beige',
-    totalCount: 38,
-    items: [{ id: 'b2', behaviorTitle: '책 10분 읽기', behaviorDifficulty: '시작하기', count: 38 }],
-  },
-};
+import type { AllBehaviorStatItem, BehaviorStatItem, GoalBehaviorStat } from '@web24/shared';
+import { useEffect, useMemo, useState } from 'react';
 
 interface StatsContainerProps {
   title: string;
@@ -129,14 +38,26 @@ function PieTooltip({ datum }: PieTooltipProps<Datum>) {
 export function StatsPage() {
   const [activeGoal, setActiveGoal] = useState<string>('ALL');
   const [activeId, setActiveId] = useState<DatumId | null>(null);
+  const [allTopBehaviors, setAllTopBehaviors] = useState<AllBehaviorStatItem>({
+    totalCount: 0,
+    items: [],
+  });
+  const [goalTopBehaviors, setGoalTopBehaviors] = useState<GoalBehaviorStat[]>([]);
+
+  useEffect(() => {
+    fetchTopBehaviors().then((data) => {
+      setAllTopBehaviors(data.all);
+      setGoalTopBehaviors(data.goals);
+    });
+  }, []);
 
   // 서버에서 TOP10 내림차순 정렬된 데이터를 받는다고 가정
   const currentData = useMemo(() => {
     if (activeGoal === 'ALL') {
-      return MOCK_TOTAL_STATS;
+      return allTopBehaviors;
     }
 
-    const goalStat = MOCK_GOAL_STATS[activeGoal];
+    const goalStat = goalTopBehaviors.find((b) => b.id === activeGoal);
     if (!goalStat) return { totalCount: 0, items: [] };
 
     const enrichedItems: BehaviorStatItem[] = goalStat.items.map((item) => ({
@@ -149,7 +70,7 @@ export function StatsPage() {
       totalCount: goalStat.totalCount,
       items: enrichedItems,
     };
-  }, [activeGoal]);
+  }, [activeGoal, allTopBehaviors, goalTopBehaviors]);
 
   const chartData = currentData.items.map((item) => ({
     id: item.id,
@@ -160,9 +81,9 @@ export function StatsPage() {
 
   const goalTabs = [
     { label: 'ALL', value: 'ALL' },
-    ...Object.entries(MOCK_GOAL_STATS).map(([key, goal]) => ({
-      label: goal.goalTitle,
-      value: key,
+    ...goalTopBehaviors.map((b) => ({
+      label: b.goalTitle,
+      value: b.id,
     })),
   ];
 
@@ -181,7 +102,7 @@ export function StatsPage() {
           <SwiperTabs tabs={goalTabs} onChange={setActiveGoal} />
         </div>
         <div className="flex flex-col items-start gap-4 md:flex-row">
-          <div className="min-h-85 w-full p-2 md:min-h-125 md:w-1/2">
+          <div className="min-h-85 w-full p-2 md:min-h-100 md:w-1/2">
             <ResponsivePie
               data={chartData}
               margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
@@ -241,15 +162,6 @@ export function StatsPage() {
                 </div>
               </button>
             ))}
-
-            {/* 더보기 버튼 */}
-            <button
-              type="button"
-              onClick={() => {}}
-              className="border-bg-alternative text-label-alternative/40 hover:bg-bg-normal/40 mt-2 flex w-full items-center justify-center gap-1 rounded-xl border py-3 text-xs font-bold transition-colors"
-            >
-              더보기 <MoreHorizontal size={14} />
-            </button>
           </div>
         </div>
       </StatsContainer>
