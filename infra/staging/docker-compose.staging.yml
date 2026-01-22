@@ -1,41 +1,14 @@
 version: '3.9'
 
 services:
-  nginx:
-    image: nginx:1.27-alpine
-    container_name: web24-nginx-staging
-    restart: unless-stopped
-    ports:
-      - '80:80'
-      - '443:443'
-    volumes:
-      - ./nginx/staging.conf:/etc/nginx/conf.d/default.conf:ro
-      - certbot-www:/var/www/certbot
-      - certbot-conf:/etc/letsencrypt
-    depends_on:
-      - frontend
-      - backend
-
-  certbot:
-    image: certbot/certbot:latest
-    container_name: web24-certbot-staging
-    volumes:
-      - certbot-www:/var/www/certbot
-      - certbot-conf:/etc/letsencrypt
-    entrypoint: sh
-    command: >
-      -c "trap exit TERM;
-          while :; do
-            certbot renew --webroot -w /var/www/certbot;
-            sleep 12h;
-          done"
-
   frontend:
     image: ghcr.io/boostcampwm2025/web24-sdoodio-frontend:staging
     container_name: web24-frontend-staging
     restart: unless-stopped
     expose:
       - '8080'
+    networks:
+      - web-network
 
   backend:
     image: ghcr.io/boostcampwm2025/web24-sdoodio-backend:staging
@@ -54,7 +27,9 @@ services:
       CLOVA_API_KEY: ${CLOVA_API_KEY}
       SESSION_SECRET: ${SESSION_SECRET}
       SESSION_MAX_AGE_MS: ${SESSION_MAX_AGE_MS}
+    networks:
+      - web-network
 
-volumes:
-  certbot-www:
-  certbot-conf:
+networks:
+  web-network:
+    external: true
