@@ -1,6 +1,6 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import {
-  GetDifficultyStatsResponseSchema
+  GetDifficultyStatsResponseSchema,
   GetTopBehaviorsStatResponseSchema,
   GetTotalCompletedCountResponseSchema,
 } from '@web24/shared';
@@ -14,7 +14,7 @@ export function registerStatApi(registry: OpenAPIRegistry, common: CommonSchemas
     'GetDifficultyStatsResponse',
     GetDifficultyStatsResponseSchema,
   );
-  
+
   const getTopBehaviorsStatResponse = registry.register(
     'GetTopBehaviorsStatResponse',
     GetTopBehaviorsStatResponseSchema,
@@ -37,7 +37,7 @@ export function registerStatApi(registry: OpenAPIRegistry, common: CommonSchemas
         content: {
           'application/json': {
             schema: getDifficultyStatsResponse,
-            },
+          },
         },
       },
       401: {
