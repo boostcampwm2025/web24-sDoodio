@@ -75,9 +75,9 @@ export class StatService {
             goalCount,
             behaviorCount,
           ] = await Promise.all([
-            this.calcTotalCompledCounts(user, yesterDayKey),
+            this.calcTotalCompletedCounts(user, yesterDayKey),
             this.calcBehaviorCompletedTopNCounts(user, yesterDayKey),
-            this.calcGoalCompltedTopNCounts(user, yesterDayKey),
+            this.calcGoalCompletedTopNCounts(user, yesterDayKey),
 
             this.countByDifficulty(user.id, yesterDayKey, yesterDayKey),
             this.countByDifficulty(user.id, weekStartKey, yesterDayKey),
@@ -140,7 +140,7 @@ export class StatService {
     );
   }
 
-  private async calcTotalCompledCounts(user: User, end?: string) {
+  private async calcTotalCompletedCounts(user: User, end?: string) {
     const where = { user: { id: user.id }, status: 'completed' } as FindOptionsWhere<TodayBehavior>;
     if (end) {
       where.date = LessThanOrEqual(end);
@@ -176,7 +176,7 @@ export class StatService {
     return behaviorCompletedTopNCounts;
   }
 
-  private async calcGoalCompltedTopNCounts(user: User, end?: string) {
+  private async calcGoalCompletedTopNCounts(user: User, end?: string) {
     const rowsQuery = this.todayBehaviorRepository
       .createQueryBuilder('tb')
       .innerJoin('tb.behavior', 'behavior')
