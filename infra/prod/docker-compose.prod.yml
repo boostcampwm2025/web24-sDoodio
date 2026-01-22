@@ -17,6 +17,8 @@ services:
       - backend
     networks:
       - web-network
+    command: >
+      /bin/sh -c "while :; do sleep 24h & wait $${!}; nginx -s reload; done & exec nginx -g 'daemon off;'"
 
   certbot:
     image: certbot/certbot:latest
