@@ -31,7 +31,8 @@
     "migration:run:prod": "node ./node_modules/typeorm/cli.js -d ./dist/common/database/data-source.js migration:run",
     "migration:revert": "pnpm run typeorm migration:revert",
     "migration:revert:prod": "node ./node_modules/typeorm/cli.js -d ./dist/common/database/data-source.js migration:revert",
-    "seed": "cross-env NODE_ENV=development ts-node -r tsconfig-paths/register src/common/database/seed.ts"
+    "seed": "cross-env NODE_ENV=development ts-node -r tsconfig-paths/register src/common/database/seed.ts",
+    "stat:daily": "cross-env NODE_ENV=development TS_NODE_FILES=true ts-node -r tsconfig-paths/register src/common/scripts/run-daily-user-stats.ts"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^8.4.0",
