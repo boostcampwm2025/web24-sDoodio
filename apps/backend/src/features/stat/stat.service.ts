@@ -543,4 +543,12 @@ export class StatService {
       goals,
     };
   }
+
+  async getTotalCompletedCounts(userId: string): Promise<number> {
+    const todayKey = getKstDayKey(new Date());
+    const dailyUserStat = await this.dailyUserStatRepository.findOne({
+      where: { user: { id: userId }, statDate: todayKey },
+    });
+    return dailyUserStat?.totalCompletedCounts ?? 0;
+  }
 }

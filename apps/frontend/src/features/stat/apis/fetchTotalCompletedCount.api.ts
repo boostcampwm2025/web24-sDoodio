@@ -4,7 +4,7 @@ import {
 } from '@web24/shared';
 
 export async function fetchTotalCompletedCount(): Promise<GetTotalCompletedCountResponse> {
-  const res = await fetch('/api/stats/total-compledted-count', {
+  const res = await fetch('/api/stats/total-completed-count', {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
