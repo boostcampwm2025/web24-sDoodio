@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { GetStatInsightsResponse } from '@web24/shared';
 import { StatInsightsGrid } from './StatInsightsGrid';
 import { fetchStatInsights } from '../apis/fetchStatInsights.api';
 
@@ -14,7 +15,7 @@ vi.mock('seedrandom', () => ({
 describe('StatInsightsGrid', () => {
   const mockedFetchStatInsights = vi.mocked(fetchStatInsights);
 
-  const mockInsights = {
+  const mockInsights: GetStatInsightsResponse = {
     statDate: '2026-01-22',
     dailyDifficultyCompletedCounts: {
       마음열기: 1,
