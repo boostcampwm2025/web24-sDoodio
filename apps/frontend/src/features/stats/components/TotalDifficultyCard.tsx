@@ -13,8 +13,9 @@ export function TotalDifficultyCard({ counts }: TotalDifficultyCardProps) {
   let sub = '조금 더 쌓이면 알려드릴게요.';
 
   if (total > 0) {
-    const topDifficulty = NON_AI_DIFFICULTIES.reduce((top, diff) =>
-      counts[diff] > counts[top] ? diff : top,
+    const topDifficulty = NON_AI_DIFFICULTIES.reduce(
+      (top, diff) => (counts[diff] > counts[top] ? diff : top),
+      NON_AI_DIFFICULTIES[0] ?? '마음열기',
     );
     main = `누적 기준으로 ${topDifficulty}가 가장 많아요.`;
     sub = `지금까지 총 ${total}회 수행했어요.`;

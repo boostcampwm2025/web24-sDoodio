@@ -13,8 +13,9 @@ export function WeeklyDifficultyCard({ counts }: WeeklyDifficultyCardProps) {
   let sub = '조금 더 쌓이면 알려드릴게요.';
 
   if (total > 0) {
-    const topDifficulty = NON_AI_DIFFICULTIES.reduce((top, diff) =>
-      counts[diff] > counts[top] ? diff : top,
+    const topDifficulty = NON_AI_DIFFICULTIES.reduce(
+      (top, diff) => (counts[diff] > counts[top] ? diff : top),
+      NON_AI_DIFFICULTIES[0] ?? '마음열기',
     );
     main = `이번 주에는 ${topDifficulty}가 가장 많았어요.`;
     sub = `이번 주 총 ${total}회 수행했어요.`;
