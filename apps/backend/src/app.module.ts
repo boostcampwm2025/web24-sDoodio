@@ -87,6 +87,7 @@ export class AppModule implements NestModule {
         createTableIfMissing: false,
       }),
       secret: this.configService.getOrThrow<string>('SESSION_SECRET'),
+      proxy: true,
       resave: false,
       saveUninitialized: false,
       cookie: {
