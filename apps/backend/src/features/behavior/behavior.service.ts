@@ -132,6 +132,7 @@ export class BehaviorService {
       );
 
       const behaviors = await behaviorRepository.find({
+        where: { goal: { user: { id: userId } } },
         relations: { goal: true },
       });
 

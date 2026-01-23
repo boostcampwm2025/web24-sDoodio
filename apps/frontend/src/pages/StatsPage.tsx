@@ -1,9 +1,10 @@
-import { DifficultyGraph } from '@/features/stats/components/DifficultyGraph';
 import { useEffect, useState } from 'react';
 import type { AllBehaviorStatItem, GoalBehaviorStat } from '@web24/shared';
 import { fetchTopBehaviors } from '@/features/stat/apis/fetchTopBehaviors.api';
 import { fetchTotalCompletedCount } from '@/features/stat/apis/fetchTotalCompletedCount.api';
 import { AccumulatedBehaviorStats } from '@/features/stat/components/AccumulatedBehaviorStats';
+import { DifficultyGraph } from '@/features/stats/components/DifficultyGraph';
+import { StatInsightsGrid } from '@/features/stats/components/StatInsightsGrid';
 
 interface StatsContainerProps {
   title: string;
@@ -39,7 +40,6 @@ export function StatsPage() {
       setTotalCompletedCount(data.count);
     });
   }, []);
-
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-5 md:pt-2">
       {/* 총 횟수 */}
@@ -63,16 +63,9 @@ export function StatsPage() {
       <StatsContainer title="요즘 이런 흐름으로 행동했어요">
         <DifficultyGraph />
       </StatsContainer>
-
       {/* 랜덤 통계 */}
       <StatsContainer title="이런 점이 눈에 띄었어요">
-        {/* 데스크톱: 2x2 카드, 모바일: 일렬 카드배치 */}
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-          <div className="border">카드1</div>
-          <div className="border">카드2</div>
-          <div className="border">카드3</div>
-          <div className="border">카드4</div>
-        </div>
+        <StatInsightsGrid />
       </StatsContainer>
     </div>
   );
