@@ -1,6 +1,7 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import {
   GetDifficultyStatsResponseSchema,
+  GetStatInsightsResponseSchema
   GetTopBehaviorsStatResponseSchema,
   GetTotalCompletedCountResponseSchema,
 } from '@web24/shared';
@@ -13,6 +14,10 @@ export function registerStatApi(registry: OpenAPIRegistry, common: CommonSchemas
   const getDifficultyStatsResponse = registry.register(
     'GetDifficultyStatsResponse',
     GetDifficultyStatsResponseSchema,
+  );
+  const getStatInsightsResponse = registry.register(
+    'GetStatInsightsResponse',
+    GetStatInsightsResponseSchema,
   );
 
   const getTopBehaviorsStatResponse = registry.register(
@@ -85,6 +90,30 @@ export function registerStatApi(registry: OpenAPIRegistry, common: CommonSchemas
         content: {
           'application/json': {
             schema: getTotalCompletedCountResponse,
+            },
+        },
+      },
+      401: {
+        description: 'Unauthorized',
+        content: {
+          'application/json': {
+            schema: errorResponse,
+          },
+        },
+      },
+    },
+  })
+
+  registry.registerPath({
+    method: 'get',
+    path: '/stats/insights',
+    security: [{ sessionAuth: [] }],
+    responses: {
+      200: {
+        description: '랜덤 문구용 통계 데이터를 반환',
+        content: {
+          'application/json': {
+            schema: getStatInsightsResponse,
           },
         },
       },

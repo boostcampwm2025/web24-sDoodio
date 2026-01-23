@@ -15,6 +15,11 @@ export class StatController {
     return this.statService.getDifficultyStats(userId);
   }
 
+  @Get('insights')
+  getInsights(@UserId() userId: string): Promise<Shared.GetStatInsightsResponse> {
+    return this.statService.getInsights(userId);
+  }
+
   @Get('total-completed-count')
   async getTotalCompletedCounts(@UserId() userId: string): Promise<GetTotalCompletedCountResponse> {
     const count = await this.statService.getTotalCompletedCounts(userId);

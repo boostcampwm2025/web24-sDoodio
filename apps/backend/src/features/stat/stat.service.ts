@@ -4,8 +4,9 @@ import { Between, FindOptionsWhere, LessThanOrEqual, Repository } from 'typeorm'
 import {
   BEHAVIOR_DIFFICULTIES,
   BehaviorDifficulty,
-  TodayBehaviorOrigin,
   type GetTopBehaviorsStatResponse,
+  TODAY_BEHAVIOR_ORIGIN,
+  TodayBehaviorOrigin,
 } from '@web24/shared';
 import { Cron } from '@nestjs/schedule';
 import pLimit from 'p-limit';
@@ -77,6 +78,104 @@ export class StatService {
     }
 
     return normalized;
+  }
+
+  async getInsights(userId: string) {
+    const todayKey = getKstDayKey(new Date());
+    const stat = await this.dailyUserStatRepository.findOne({
+      where: { user: { id: userId }, statDate: todayKey },
+    });
+
+    const emptyDifficultyCounts = BEHAVIOR_DIFFICULTIES.reduce(
+      (acc, difficulty) => {
+        acc[difficulty] = 0;
+        return acc;
+      },
+      {} as Record<BehaviorDifficulty, number>,
+    );
+
+    const emptyOriginCounts = TODAY_BEHAVIOR_ORIGIN.reduce(
+      (acc, origin) => {
+        acc[origin] = 0;
+        return acc;
+      },
+      {} as Record<TodayBehaviorOrigin, number>,
+    );
+
+    const emptyCompletionTimeBuckets = Object.values(COMPLETION_TIME_BUCKET).reduce(
+      (acc, bucket) => {
+        acc[bucket] = 0;
+        return acc;
+      },
+      {} as Record<CompletionTimeBucket, number>,
+    );
+
+    if (!stat) {
+      return {
+        statDate: todayKey,
+        dailyDifficultyCompletedCounts: emptyDifficultyCounts,
+        weeklyDifficultyCompletedCounts: emptyDifficultyCounts,
+        totalDifficultyCompletedCounts: emptyDifficultyCounts,
+        originCompletedCounts: emptyOriginCounts,
+        notDoneCounts: emptyOriginCounts,
+        completionTimeBuckets: emptyCompletionTimeBuckets,
+        checkInTotal: 0,
+        duduCatchTotal: 0,
+        goalCountDegree: COUNT_DEGREE.MUCH_LESS,
+        behaviorCountDegree: COUNT_DEGREE.MUCH_LESS,
+        avgRefreshPerDay: 0,
+        avgCompletedPerDay: 0,
+      };
+    }
+
+    const normalizeDifficultyCounts = (counts: Record<BehaviorDifficulty, number>) =>
+      BEHAVIOR_DIFFICULTIES.reduce(
+        (acc, difficulty) => {
+          acc[difficulty] = counts?.[difficulty] ?? 0;
+          return acc;
+        },
+        {} as Record<BehaviorDifficulty, number>,
+      );
+
+    const normalizeOriginCounts = (counts: Record<TodayBehaviorOrigin, number>) =>
+      TODAY_BEHAVIOR_ORIGIN.reduce(
+        (acc, origin) => {
+          acc[origin] = counts?.[origin] ?? 0;
+          return acc;
+        },
+        {} as Record<TodayBehaviorOrigin, number>,
+      );
+
+    const normalizeCompletionTimeBuckets = (counts: Record<CompletionTimeBucket, number>) =>
+      Object.values(COMPLETION_TIME_BUCKET).reduce(
+        (acc, bucket) => {
+          acc[bucket] = counts?.[bucket] ?? 0;
+          return acc;
+        },
+        {} as Record<CompletionTimeBucket, number>,
+      );
+
+    return {
+      statDate: stat.statDate,
+      dailyDifficultyCompletedCounts: normalizeDifficultyCounts(
+        stat.dailyDifficultyCompletedCounts,
+      ),
+      weeklyDifficultyCompletedCounts: normalizeDifficultyCounts(
+        stat.weeklyDifficultyCompletedCounts,
+      ),
+      totalDifficultyCompletedCounts: normalizeDifficultyCounts(
+        stat.totalDifficultyCompletedCounts,
+      ),
+      originCompletedCounts: normalizeOriginCounts(stat.originCompletedCounts),
+      notDoneCounts: normalizeOriginCounts(stat.notDoneCounts),
+      completionTimeBuckets: normalizeCompletionTimeBuckets(stat.completionTimeBuckets),
+      checkInTotal: Number(stat.checkInTotal),
+      duduCatchTotal: Number(stat.duduCatchTotal),
+      goalCountDegree: stat.goalCountDegree,
+      behaviorCountDegree: stat.behaviorCountDegree,
+      avgRefreshPerDay: Number(stat.avgRefreshPerDay),
+      avgCompletedPerDay: Number(stat.avgCompletedPerDay),
+    };
   }
 
   @Cron('0 0 4 * * *', { name: 'daily_user_stat_batch', timeZone: 'Asia/Seoul' })
