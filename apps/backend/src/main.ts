@@ -10,7 +10,9 @@ import { openApiDocument } from './common/docs/openapi';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  app.set('trust proxy', 1);
+  if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+  }
 
   if (process.env.NODE_ENV === 'development') {
     app.enableCors({
