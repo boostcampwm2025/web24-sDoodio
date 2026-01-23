@@ -9,6 +9,7 @@ vi.mock('../apis/fetchDifficultyStats.api', () => ({
 
 describe('DifficultyGraph', () => {
   const mockedFetchDifficultyStats = vi.mocked(fetchDifficultyStats);
+
   const mockStats = [
     { 마음열기: 2, 시작하기: 3, 이어가기: 1, 몰입하기: 0, AI: 0 },
     { 마음열기: 1, 시작하기: 2, 이어가기: 4, 몰입하기: 2, AI: 0 },

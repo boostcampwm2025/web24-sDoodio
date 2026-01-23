@@ -15,6 +15,7 @@ export function registerStatApi(registry: OpenAPIRegistry, common: CommonSchemas
     'GetDifficultyStatsResponse',
     GetDifficultyStatsResponseSchema,
   );
+
   const getStatInsightsResponse = registry.register(
     'GetStatInsightsResponse',
     GetStatInsightsResponseSchema,
