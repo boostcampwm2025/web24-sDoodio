@@ -7,9 +7,10 @@ type CompletionTimeCardProps = {
 
 export function CompletionTimeCard({ buckets }: CompletionTimeCardProps) {
   const entries = Object.entries(buckets);
-  const [topBucket, topValue] =
-    entries.reduce((max, entry) => (entry[1] > max[1] ? entry : max), entries[0] ?? ['1~7', 0]) ??
-    [];
+  const [topBucket, topValue] = entries.reduce(
+    (max, entry) => (entry[1] > max[1] ? entry : max),
+    entries[0] ?? ['1~7', 0],
+  );
 
   const hasData = Number(topValue) > 0;
   const main = hasData
