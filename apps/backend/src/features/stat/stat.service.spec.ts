@@ -1,10 +1,16 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
+import {
+  BEHAVIOR_DIFFICULTIES,
+  TODAY_BEHAVIOR_ORIGIN,
+  type BehaviorDifficulty,
+  type TodayBehaviorOrigin,
+} from '@web24/shared';
 import { StatService } from './stat.service';
 import { User } from '../user/user.entity';
 import { TodayBehavior } from '../behavior/today-behavior.entity';
-import { DailyUserStat } from './daily-user-stat.entity';
+import { COMPLETION_TIME_BUCKET, COUNT_DEGREE, DailyUserStat } from './daily-user-stat.entity';
 import { StatEventLog } from './stat-event-log.entity';
 import { Goal } from '../goal/goal.entity';
 import { Behavior } from '../behavior/behavior.entity';
@@ -224,6 +230,128 @@ describe('StatService', () => {
         { 마음열기: 1, 시작하기: 0, 이어가기: 2, 몰입하기: 0, AI: 0 },
         { 마음열기: 0, 시작하기: 3, 이어가기: 0, 몰입하기: 1, AI: 0 },
       ]);
+    });
+  });
+
+  describe('getInsights', () => {
+    const buildEmptyDifficultyCounts = () =>
+      BEHAVIOR_DIFFICULTIES.reduce(
+        (acc, difficulty) => {
+          acc[difficulty] = 0;
+          return acc;
+        },
+        {} as Record<BehaviorDifficulty, number>,
+      );
+
+    const buildEmptyOriginCounts = () =>
+      TODAY_BEHAVIOR_ORIGIN.reduce(
+        (acc, origin) => {
+          acc[origin] = 0;
+          return acc;
+        },
+        {} as Record<TodayBehaviorOrigin, number>,
+      );
+
+    const buildEmptyCompletionBuckets = () =>
+      Object.values(COMPLETION_TIME_BUCKET).reduce(
+        (acc, bucket) => {
+          acc[bucket] = 0;
+          return acc;
+        },
+        {} as Record<(typeof COMPLETION_TIME_BUCKET)[keyof typeof COMPLETION_TIME_BUCKET], number>,
+      );
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('통계가 없으면 기본값을 반환한다', async () => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-01-21T03:00:00.000Z'));
+      const userId = 'user-1';
+      const dailyUserStatRepository = { findOne: jest.fn().mockResolvedValue(null) };
+      const { service } = await createService({ dailyUserStatRepository });
+
+      const result = await service.getInsights(userId);
+
+      const todayKey = getKstDayKey(new Date());
+      expect(dailyUserStatRepository.findOne).toHaveBeenCalledWith({
+        where: { user: { id: userId }, statDate: todayKey },
+      });
+      expect(result).toEqual({
+        statDate: todayKey,
+        dailyDifficultyCompletedCounts: buildEmptyDifficultyCounts(),
+        weeklyDifficultyCompletedCounts: buildEmptyDifficultyCounts(),
+        totalDifficultyCompletedCounts: buildEmptyDifficultyCounts(),
+        originCompletedCounts: buildEmptyOriginCounts(),
+        notDoneCounts: buildEmptyOriginCounts(),
+        completionTimeBuckets: buildEmptyCompletionBuckets(),
+        checkInTotal: 0,
+        duduCatchTotal: 0,
+        goalCountDegree: COUNT_DEGREE.MUCH_LESS,
+        behaviorCountDegree: COUNT_DEGREE.MUCH_LESS,
+        avgRefreshPerDay: 0,
+        avgCompletedPerDay: 0,
+      });
+    });
+
+    it('통계가 있으면 값을 정규화해 반환한다', async () => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-01-21T03:00:00.000Z'));
+      const userId = 'user-1';
+      const dailyUserStatRepository = {
+        findOne: jest.fn().mockResolvedValue({
+          statDate: '2026-01-20',
+          dailyDifficultyCompletedCounts: { 마음열기: 1 },
+          weeklyDifficultyCompletedCounts: { 몰입하기: 2 },
+          totalDifficultyCompletedCounts: { 시작하기: 3, AI: 5 },
+          originCompletedCounts: { system: 2 },
+          notDoneCounts: { user: 1 },
+          completionTimeBuckets: { '7~10': 2 },
+          checkInTotal: 3,
+          duduCatchTotal: 1,
+          goalCountDegree: COUNT_DEGREE.MORE,
+          behaviorCountDegree: COUNT_DEGREE.LESS,
+          avgRefreshPerDay: 1.5,
+          avgCompletedPerDay: 2.2,
+        }),
+      };
+      const { service } = await createService({ dailyUserStatRepository });
+
+      const result = await service.getInsights(userId);
+
+      expect(result).toEqual({
+        statDate: '2026-01-20',
+        dailyDifficultyCompletedCounts: {
+          ...buildEmptyDifficultyCounts(),
+          마음열기: 1,
+        },
+        weeklyDifficultyCompletedCounts: {
+          ...buildEmptyDifficultyCounts(),
+          몰입하기: 2,
+        },
+        totalDifficultyCompletedCounts: {
+          ...buildEmptyDifficultyCounts(),
+          시작하기: 3,
+          AI: 5,
+        },
+        originCompletedCounts: {
+          ...buildEmptyOriginCounts(),
+          system: 2,
+        },
+        notDoneCounts: {
+          ...buildEmptyOriginCounts(),
+          user: 1,
+        },
+        completionTimeBuckets: {
+          ...buildEmptyCompletionBuckets(),
+          '7~10': 2,
+        },
+        checkInTotal: 3,
+        duduCatchTotal: 1,
+        goalCountDegree: COUNT_DEGREE.MORE,
+        behaviorCountDegree: COUNT_DEGREE.LESS,
+        avgRefreshPerDay: 1.5,
+        avgCompletedPerDay: 2.2,
+      });
     });
   });
 

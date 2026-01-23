@@ -4,8 +4,10 @@ import { StatService } from './stat.service';
 
 describe('StatController', () => {
   let controller: StatController;
+
   let service: {
     getDifficultyStats: jest.Mock;
+    getInsights: jest.Mock;
     getTopBehaviors: jest.Mock;
   };
 
@@ -13,6 +15,7 @@ describe('StatController', () => {
     service = {
       getDifficultyStats: jest.fn(),
       getTopBehaviors: jest.fn(),
+      getInsights: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -35,6 +38,55 @@ describe('StatController', () => {
     const result = await controller.getDifficultyStats(userId);
 
     expect(service.getDifficultyStats).toHaveBeenCalledWith(userId);
+    expect(result).toBe(mock);
+  });
+
+  it('getInsights가 서비스 결과를 반환한다', async () => {
+    const userId = '019bd5d8-72dc-78ca-af5d-c93358058b32';
+    const mock = {
+      statDate: '2026-01-22',
+      dailyDifficultyCompletedCounts: {
+        마음열기: 1,
+        시작하기: 0,
+        이어가기: 0,
+        몰입하기: 0,
+        AI: 0,
+      },
+      weeklyDifficultyCompletedCounts: {
+        마음열기: 1,
+        시작하기: 2,
+        이어가기: 3,
+        몰입하기: 4,
+        AI: 0,
+      },
+      totalDifficultyCompletedCounts: {
+        마음열기: 2,
+        시작하기: 3,
+        이어가기: 4,
+        몰입하기: 5,
+        AI: 0,
+      },
+      originCompletedCounts: { system: 1, user: 1 },
+      notDoneCounts: { system: 0, user: 0 },
+      completionTimeBuckets: {
+        '1~7': 0,
+        '7~10': 1,
+        '10~17': 0,
+        '17~20': 0,
+        '20~1': 0,
+      },
+      checkInTotal: 1,
+      duduCatchTotal: 0,
+      goalCountDegree: 'NEUTRAL',
+      behaviorCountDegree: 'NEUTRAL',
+      avgRefreshPerDay: 1,
+      avgCompletedPerDay: 1,
+    };
+    service.getInsights.mockResolvedValue(mock);
+
+    const result = await controller.getInsights(userId);
+
+    expect(service.getInsights).toHaveBeenCalledWith(userId);
     expect(result).toBe(mock);
   });
 
