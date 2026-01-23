@@ -5,6 +5,7 @@ import { fetchTotalCompletedCount } from '@/features/stat/apis/fetchTotalComplet
 import { AccumulatedBehaviorStats } from '@/features/stat/components/AccumulatedBehaviorStats';
 import { DifficultyGraph } from '@/features/stats/components/DifficultyGraph';
 import { StatInsightsGrid } from '@/features/stats/components/StatInsightsGrid';
+
 interface StatsContainerProps {
   title: string;
   children: React.ReactNode;
