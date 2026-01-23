@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, FindOptionsWhere, LessThanOrEqual, Repository } from 'typeorm';
-import { BEHAVIOR_DIFFICULTIES, BehaviorDifficulty, TodayBehaviorOrigin } from '@web24/shared';
+import {
+  BEHAVIOR_DIFFICULTIES,
+  BehaviorDifficulty,
+  TodayBehaviorOrigin,
+  type GetTopBehaviorsStatResponse,
+} from '@web24/shared';
 import { Cron } from '@nestjs/schedule';
 import pLimit from 'p-limit';
 import { addDays, getKstDayKey, toKstBoundary } from '../../common/utils/time.utils';
@@ -454,5 +459,96 @@ export class StatService {
     if (count <= BEHAVIOR_COUNT_THRESHOLD.MORE_BASELINE) return COUNT_DEGREE.NEUTRAL;
     if (count <= BEHAVIOR_COUNT_THRESHOLD.MUCH_MORE_BASELINE) return COUNT_DEGREE.MORE;
     return COUNT_DEGREE.MUCH_MORE;
+  }
+
+  async getTopBehaviors(userId: string): Promise<GetTopBehaviorsStatResponse> {
+    const todayKey = getKstDayKey(new Date());
+    const dailyUserStat = await this.dailyUserStatRepository.findOne({
+      where: { user: { id: userId }, statDate: todayKey },
+    });
+
+    if (!dailyUserStat) {
+      return {
+        all: {
+          totalCount: 0,
+          items: [],
+        },
+        goals: [],
+      };
+    }
+
+    const behaviorCompletedTopN = dailyUserStat.behaviorCompletedTopNCounts;
+    const allItems = (
+      await Promise.all(
+        behaviorCompletedTopN.map(async (bc) => {
+          const behavior = await this.behaviorRepository.findOne({
+            where: { id: bc.behaviorId },
+            relations: { goal: true },
+          });
+
+          if (!behavior?.goal) return [];
+
+          return {
+            id: behavior.id,
+            behaviorTitle: behavior.title,
+            behaviorDifficulty: behavior.difficulty,
+            goalTitle: behavior.goal.title,
+            goalColor: behavior.goal.color,
+            count: bc.count,
+          };
+        }),
+      )
+    ).flat();
+    const totalCount = allItems.reduce((acc, item) => acc + item.count, 0);
+
+    const goalCompletedTopN = dailyUserStat.goalCompletedTopNCounts;
+    const goals = (
+      await Promise.all(
+        goalCompletedTopN.map(async (gc) => {
+          const goal = await this.goalRepository.findOne({
+            where: { id: gc.goalId },
+            relations: { behaviors: true },
+          });
+
+          if (!goal) return [];
+
+          const items = gc.behaviors.map((b) => {
+            const behavior = goal.behaviors.find((gb) => gb.id === b.behaviorId);
+            if (!behavior) throw new Error('Behavior Not found');
+
+            return {
+              id: b.behaviorId,
+              behaviorTitle: b.behaviorTitle,
+              behaviorDifficulty: behavior.difficulty,
+              count: b.count,
+            };
+          });
+
+          return {
+            id: goal.id,
+            goalTitle: goal.title,
+            goalColor: goal.color,
+            totalCount: items.reduce((sum, item) => sum + item.count, 0),
+            items,
+          };
+        }),
+      )
+    ).flat();
+
+    return {
+      all: {
+        totalCount,
+        items: allItems,
+      },
+      goals,
+    };
+  }
+
+  async getTotalCompletedCounts(userId: string): Promise<number> {
+    const todayKey = getKstDayKey(new Date());
+    const dailyUserStat = await this.dailyUserStatRepository.findOne({
+      where: { user: { id: userId }, statDate: todayKey },
+    });
+    return dailyUserStat?.totalCompletedCounts ?? 0;
   }
 }

@@ -482,4 +482,229 @@ describe('StatService', () => {
       expect((service as any).calcBehaviorDegree(80)).toBe('MORE');
     });
   });
+
+  describe('getTopBehaviors', () => {
+    afterEach(() => {
+      jest.useRealTimers();
+      jest.restoreAllMocks();
+    });
+
+    it('오늘 stat이 없으면 빈 응답을 반환한다', async () => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-01-21T03:00:00.000Z'));
+      const todayKey = getKstDayKey(new Date());
+
+      const dailyUserStatRepository = {
+        findOne: jest.fn().mockResolvedValue(null),
+      };
+
+      const { service } = await createService({ dailyUserStatRepository });
+
+      const result = await service.getTopBehaviors('user-1');
+
+      expect(dailyUserStatRepository.findOne).toHaveBeenCalledWith({
+        where: { user: { id: 'user-1' }, statDate: todayKey },
+      });
+
+      expect(result).toEqual({
+        all: { totalCount: 0, items: [] },
+        goals: [],
+      });
+    });
+
+    it('오늘 stat이 있으면 all/goals를 매핑해서 반환한다 (goal 없는 behavior는 제외)', async () => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-01-21T03:00:00.000Z'));
+      const todayKey = getKstDayKey(new Date());
+
+      const dailyUserStat = {
+        behaviorCompletedTopNCounts: [
+          { behaviorId: 'b1', count: 3 },
+          { behaviorId: 'b2', count: 2 },
+          { behaviorId: 'b-no-goal', count: 1 }, // goal 없어서 필터링 대상
+        ],
+        goalCompletedTopNCounts: [
+          {
+            goalId: 'g1',
+            behaviors: [
+              { behaviorId: 'b1', behaviorTitle: '행동1(스냅샷)', count: 2 },
+              { behaviorId: 'b3', behaviorTitle: '행동3(스냅샷)', count: 1 },
+            ],
+          },
+        ],
+      } as any;
+
+      const dailyUserStatRepository = {
+        findOne: jest.fn().mockResolvedValue(dailyUserStat),
+      };
+
+      const behaviorRepository = {
+        findOne: jest.fn().mockImplementation(async ({ where, relations }: any) => {
+          expect(relations).toEqual({ goal: true });
+
+          if (where.id === 'b1') {
+            return {
+              id: 'b1',
+              title: '행동1',
+              difficulty: '몰입하기',
+              goal: { id: 'g1', title: '목표1', color: '#111111' },
+            } as any;
+          }
+          if (where.id === 'b2') {
+            return {
+              id: 'b2',
+              title: '행동2',
+              difficulty: '마음열기',
+              goal: { id: 'g2', title: '목표2', color: '#222222' },
+            } as any;
+          }
+          if (where.id === 'b-no-goal') {
+            return {
+              id: 'b-no-goal',
+              title: 'goal없는행동',
+              difficulty: '몰입하기',
+              goal: null,
+            } as any;
+          }
+          return null;
+        }),
+      };
+
+      const goalRepository = {
+        findOne: jest.fn().mockImplementation(async ({ where, relations }: any) => {
+          expect(relations).toEqual({ behaviors: true });
+
+          if (where.id === 'g1') {
+            return {
+              id: 'g1',
+              title: '목표1',
+              color: '#111111',
+              behaviors: [
+                { id: 'b1', difficulty: '몰입하기' },
+                { id: 'b3', difficulty: '마음열기' },
+              ],
+            } as any;
+          }
+          return null;
+        }),
+      };
+
+      const { service } = await createService({
+        dailyUserStatRepository,
+        behaviorRepository,
+        goalRepository,
+      });
+
+      const result = await service.getTopBehaviors('user-1');
+
+      // stat 조회
+      expect(dailyUserStatRepository.findOne).toHaveBeenCalledWith({
+        where: { user: { id: 'user-1' }, statDate: todayKey },
+      });
+
+      // behavior 조회: 3개 시도 (b-no-goal은 결과에서 제외되지만 조회는 함)
+      expect(behaviorRepository.findOne).toHaveBeenCalledTimes(3);
+      expect(behaviorRepository.findOne).toHaveBeenNthCalledWith(1, {
+        where: { id: 'b1' },
+        relations: { goal: true },
+      });
+      expect(behaviorRepository.findOne).toHaveBeenNthCalledWith(2, {
+        where: { id: 'b2' },
+        relations: { goal: true },
+      });
+      expect(behaviorRepository.findOne).toHaveBeenNthCalledWith(3, {
+        where: { id: 'b-no-goal' },
+        relations: { goal: true },
+      });
+
+      // goal 조회
+      expect(goalRepository.findOne).toHaveBeenCalledTimes(1);
+      expect(goalRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 'g1' },
+        relations: { behaviors: true },
+      });
+
+      // 결과 검증
+      expect(result).toEqual({
+        all: {
+          totalCount: 5, // b1(3) + b2(2) ; b-no-goal은 제외
+          items: [
+            {
+              id: 'b1',
+              behaviorTitle: '행동1',
+              behaviorDifficulty: '몰입하기',
+              goalTitle: '목표1',
+              goalColor: '#111111',
+              count: 3,
+            },
+            {
+              id: 'b2',
+              behaviorTitle: '행동2',
+              behaviorDifficulty: '마음열기',
+              goalTitle: '목표2',
+              goalColor: '#222222',
+              count: 2,
+            },
+          ],
+        },
+        goals: [
+          {
+            id: 'g1',
+            goalTitle: '목표1',
+            goalColor: '#111111',
+            totalCount: 3, // b1(2) + b3(1)
+            items: [
+              {
+                id: 'b1',
+                behaviorTitle: '행동1(스냅샷)',
+                behaviorDifficulty: '몰입하기', // goal.behaviors에서 difficulty를 가져옴
+                count: 2,
+              },
+              {
+                id: 'b3',
+                behaviorTitle: '행동3(스냅샷)',
+                behaviorDifficulty: '마음열기',
+                count: 1,
+              },
+            ],
+          },
+        ],
+      });
+    });
+
+    it('goalCompletedTopNCounts에 있는 behaviorId가 goal.behaviors에 없으면 에러를 던진다', async () => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-01-21T03:00:00.000Z'));
+
+      const dailyUserStat = {
+        behaviorCompletedTopNCounts: [],
+        goalCompletedTopNCounts: [
+          {
+            goalId: 'g1',
+            behaviors: [{ behaviorId: 'b-not-in-goal', behaviorTitle: '없는행동', count: 1 }],
+          },
+        ],
+      } as any;
+
+      const dailyUserStatRepository = {
+        findOne: jest.fn().mockResolvedValue(dailyUserStat),
+      };
+
+      const goalRepository = {
+        findOne: jest.fn().mockResolvedValue({
+          id: 'g1',
+          title: '목표1',
+          color: '#111111',
+          behaviors: [
+            // b-not-in-goal 없음!
+            { id: 'b1', difficulty: '몰입하기' },
+          ],
+        } as any),
+      };
+
+      const { service } = await createService({
+        dailyUserStatRepository,
+        goalRepository,
+      });
+
+      await expect(service.getTopBehaviors('user-1')).rejects.toThrow('Behavior Not found');
+    });
+  });
 });

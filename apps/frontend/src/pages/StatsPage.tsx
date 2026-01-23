@@ -1,4 +1,9 @@
 import { DifficultyGraph } from '@/features/stats/components/DifficultyGraph';
+import { useEffect, useState } from 'react';
+import type { AllBehaviorStatItem, GoalBehaviorStat } from '@web24/shared';
+import { fetchTopBehaviors } from '@/features/stat/apis/fetchTopBehaviors.api';
+import { fetchTotalCompletedCount } from '@/features/stat/apis/fetchTotalCompletedCount.api';
+import { AccumulatedBehaviorStats } from '@/features/stat/components/AccumulatedBehaviorStats';
 
 interface StatsContainerProps {
   title: string;
@@ -15,31 +20,50 @@ function StatsContainer({ title, children }: StatsContainerProps) {
 }
 
 export function StatsPage() {
+  const [allTopBehaviors, setAllTopBehaviors] = useState<AllBehaviorStatItem>({
+    totalCount: 0,
+    items: [],
+  });
+  const [goalTopBehaviors, setGoalTopBehaviors] = useState<GoalBehaviorStat[]>([]);
+  const [totalCompletedCount, setTotalCompletedCount] = useState<number>(0);
+
+  useEffect(() => {
+    fetchTopBehaviors().then((data) => {
+      setAllTopBehaviors(data.all);
+      setGoalTopBehaviors(data.goals);
+    });
+  }, []);
+
+  useEffect(() => {
+    fetchTotalCompletedCount().then((data) => {
+      setTotalCompletedCount(data.count);
+    });
+  }, []);
+
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-5 md:pt-2">
       {/* 총 횟수 */}
       <section>
         <h2 className="text-headline-1 font-semibold">
-          지금까지 행동을 총 <span className="text-primary-strong text-3xl font-bold">184</span>번
+          지금까지 행동을 총{' '}
+          <span className="text-primary-strong text-3xl font-bold">{totalCompletedCount}</span>번
           해냈어요!
         </h2>
       </section>
+
       {/* 누적 행동 통계 */}
       <StatsContainer title="지금까지 가장 많이한 행동이에요">
-        <div className="flex flex-col items-start gap-4 md:flex-row">
-          <div className="w-full border p-2 md:w-1/2">그래프 영역</div>
-          <div className="flex w-full flex-col border p-2 md:w-1/2">
-            <div>리스트 영역</div>
-            <button className="ml-auto border" type="button">
-              더보기
-            </button>
-          </div>
-        </div>
+        <AccumulatedBehaviorStats
+          allTopBehaviors={allTopBehaviors}
+          goalTopBehaviors={goalTopBehaviors}
+        />
       </StatsContainer>
+
       {/* 난이도 통계 */}
       <StatsContainer title="요즘 이런 흐름으로 행동했어요">
         <DifficultyGraph />
       </StatsContainer>
+
       {/* 랜덤 통계 */}
       <StatsContainer title="이런 점이 눈에 띄었어요">
         {/* 데스크톱: 2x2 카드, 모바일: 일렬 카드배치 */}
