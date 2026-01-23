@@ -8,6 +8,7 @@ vi.mock('../apis/fetchDifficultyStats.api', () => ({
 }));
 
 describe('DifficultyGraph', () => {
+  const mockedFetchDifficultyStats = vi.mocked(fetchDifficultyStats);
   const mockStats = [
     { 마음열기: 2, 시작하기: 3, 이어가기: 1, 몰입하기: 0, AI: 0 },
     { 마음열기: 1, 시작하기: 2, 이어가기: 4, 몰입하기: 2, AI: 0 },
@@ -19,13 +20,13 @@ describe('DifficultyGraph', () => {
   });
 
   it('로딩 중일 때 로딩 메시지를 표시한다', () => {
-    (fetchDifficultyStats as any).mockReturnValue(new Promise(() => {}));
+    mockedFetchDifficultyStats.mockReturnValue(new Promise(() => {}));
     render(<DifficultyGraph />);
     expect(screen.getByText('데이터를 불러오는 중...')).toBeInTheDocument();
   });
 
   it('데이터가 없을 때 대체 메시지를 표시한다', async () => {
-    (fetchDifficultyStats as any).mockResolvedValue([]);
+    mockedFetchDifficultyStats.mockResolvedValue([]);
     render(<DifficultyGraph />);
     await waitFor(() => {
       expect(screen.getByText('조금 더 쌓이면 보여줄 수 있어요.')).toBeInTheDocument();
@@ -33,7 +34,7 @@ describe('DifficultyGraph', () => {
   });
 
   it('데이터가 있을 때 그래프와 통계를 표시한다', async () => {
-    (fetchDifficultyStats as any).mockResolvedValue(mockStats);
+    mockedFetchDifficultyStats.mockResolvedValue(mockStats);
     render(<DifficultyGraph />);
 
     await waitFor(() => {
@@ -54,7 +55,7 @@ describe('DifficultyGraph', () => {
   });
 
   it('막대를 클릭하면 해당 날짜 데이터만 표시한다', async () => {
-    (fetchDifficultyStats as any).mockResolvedValue(mockStats);
+    mockedFetchDifficultyStats.mockResolvedValue(mockStats);
     render(<DifficultyGraph />);
 
     await waitFor(() => {
@@ -81,7 +82,7 @@ describe('DifficultyGraph', () => {
   });
 
   it('막대를 다시 클릭하면 전체 통계로 복구된다', async () => {
-    (fetchDifficultyStats as any).mockResolvedValue(mockStats);
+    mockedFetchDifficultyStats.mockResolvedValue(mockStats);
     render(<DifficultyGraph />);
 
     await waitFor(() => {
