@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
@@ -167,7 +167,7 @@ JSON 외의 설명, 문장, 코드블록, 주석은 **절대 출력하지 마**.
     const logger = new Logger();
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     }
 
     const history = await this.dodoChatRepository.find({
@@ -214,7 +214,7 @@ JSON 외의 설명, 문장, 코드블록, 주석은 **절대 출력하지 마**.
 
     if (!response.ok) {
       logger.error(`CLOVA API error: ${response.status}`);
-      throw new Error('Failed to fetch CLOVA response');
+      throw new ServiceUnavailableException('Failed to fetch CLOVA response');
     }
 
     const responseJson = (await response.json()) as ClovaChatResponse;

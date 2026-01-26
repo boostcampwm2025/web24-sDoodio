@@ -1,9 +1,14 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import { DodoChatRequestSchema, DodoChatResponseSchema } from '@web24/shared';
 
-export function registerAIApi(registry: OpenAPIRegistry) {
+type CommonSchemas = {
+  errorResponse: ReturnType<OpenAPIRegistry['register']>;
+};
+
+export function registerAIApi(registry: OpenAPIRegistry, common: CommonSchemas) {
   const dodoChatRequest = registry.register('DodoChatRequest', DodoChatRequestSchema);
   const dodoChatResponse = registry.register('DodoChatResponse', DodoChatResponseSchema);
+  const { errorResponse } = common;
 
   registry.registerPath({
     method: 'post',
@@ -28,9 +33,27 @@ export function registerAIApi(registry: OpenAPIRegistry) {
       },
       401: {
         description: 'Unauthorized',
+        content: {
+          'application/json': {
+            schema: errorResponse,
+          },
+        },
       },
-      500: {
-        description: 'Internal server error',
+      404: {
+        description: 'User not found',
+        content: {
+          'application/json': {
+            schema: errorResponse,
+          },
+        },
+      },
+      503: {
+        description: 'Service unavailable',
+        content: {
+          'application/json': {
+            schema: errorResponse,
+          },
+        },
       },
     },
   });
