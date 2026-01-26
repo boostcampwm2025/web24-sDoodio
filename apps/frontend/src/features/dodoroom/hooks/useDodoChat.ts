@@ -12,6 +12,9 @@ const INITIAL_MESSAGES: Message[] = [
 
 const TYPING_ANIMATION_INTERVAL = 35;
 
+const updateMessageText = (messages: Message[], id: string, text: string) =>
+  messages.map((message) => (message.id === id ? { ...message, text } : message));
+
 const createMessageId = () => {
   const cryptoId = globalThis.crypto?.randomUUID?.();
   if (cryptoId) return cryptoId;
@@ -48,7 +51,7 @@ export const useDodoChat = () => {
       index += 1;
       const nextText = fullText.slice(0, index);
 
-      setMessages((prev) => prev.map((msg) => (msg.id === id ? { ...msg, text: nextText } : msg)));
+      setMessages((prev) => updateMessageText(prev, id, nextText));
 
       if (index >= fullText.length && typingTimerRef.current) {
         globalThis.clearInterval(typingTimerRef.current);
