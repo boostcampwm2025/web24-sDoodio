@@ -40,30 +40,20 @@ export class PushService implements OnModuleInit {
   }
 
   async upsertSubscription(userId: string, subscription: PushSubscription): Promise<void> {
-    const user = await this.userRepository.findOne({ where: { id: userId } });
+    const user = await this.userRepository.findOneBy({ id: userId });
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    const existing = await this.pushSubscriptionRepository.findOne({
-      where: { endpoint: subscription.endpoint },
-      relations: ['user'],
-    });
-
-    if (existing) {
-      existing.user = user;
-      existing.endpoint = subscription.endpoint;
-      existing.subscription = subscription;
-      await this.pushSubscriptionRepository.save(existing);
-      return;
-    }
-
-    const entity = this.pushSubscriptionRepository.create({
-      user,
-      endpoint: subscription.endpoint,
-      subscription,
-    });
-    await this.pushSubscriptionRepository.save(entity);
+    await this.pushSubscriptionRepository.upsert(
+      {
+        user,
+        endpoint: subscription.endpoint,
+        subscription,
+        updatedAt: new Date(),
+      },
+      ['endpoint'],
+    );
   }
 
   async removeSubscription(userId: string, endpoint: string): Promise<void> {
@@ -72,7 +62,6 @@ export class PushService implements OnModuleInit {
         endpoint,
         user: { id: userId },
       },
-      relations: ['user'],
     });
 
     if (!existing) {
@@ -88,7 +77,6 @@ export class PushService implements OnModuleInit {
   ): Promise<SendPushNotificationResponse> {
     const subscriptions = await this.pushSubscriptionRepository.find({
       where: { user: { id: userId } },
-      relations: ['user'],
     });
 
     if (subscriptions.length === 0) {
@@ -107,10 +95,12 @@ export class PushService implements OnModuleInit {
           await webpush.sendNotification(subscription.subscription, payloadString);
           return { sent: 1, failed: 0, removed: 0 };
         } catch (error) {
-          const { statusCode } = error as { statusCode?: number };
-          if (statusCode === 404 || statusCode === 410) {
-            await this.pushSubscriptionRepository.remove(subscription);
-            return { sent: 0, failed: 1, removed: 1 };
+          if (error && typeof error === 'object' && 'statusCode' in error) {
+            const { statusCode } = error as { statusCode: number };
+            if (statusCode === 404 || statusCode === 410) {
+              await this.pushSubscriptionRepository.remove(subscription);
+              return { sent: 0, failed: 1, removed: 1 };
+            }
           }
           return { sent: 0, failed: 1, removed: 0 };
         }

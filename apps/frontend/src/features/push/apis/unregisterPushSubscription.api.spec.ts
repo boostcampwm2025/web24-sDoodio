@@ -44,7 +44,7 @@ describe('unregisterPushSubscription', () => {
     } as Response);
 
     await expect(unregisterPushSubscription(request)).rejects.toThrow(
-      'Failed to register push subscription',
+      'Failed to unregister push subscription',
     );
   });
 

@@ -52,12 +52,14 @@ describe('PushService', () => {
             create: jest.fn(),
             save: jest.fn(),
             remove: jest.fn(),
+            upsert: jest.fn(),
           },
         },
         {
           provide: getRepositoryToken(User),
           useValue: {
             findOne: jest.fn(),
+            findOneBy: jest.fn(),
           },
         },
       ],
@@ -105,51 +107,30 @@ describe('PushService', () => {
     };
 
     it('유저가 없으면 예외를 던진다', async () => {
-      userRepository.findOne.mockResolvedValue(null);
+      userRepository.findOneBy.mockResolvedValue(null);
 
       await expect(service.upsertSubscription('user-id', subscription)).rejects.toThrow(
         NotFoundException,
       );
 
-      expect(pushSubscriptionRepository.save).not.toHaveBeenCalled();
+      expect(pushSubscriptionRepository.upsert).not.toHaveBeenCalled();
     });
 
-    it('기존 구독이 있으면 갱신한다', async () => {
+    it('구독 정보를 업서트한다', async () => {
       const user = { id: 'user-id' } as User;
-      const existing = {
-        id: 'sub-id',
-        endpoint: 'old-endpoint',
-        subscription: { endpoint: 'old-endpoint', keys: { p256dh: 'old', auth: 'old' } },
-        user: { id: 'old-user' } as User,
-      } as PushSubscriptionEntity;
-
-      userRepository.findOne.mockResolvedValue(user);
-      pushSubscriptionRepository.findOne.mockResolvedValue(existing);
+      userRepository.findOneBy.mockResolvedValue(user);
 
       await service.upsertSubscription('user-id', subscription);
 
-      expect(pushSubscriptionRepository.save).toHaveBeenCalledWith(existing);
-      expect(existing.user).toBe(user);
-      expect(existing.endpoint).toBe(subscription.endpoint);
-      expect(existing.subscription).toEqual(subscription);
-    });
-
-    it('기존 구독이 없으면 새로 생성한다', async () => {
-      const user = { id: 'user-id' } as User;
-      const entity = { id: 'sub-id' } as PushSubscriptionEntity;
-
-      userRepository.findOne.mockResolvedValue(user);
-      pushSubscriptionRepository.findOne.mockResolvedValue(null);
-      pushSubscriptionRepository.create.mockReturnValue(entity);
-
-      await service.upsertSubscription('user-id', subscription);
-
-      expect(pushSubscriptionRepository.create).toHaveBeenCalledWith({
-        user,
-        endpoint: subscription.endpoint,
-        subscription,
-      });
-      expect(pushSubscriptionRepository.save).toHaveBeenCalledWith(entity);
+      expect(pushSubscriptionRepository.upsert).toHaveBeenCalledWith(
+        {
+          user,
+          endpoint: subscription.endpoint,
+          subscription,
+          updatedAt: expect.any(Date),
+        },
+        ['endpoint'],
+      );
     });
   });
 

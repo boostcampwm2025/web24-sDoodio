@@ -16,7 +16,7 @@ export async function unregisterPushSubscription(
   });
 
   if (!response.ok) {
-    throw new Error('Failed to register push subscription');
+    throw new Error('Failed to unregister push subscription');
   }
 
   const json = await response.json();
