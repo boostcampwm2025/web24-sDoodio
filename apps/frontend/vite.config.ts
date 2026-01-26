@@ -41,6 +41,19 @@ export default defineConfig({
           },
         ],
       },
+      workbox: {
+        importScripts: ['push-handlers.js'],
+        navigateFallback: '/index.html',
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith('/api'),
+            handler: 'NetworkOnly',
+          },
+        ],
+      },
     }),
   ],
   build: {
