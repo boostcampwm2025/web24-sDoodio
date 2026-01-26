@@ -17,6 +17,8 @@ import { toast } from 'react-toastify';
 import { createTodayBehavior } from '@/features/behavior/apis/createTodayBehavior.api';
 import type { GetGoalSummary } from '@web24/shared';
 import { getRandomElement } from '@/shared/utils/random';
+import useAuthStore from '@/stores/useAuthStore';
+import { useAutoWebPushSubscribe } from '@/features/push/hooks/useAutoWebPushSubscribe';
 
 export function IndexPage() {
   const [behaviors, setBehaviors] = useState<Behavior[]>([]);
@@ -31,6 +33,9 @@ export function IndexPage() {
   const showToast = useDodoToast();
   const heroRef = useRef<HTMLDivElement>(null);
   const [isHeroVisible, setIsHeroVisible] = useState(true);
+
+  const { user } = useAuthStore();
+  useAutoWebPushSubscribe({ enabled: !!user, mode: 'silent' });
 
   // Hero 섹션 보이는지 확인
   useEffect(() => {
