@@ -42,6 +42,8 @@ type AIBehaviorRecommendation = {
 export class AIService {
   private readonly logger = new Logger(AIService.name);
 
+  private static readonly CHAT_HISTORY_LIMIT = 12;
+
   constructor(
     private readonly configService: ConfigService,
     @InjectRepository(DodoChatMessage)
@@ -172,7 +174,7 @@ JSON 외의 설명, 문장, 코드블록, 주석은 **절대 출력하지 마**.
     const history = await this.dodoChatRepository.find({
       where: { user: { id: userId } },
       order: { createdAt: 'DESC' },
-      take: 12,
+      take: AIService.CHAT_HISTORY_LIMIT,
     });
 
     const systemPrompt =

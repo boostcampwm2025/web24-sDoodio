@@ -10,12 +10,18 @@ const INITIAL_MESSAGES: Message[] = [
   },
 ];
 
-const createMessageId = (suffix?: string) => `msg-${Date.now()}${suffix ? `-${suffix}` : ''}`;
+const TYPING_ANIMATION_INTERVAL = 35;
+
+const createMessageId = () => {
+  const cryptoId = globalThis.crypto?.randomUUID?.();
+  if (cryptoId) return cryptoId;
+  return `msg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+};
 
 export const useDodoChat = () => {
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
   const [input, setInput] = useState('');
-  const typingTimerRef = useRef<number | null>(null);
+  const typingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const canSend = input.trim().length > 0;
   const latestDodoMessage = useMemo(
@@ -26,7 +32,7 @@ export const useDodoChat = () => {
   useEffect(
     () => () => {
       if (typingTimerRef.current) {
-        window.clearInterval(typingTimerRef.current);
+        globalThis.clearInterval(typingTimerRef.current);
       }
     },
     [],
@@ -34,21 +40,21 @@ export const useDodoChat = () => {
 
   const animateDodoReply = useCallback((id: string, fullText: string) => {
     if (typingTimerRef.current) {
-      window.clearInterval(typingTimerRef.current);
+      globalThis.clearInterval(typingTimerRef.current);
     }
 
     let index = 0;
-    typingTimerRef.current = window.setInterval(() => {
+    typingTimerRef.current = globalThis.setInterval(() => {
       index += 1;
-      setMessages((prev) =>
-        prev.map((msg) => (msg.id === id ? { ...msg, text: fullText.slice(0, index) } : msg)),
-      );
+      const nextText = fullText.slice(0, index);
+
+      setMessages((prev) => prev.map((msg) => (msg.id === id ? { ...msg, text: nextText } : msg)));
 
       if (index >= fullText.length && typingTimerRef.current) {
-        window.clearInterval(typingTimerRef.current);
+        globalThis.clearInterval(typingTimerRef.current);
         typingTimerRef.current = null;
       }
-    }, 35);
+    }, TYPING_ANIMATION_INTERVAL);
   }, []);
 
   const handleSend = useCallback(() => {
@@ -60,7 +66,7 @@ export const useDodoChat = () => {
 
     sendDodoChat(value)
       .then((data) => {
-        const dodoMessageId = createMessageId('dodo');
+        const dodoMessageId = createMessageId();
         setMessages((prev) => [...prev, { id: dodoMessageId, role: 'dodo', text: '' }]);
         animateDodoReply(dodoMessageId, data.reply);
       })
@@ -68,7 +74,7 @@ export const useDodoChat = () => {
         setMessages((prev) => [
           ...prev,
           {
-            id: createMessageId('dodo'),
+            id: createMessageId(),
             role: 'dodo',
             text: '잠시 후 다시 이야기해요.',
           },
