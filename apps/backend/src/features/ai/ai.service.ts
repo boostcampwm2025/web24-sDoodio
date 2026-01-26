@@ -1,6 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
+import type { Repository } from 'typeorm';
 import { Goal } from '../goal/goal.entity';
+import { DodoChatMessage, DODO_CHAT_ROLE, type DodoChatRole } from './dodo-chat-message.entity';
+import { User } from '../user/user.entity';
 
 type ClovaChatResponse = {
   status: {
@@ -36,7 +40,13 @@ type AIBehaviorRecommendation = {
 
 @Injectable()
 export class AIService {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    @InjectRepository(DodoChatMessage)
+    private readonly dodoChatRepository: Repository<DodoChatMessage>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
 
   async getAIBehaviorTitles(goal: Goal): Promise<string[]> {
     const logger = new Logger();
@@ -151,5 +161,78 @@ JSON 외의 설명, 문장, 코드블록, 주석은 **절대 출력하지 마**.
       }
       throw new Error('AI 응답 JSON 파싱에 실패했습니다.');
     }
+  }
+
+  async getDodoChat(userId: string, message: string) {
+    const logger = new Logger();
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const history = await this.dodoChatRepository.find({
+      where: { user: { id: userId } },
+      order: { createdAt: 'DESC' },
+      take: 12,
+    });
+
+    const systemPrompt =
+      '너는 행동 기록 서비스 "뚜웰"에서 사용자에게 친근하고 따뜻하게 응답하는 캐릭터 "두두"야. ' +
+      '과하지 않은 말투로 짧고 긍정적으로 응답해줘. ' +
+      '사용자가 힘들어하면 가볍게 응원하고, 너무 길게 설명하지 않아.';
+
+    const messages = [
+      {
+        role: 'system' as const,
+        content: [{ type: 'text', text: systemPrompt }],
+      },
+      ...history
+        .slice()
+        .reverse()
+        .map((entry) => ({
+          role: entry.role as DodoChatRole,
+          content: [{ type: 'text', text: entry.content }],
+        })),
+      {
+        role: 'user' as const,
+        content: [{ type: 'text', text: message }],
+      },
+    ];
+
+    const modelName = 'HCX-005';
+    const clovaApiUrl = `https://clovastudio.stream.ntruss.com/v3/chat-completions/${modelName}`;
+    const clovaApiKey = this.configService.getOrThrow<string>('CLOVA_API_KEY');
+
+    const response = await fetch(clovaApiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${clovaApiKey}`,
+      },
+      body: JSON.stringify({ messages }),
+    });
+
+    if (!response.ok) {
+      logger.error(`CLOVA API error: ${response.status}`);
+      throw new Error('Failed to fetch CLOVA response');
+    }
+
+    const responseJson = (await response.json()) as ClovaChatResponse;
+    const reply = responseJson.result.message.content;
+
+    await this.dodoChatRepository.save([
+      this.dodoChatRepository.create({
+        user,
+        role: DODO_CHAT_ROLE.USER,
+        content: message,
+      }),
+      this.dodoChatRepository.create({
+        user,
+        role: DODO_CHAT_ROLE.ASSISTANT,
+        content: reply,
+      }),
+    ]);
+
+    return { reply };
   }
 }
