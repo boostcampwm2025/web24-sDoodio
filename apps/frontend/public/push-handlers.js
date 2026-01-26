@@ -1,8 +1,7 @@
 /* eslint-env serviceworker */
-/* global self */
-/* eslint-disable no-restricted-globals */
+/* global globalThis */
 
-self.addEventListener('push', (event) => {
+globalThis.addEventListener('push', (event) => {
   const data = event.data ? event.data.json() : {};
   const title = data.title || 'Push received';
   const options = {
@@ -14,16 +13,16 @@ self.addEventListener('push', (event) => {
     },
   };
 
-  event.waitUntil(self.registration.showNotification(title, options));
+  event.waitUntil(globalThis.registration.showNotification(title, options));
 });
 
-self.addEventListener('notificationclick', (event) => {
+globalThis.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const url = event.notification.data.url || '/';
 
   event.waitUntil(
     (async () => {
-      const windowClients = await self.clients.matchAll({
+      const windowClients = await globalThis.clients.matchAll({
         type: 'window',
         includeUncontrolled: true,
       });
@@ -33,7 +32,7 @@ self.addEventListener('notificationclick', (event) => {
       );
       if (matchingClient && 'focus' in matchingClient) return matchingClient.focus();
 
-      if (self.clients.openWindow) return self.clients.openWindow(url);
+      if (globalThis.clients.openWindow) return globalThis.clients.openWindow(url);
       return undefined;
     })(),
   );

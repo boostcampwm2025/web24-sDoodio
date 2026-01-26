@@ -9,7 +9,7 @@ export async function ensureWebPushSubscribed(params: { mode: EnsureMode }) {
   const { mode } = params;
 
   if (!('serviceWorker' in navigator)) return { ok: false, reason: 'no-sw' } as const;
-  if (!('PushManager' in window)) return { ok: false, reason: 'no-push' } as const;
+  if (!('PushManager' in globalThis)) return { ok: false, reason: 'no-push' } as const;
 
   // denied면 끝
   if (Notification.permission === 'denied') {
