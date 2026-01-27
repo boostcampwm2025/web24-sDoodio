@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import useAuthStore from '@/stores/useAuthStore';
+import { ensureWebPushSubscribed } from '@/features/push/hooks/useAutoWebPushSubscribe';
 
 type LocationState = {
   from?: { pathname: string };
@@ -26,6 +27,7 @@ export function LoginPage() {
 
   const handleGuestLogin = async () => {
     await loginGuest();
+    await ensureWebPushSubscribed({ mode: 'interactive' }).catch(() => null);
     navigate(from, { replace: true });
   };
 

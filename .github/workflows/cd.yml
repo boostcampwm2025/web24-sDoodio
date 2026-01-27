@@ -104,6 +104,9 @@ jobs:
             CLOVA_API_KEY=${{ secrets.STAGING_CLOVA_API_KEY }}
             SESSION_SECRET=${{ secrets.STAGING_SESSION_SECRET }}
             SESSION_MAX_AGE_MS=${{ secrets.STAGING_SESSION_MAX_AGE_MS }}
+            VAPID_PUBLIC_KEY=${{ secrets.STAGING_VAPID_PUBLIC_KEY }}
+            VAPID_PRIVATE_KEY=${{ secrets.STAGING_VAPID_PRIVATE_KEY }}
+            VAPID_SUBJECT=${{ secrets.STAGING_VAPID_SUBJECT }}
             EOF
             chmod 600 infra/staging/.env
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
@@ -141,6 +144,9 @@ jobs:
             CLOVA_API_KEY=${{ secrets.PROD_CLOVA_API_KEY }}
             SESSION_SECRET=${{ secrets.PROD_SESSION_SECRET }}
             SESSION_MAX_AGE_MS=${{ secrets.PROD_SESSION_MAX_AGE_MS }}
+            VAPID_PUBLIC_KEY=${{ secrets.PROD_VAPID_PUBLIC_KEY }}
+            VAPID_PRIVATE_KEY=${{ secrets.PROD_VAPID_PRIVATE_KEY }}
+            VAPID_SUBJECT=${{ secrets.PROD_VAPID_SUBJECT }}
             EOF
             chmod 600 infra/prod/.env
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin

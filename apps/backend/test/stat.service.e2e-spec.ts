@@ -19,6 +19,9 @@ const REQUIRED_ENV = [
   'SESSION_SECRET',
   'SESSION_MAX_AGE_MS',
   'CLOVA_API_KEY',
+  'VAPID_PUBLIC_KEY',
+  'VAPID_PRIVATE_KEY',
+  'VAPID_SUBJECT',
 ];
 
 const hasRequiredEnv = REQUIRED_ENV.every((key) => Boolean(process.env[key]));

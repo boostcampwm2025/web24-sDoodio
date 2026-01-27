@@ -12,6 +12,7 @@ import { BehaviorModule } from './features/behavior/behavior.module';
 import { AIModule } from './features/ai/ai.module';
 import { AuthModule } from './features/auth/auth.module';
 import { StatModule } from './features/stat/stat.module';
+import { PushModule } from './features/push/push.module';
 
 @Module({
   imports: [
@@ -29,6 +30,9 @@ import { StatModule } from './features/stat/stat.module';
         SESSION_SECRET: Joi.string().required(),
         SESSION_MAX_AGE_MS: Joi.number().required(),
         CLOVA_API_KEY: Joi.string().required(),
+        VAPID_PUBLIC_KEY: Joi.string().required(),
+        VAPID_PRIVATE_KEY: Joi.string().required(),
+        VAPID_SUBJECT: Joi.string().required(),
       }),
     }),
     TypeOrmModule.forRootAsync({
@@ -53,6 +57,7 @@ import { StatModule } from './features/stat/stat.module';
     AIModule,
     AuthModule,
     StatModule,
+    PushModule,
   ],
   controllers: [],
   providers: [
