@@ -60,7 +60,7 @@ export function BehaviorCard({ behavior, onToggle, onDelete }: BehaviorProps) {
                   setIsActionVisible(true);
                   setIsDeleteModalOpen(true);
                 }}
-                className={`text-label-alternative hover:text-difficulty-4 transition ${actionTriggerClasses} md:pointer-events-none md:opacity-0 md:group-hover:pointer-events-auto md:group-hover:opacity-100`}
+                className={`text-label-alternative hover:text-difficulty-4 transition ${actionTriggerClasses} pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100`}
               >
                 <Trash2 size={16} />
               </button>
