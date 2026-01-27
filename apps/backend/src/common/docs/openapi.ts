@@ -1,5 +1,6 @@
 import { OpenAPIRegistry, OpenApiGeneratorV3 } from '@asteasolutions/zod-to-openapi';
 
+import { registerAIApi } from 'src/features/ai/ai.docs';
 import { registerCommonSchemas } from './common.docs';
 import { registerBehaviorApi } from '../../features/behavior/behavior.docs';
 import { registerGoalApi } from '../../features/goal/goal.docs';
@@ -15,6 +16,7 @@ registerGoalApi(registry);
 registerBehaviorApi(registry, commonSchemas);
 registerAuthApi(registry, commonSchemas);
 registerStatApi(registry, commonSchemas);
+registerAIApi(registry, commonSchemas);
 
 type OpenApiDocument = ReturnType<OpenApiGeneratorV3['generateDocument']>;
 

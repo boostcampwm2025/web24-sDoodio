@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 
-export type RoutePath = '/' | '/all-goals' | '/stats' | '/myroom';
+export type RoutePath = '/' | '/all-goals' | '/stats' | '/dodo-room';
 
 export interface MenuItem {
   path: RoutePath;

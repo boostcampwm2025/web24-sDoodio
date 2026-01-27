@@ -1,6 +1,10 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
+import type { Repository } from 'typeorm';
 import { Goal } from '../goal/goal.entity';
+import { DodoChatMessage, DODO_CHAT_ROLE } from './dodo-chat-message.entity';
+import { User } from '../user/user.entity';
 
 type ClovaChatResponse = {
   status: {
@@ -36,11 +40,19 @@ type AIBehaviorRecommendation = {
 
 @Injectable()
 export class AIService {
-  constructor(private readonly configService: ConfigService) {}
+  private readonly logger = new Logger(AIService.name);
+
+  private static readonly CHAT_HISTORY_LIMIT = 12;
+
+  constructor(
+    private readonly configService: ConfigService,
+    @InjectRepository(DodoChatMessage)
+    private readonly dodoChatRepository: Repository<DodoChatMessage>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
 
   async getAIBehaviorTitles(goal: Goal): Promise<string[]> {
-    const logger = new Logger();
-
     const goalTitle = goal.title;
     const openBehaivors = goal.behaviors
       .filter((b) => b.difficulty === '마음열기')
@@ -114,7 +126,7 @@ JSON 외의 설명, 문장, 코드블록, 주석은 **절대 출력하지 마**.
 
     const body = { messages };
 
-    logger.log(`send Clova API with title:${goal.title} id: ${goal.id}`);
+    this.logger.log(`send Clova API with title:${goal.title} id: ${goal.id}`);
 
     const clovaApiKey = this.configService.getOrThrow<string>('CLOVA_API_KEY');
     const response = await fetch(clovaApiUrl, {
@@ -133,7 +145,7 @@ JSON 외의 설명, 문장, 코드블록, 주석은 **절대 출력하지 마**.
     const endIndex = content.lastIndexOf('}');
 
     if (startIndex === -1 || endIndex === -1 || startIndex >= endIndex) {
-      logger.error(`Failed to find JSON object in Clova API response: ${content}`);
+      this.logger.error(`Failed to find JSON object in Clova API response: ${content}`);
       throw new Error('Failed to parse JSON from Clova API response');
     }
 
@@ -141,15 +153,87 @@ JSON 외의 설명, 문장, 코드블록, 주석은 **절대 출력하지 마**.
 
     try {
       const aiResultObject = JSON.parse(jsonStr) as AIBehaviorRecommendation;
-      logger.log(`Response of Clova API:: ${jsonStr}`);
+      this.logger.log(`Response of Clova API:: ${jsonStr}`);
       return [aiResultObject.몰입하기];
     } catch (error) {
       if (error instanceof Error) {
-        logger.error(`Failed to parse JSON: ${error.message}`, error.stack, jsonStr);
+        this.logger.error(`Failed to parse JSON: ${error.message}`, error.stack, jsonStr);
       } else {
-        logger.error('Failed to parse JSON: Unknown error', String(error), jsonStr);
+        this.logger.error('Failed to parse JSON: Unknown error', String(error), jsonStr);
       }
       throw new Error('AI 응답 JSON 파싱에 실패했습니다.');
     }
+  }
+
+  async getDodoChat(userId: string, message: string) {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const history = await this.dodoChatRepository.find({
+      where: { user: { id: userId } },
+      order: { createdAt: 'DESC' },
+      take: AIService.CHAT_HISTORY_LIMIT,
+    });
+
+    const systemPrompt =
+      '너는 행동 기록 서비스 "뚜웰"에서 사용자에게 친근하고 따뜻하게 응답하는 캐릭터 "두두"야. ' +
+      '과하지 않은 말투로 짧고 긍정적으로 응답해줘. ' +
+      '사용자가 힘들어하면 가볍게 응원하고, 너무 길게 설명하지 않아.';
+
+    const messages = [
+      {
+        role: 'system' as const,
+        content: [{ type: 'text', text: systemPrompt }],
+      },
+      ...history
+        .slice()
+        .reverse()
+        .map((entry) => ({
+          role: entry.role,
+          content: [{ type: 'text', text: entry.content }],
+        })),
+      {
+        role: 'user' as const,
+        content: [{ type: 'text', text: message }],
+      },
+    ];
+
+    const modelName = 'HCX-005';
+    const clovaApiUrl = `https://clovastudio.stream.ntruss.com/v3/chat-completions/${modelName}`;
+    const clovaApiKey = this.configService.getOrThrow<string>('CLOVA_API_KEY');
+
+    const response = await fetch(clovaApiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${clovaApiKey}`,
+      },
+      body: JSON.stringify({ messages }),
+    });
+
+    if (!response.ok) {
+      this.logger.error(`CLOVA API error: ${response.status}`);
+      throw new ServiceUnavailableException('Failed to fetch CLOVA response');
+    }
+
+    const responseJson = (await response.json()) as ClovaChatResponse;
+    const reply = responseJson.result.message.content;
+
+    await this.dodoChatRepository.save([
+      this.dodoChatRepository.create({
+        user,
+        role: DODO_CHAT_ROLE.USER,
+        content: message,
+      }),
+      this.dodoChatRepository.create({
+        user,
+        role: DODO_CHAT_ROLE.ASSISTANT,
+        content: reply,
+      }),
+    ]);
+
+    return { reply };
   }
 }
