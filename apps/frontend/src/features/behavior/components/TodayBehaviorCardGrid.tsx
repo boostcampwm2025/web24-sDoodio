@@ -1,5 +1,6 @@
 import { BehaviorCard } from '@/shared/components/behavior/BehaviorCard';
 import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
+import { BEHAVIOR_DIFFICULTIES } from '@web24/shared';
 import { Plus } from 'lucide-react';
 
 interface TodayBehaviorCardGridProps {
@@ -15,9 +16,21 @@ export function TodayBehaviorCardGrid({
   onDelete,
   openAddModal,
 }: TodayBehaviorCardGridProps) {
+  const difficultyRank = new Map(
+    BEHAVIOR_DIFFICULTIES.map((difficulty, index) => [difficulty, index]),
+  );
+  const sortedBehaviors = [...behaviors].sort((a, b) => {
+    const difficultyDelta =
+      (difficultyRank.get(a.difficulty) ?? Number.POSITIVE_INFINITY) -
+      (difficultyRank.get(b.difficulty) ?? Number.POSITIVE_INFINITY);
+    if (difficultyDelta !== 0) return difficultyDelta;
+
+    return 0;
+  });
+
   return (
     <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-      {behaviors.map((behavior: Behavior) => (
+      {sortedBehaviors.map((behavior: Behavior) => (
         <BehaviorCard
           key={behavior.id}
           behavior={behavior}
