@@ -40,6 +40,7 @@ export function NewGoalFrame({
   const isProgressShown = progressSteps.includes(currentStep.step);
 
   const currentDialogue = currentStep.dialogue[dialogueIdx] || '';
+  const isFirstDialogue = dialogueIdx <= 0;
   const isLastDialogue = dialogueIdx >= currentStep.dialogue.length - 1;
 
   useEffect(() => {
@@ -113,6 +114,25 @@ export function NewGoalFrame({
     onSkip?.();
   };
 
+  const changeDialogue = (targetIdx: number) => {
+    setDialogueFade(false);
+    setTimeout(() => {
+      setDialogueIdx(targetIdx);
+      setDialogueFade(true);
+      setResetTimer((prev) => prev + 1);
+    }, 300);
+  };
+
+  const handlePrevDialogue = () => {
+    if (isFirstDialogue) return;
+    changeDialogue(dialogueIdx - 1);
+  };
+
+  const handleNextDialogue = () => {
+    if (isLastDialogue) return;
+    changeDialogue(dialogueIdx + 1);
+  };
+
   return (
     <div className="bg-bg-normal flex h-full w-full items-center justify-center p-4 md:p-8 lg:p-12">
       <div className="bg-bg-light shadow-heavy flex h-[700px] w-full max-w-sm flex-shrink-0 flex-col overflow-hidden rounded-3xl md:h-[800px] md:max-w-3xl md:rounded-4xl lg:h-[850px] lg:max-w-[1240px] lg:flex-row">
@@ -129,6 +149,30 @@ export function NewGoalFrame({
               >
                 {currentDialogue}
               </p>
+              {currentStep.dialogue.length > 1 && (
+                <div className="absolute top-4 right-4 flex items-center gap-1">
+                  {/* 이전 대사 전환 버튼 */}
+                  <button
+                    type="button"
+                    onClick={handlePrevDialogue}
+                    disabled={isFirstDialogue}
+                    className="disabled:opacity-40"
+                    aria-label="Previous Dialogue"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  {/* 다음 대사 전환 버튼 */}
+                  <button
+                    type="button"
+                    onClick={handleNextDialogue}
+                    disabled={isLastDialogue}
+                    className="disabled:opacity-40"
+                    aria-label="Next Dialogue"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </div>
+              )}
             </div>
             <div className="absolute -bottom-10 left-10 flex flex-col gap-1 md:-bottom-18 md:left-16 md:gap-2">
               <div className="bg-bg-alternative -ml-4 h-3 w-3 rounded-full opacity-80 md:-ml-8 md:h-6 md:w-6" />
