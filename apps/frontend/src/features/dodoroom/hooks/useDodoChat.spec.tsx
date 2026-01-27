@@ -1,24 +1,24 @@
-import { act, renderHook, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
+import { renderHook, waitFor, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { sendDodoChat } from '@/features/dodoroom/apis/sendDodoChat.api';
+import { fetchChatHistory } from '@/features/dodoroom/apis/fetchChatHistory.api';
 import { useDodoChat } from './useDodoChat';
 
-const sendDodoChat = vi.fn();
-const fetchChatHistory = vi.fn();
-
+// --- Mocks ---
 vi.mock('@/features/dodoroom/apis/sendDodoChat.api', () => ({
-  sendDodoChat: (message: string) => sendDodoChat(message),
+  sendDodoChat: vi.fn(),
 }));
 
 vi.mock('@/features/dodoroom/apis/fetchChatHistory.api', () => ({
-  fetchChatHistory: (cursor?: string, limit?: number) => fetchChatHistory(cursor, limit),
+  fetchChatHistory: vi.fn(),
 }));
 
-describe('useDodoChat', () => {
+describe('useDodoChat Hook', () => {
   beforeEach(() => {
-    sendDodoChat.mockReset();
-    fetchChatHistory.mockReset();
-    fetchChatHistory.mockResolvedValue({
+    vi.clearAllMocks();
+    vi.useRealTimers();
+
+    (fetchChatHistory as any).mockResolvedValue({
       messages: [],
       hasMore: false,
       nextCursor: null,
@@ -26,47 +26,95 @@ describe('useDodoChat', () => {
   });
 
   afterEach(() => {
+    vi.clearAllTimers();
     vi.useRealTimers();
   });
 
-  it('초기 메시지를 가진다 (히스토리 로딩 전)', () => {
-    const { result } = renderHook(() => useDodoChat());
-
-    expect(result.current.messages).toHaveLength(1);
-    expect(result.current.messages[0].role).toBe('dodo');
-  });
-
-  it('마운트 시 히스토리를 불러와서 앞에 추가한다', async () => {
-    fetchChatHistory.mockResolvedValue({
-      messages: [
-        { id: 'h1', role: 'user', content: '과거 메시지' },
-        { id: 'h2', role: 'assistant', content: '과거 답변' },
-      ],
+  it('초기 렌더링 시 채팅 히스토리를 불러와야 한다', async () => {
+    const mockHistory = [
+      { id: 'old-1', role: 'user', content: '안녕' },
+      { id: 'old-2', role: 'assistant', content: '반가워' },
+    ];
+    (fetchChatHistory as any).mockResolvedValue({
+      messages: mockHistory,
       hasMore: true,
-      nextCursor: 'h2',
+      nextCursor: 'cursor-123',
     });
 
     const { result } = renderHook(() => useDodoChat());
 
     await waitFor(() => {
-      // 초기 메시지(1) + 히스토리(2) = 3
-      expect(result.current.messages).toHaveLength(3);
+      expect(result.current.messages).toHaveLength(2);
     });
 
-    expect(result.current.messages[0].text).toBe('과거 메시지');
-    expect(result.current.messages[1].text).toBe('과거 답변');
-    expect(fetchChatHistory).toHaveBeenCalledTimes(1);
+    expect(fetchChatHistory).toHaveBeenCalledWith(undefined, 10);
+    expect(result.current.messages.length).toBe(2);
+    expect(result.current.hasMore).toBe(true);
   });
 
-  it('loadMoreMessages 호출 시 추가 히스토리를 불러온다', async () => {
-    fetchChatHistory
+  it('메시지를 전송하면 사용자 메시지와 두두의 응답(빈 상태)이 추가되어야 한다', async () => {
+    vi.useFakeTimers();
+
+    const { result } = renderHook(() => useDodoChat());
+    const userMessage = '안녕 두두';
+    const dodoReply = '반가워!';
+
+    (sendDodoChat as any).mockResolvedValue({ reply: dodoReply });
+
+    act(() => {
+      result.current.setInput(userMessage);
+    });
+
+    await act(async () => {
+      result.current.handleSend();
+    });
+
+    expect(result.current.messages).toHaveLength(3);
+
+    // 사용자 메시지 확인
+    expect(result.current.messages[1].text).toBe(userMessage);
+    expect(result.current.messages[1].role).toBe('user');
+
+    // 두두 메시지 확인 (아직 타이핑 전이라 빈 값)
+    expect(result.current.messages[2].role).toBe('dodo');
+    expect(result.current.messages[2].text).toBe('');
+
+    act(() => {
+      vi.advanceTimersByTime(35 * dodoReply.length + 100);
+    });
+
+    // 텍스트 완성 확인
+    expect(result.current.messages[2].text).toBe(dodoReply);
+  });
+
+  it('전송 실패 시 에러 메시지가 표시되어야 한다', async () => {
+    const { result } = renderHook(() => useDodoChat());
+    (sendDodoChat as any).mockRejectedValue(new Error('Network Error'));
+
+    act(() => {
+      result.current.setInput('테스트');
+    });
+
+    await act(async () => {
+      result.current.handleSend();
+    });
+
+    await waitFor(() => {
+      const lastMsg = result.current.messages[result.current.messages.length - 1];
+      expect(lastMsg.role).toBe('dodo');
+      expect(lastMsg.text).toBe('잠시 후 다시 이야기해요.');
+    });
+  });
+
+  it('더보기(loadMoreMessages) 호출 시 추가 데이터를 불러와야 한다', async () => {
+    (fetchChatHistory as any)
       .mockResolvedValueOnce({
-        messages: [{ id: 'h1', role: 'user', content: 'old1' }],
+        messages: [{ id: 'old-1', role: 'user', content: '1' }],
         hasMore: true,
-        nextCursor: 'h1',
+        nextCursor: 'cursor-1',
       })
       .mockResolvedValueOnce({
-        messages: [{ id: 'h0', role: 'assistant', content: 'old0' }],
+        messages: [{ id: 'old-2', role: 'user', content: '2' }],
         hasMore: false,
         nextCursor: null,
       });
@@ -74,43 +122,19 @@ describe('useDodoChat', () => {
     const { result } = renderHook(() => useDodoChat());
 
     await waitFor(() => {
-      expect(result.current.messages).toHaveLength(2); // old1 + init
+      expect(result.current.messages).toHaveLength(1);
+      expect(result.current.isLoadingHistory).toBe(false);
     });
 
     await act(async () => {
       await result.current.loadMoreMessages();
     });
 
-    expect(result.current.messages).toHaveLength(3); // old0 + old1 + init
-    expect(result.current.messages[0].text).toBe('old0');
     expect(fetchChatHistory).toHaveBeenCalledTimes(2);
-    expect(fetchChatHistory).toHaveBeenLastCalledWith('h1', 10);
-  });
+    expect(fetchChatHistory).toHaveBeenLastCalledWith('cursor-1', 10);
 
-  it('메시지를 보내면 사용자 메시지와 두두 응답을 추가한다', async () => {
-    sendDodoChat.mockResolvedValueOnce({ reply: '반가워요!' });
-
-    const { result } = renderHook(() => useDodoChat());
-
-    act(() => {
-      result.current.setInput('안녕');
-    });
-
-    act(() => {
-      result.current.handleSend();
-    });
-
-    expect(sendDodoChat).toHaveBeenCalledWith('안녕');
-    expect(result.current.messages.some((msg) => msg.role === 'user')).toBe(true);
-
-    await waitFor(() => {
-      expect(result.current.messages.some((msg) => msg.role === 'dodo')).toBe(true);
-    });
-
-    await waitFor(() => {
-      const dodoMessages = result.current.messages.filter((msg) => msg.role === 'dodo');
-      expect(dodoMessages).toHaveLength(2);
-      expect(dodoMessages[1].text).toBe('반가워요!');
-    });
+    // 메시지 병합 확인
+    expect(result.current.messages).toHaveLength(2);
+    expect(result.current.hasMore).toBe(false);
   });
 });

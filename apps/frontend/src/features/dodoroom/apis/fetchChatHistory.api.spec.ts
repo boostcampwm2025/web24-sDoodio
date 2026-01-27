@@ -1,63 +1,76 @@
-import { describe, expect, it, vi, beforeEach, afterEach, type Mock } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { fetchChatHistory } from './fetchChatHistory.api';
 
-describe('fetchChatHistory', () => {
-  const result = {
-    messages: [
-      {
-        id: '55555555-5555-4555-8555-555555555555',
-        role: 'user',
-        content: 'hello',
-      },
-    ],
-    hasMore: false,
-    nextCursor: null,
-  };
+vi.mock('@web24/shared', () => ({
+  DodoChatHistoryResponseSchema: {
+    parse: (data: any) => data, // 검증 통과 가정
+  },
+}));
+
+describe('fetchChatHistory API', () => {
+  // fetch 모킹
+  const fetchMock = vi.fn();
+  globalThis.fetch = fetchMock;
 
   beforeEach(() => {
-    global.fetch = vi.fn();
+    fetchMock.mockClear();
   });
 
   afterEach(() => {
-    vi.clearAllMocks();
+    vi.restoreAllMocks();
   });
 
-  it('채팅 히스토리를 불러온다', async () => {
-    (global.fetch as Mock).mockResolvedValue({
+  it('기본 파라미터(limit=10)로 API를 호출해야 한다', async () => {
+    // Mock response
+    const mockResponse = {
+      messages: [],
+      hasMore: false,
+      nextCursor: null,
+    };
+
+    fetchMock.mockResolvedValue({
       ok: true,
-      json: vi.fn().mockResolvedValue(result),
+      json: async () => mockResponse,
     });
 
-    const response = await fetchChatHistory();
+    const result = await fetchChatHistory();
 
-    expect(response).toEqual(result);
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/api/chat/history'),
-      expect.objectContaining({ method: 'GET' }),
-    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, options] = fetchMock.mock.calls[0];
+
+    expect(url).toContain('/api/chat/history');
+    expect(url).toContain('limit=10'); // 기본값 확인
+    expect(options.method).toBe('GET');
+
+    expect(result).toEqual(mockResponse);
   });
 
-  it('커서와 리미트를 포함해서 호출한다', async () => {
-    (global.fetch as Mock).mockResolvedValue({
+  it('cursor와 limit 파라미터를 포함하여 API를 호출해야 한다', async () => {
+    const cursor = 'msg-123';
+    const limit = 20;
+    const mockResponse = {
+      messages: [{ id: 'msg-123', content: 'test', role: 'user' }],
+      hasMore: true,
+      nextCursor: 'msg-100',
+    };
+
+    fetchMock.mockResolvedValue({
       ok: true,
-      json: vi.fn().mockResolvedValue(result),
+      json: async () => mockResponse,
     });
 
-    await fetchChatHistory('cursor-1', 20);
+    await fetchChatHistory(cursor, limit);
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('cursor=cursor-1'),
-      expect.anything(),
-    );
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('limit=20'),
-      expect.anything(),
-    );
+    const [url] = fetchMock.mock.calls[0];
+
+    expect(url).toContain(`cursor=${cursor}`);
+    expect(url).toContain(`limit=${limit}`);
   });
 
-  it('API 호출 실패 시 에러를 던진다', async () => {
-    (global.fetch as Mock).mockResolvedValue({
+  it('API 응답이 실패하면 에러를 던져야 한다', async () => {
+    fetchMock.mockResolvedValue({
       ok: false,
+      status: 500,
     });
 
     await expect(fetchChatHistory()).rejects.toThrow('Failed to fetch chat history');
