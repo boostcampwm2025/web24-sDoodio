@@ -70,7 +70,16 @@ export function IndexPage() {
 
   const handleRewardInteraction = (templateId?: string) => {
     const lines = (templateId && REWARD_LINES[templateId]) || REWARD_LINES.default;
-    const rewardQuote = getRandomElement(lines) || '';
+    let rewardQuote = getRandomElement(lines) || '';
+    if (lines.length > 1 && rewardQuote === quote) {
+      let nextQuote = rewardQuote;
+      let attempts = 0;
+      while (nextQuote === quote && attempts < 5) {
+        nextQuote = getRandomElement(lines) || '';
+        attempts += 1;
+      }
+      rewardQuote = nextQuote;
+    }
 
     useDodoChatStore.getState().setQuote(rewardQuote);
     if (!isHeroVisible) {
