@@ -90,6 +90,7 @@ export function AccumulatedBehaviorStats({
             sortByValue
             arcLabel="label"
             arcLabelsTextColor="#252322"
+            theme={{ labels: { text: { fontWeight: 800 } } }}
             enableArcLinkLabels={false}
             activeOuterRadiusOffset={8}
             // colors={(item) => item.data.color}
