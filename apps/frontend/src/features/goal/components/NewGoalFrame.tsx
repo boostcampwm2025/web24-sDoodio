@@ -40,6 +40,7 @@ export function NewGoalFrame({
   const isProgressShown = progressSteps.includes(currentStep.step);
 
   const currentDialogue = currentStep.dialogue[dialogueIdx] || '';
+  const hasMultipleDialogues = currentStep.dialogue.length > 1;
   const isFirstDialogue = dialogueIdx <= 0;
   const isLastDialogue = dialogueIdx >= currentStep.dialogue.length - 1;
 
@@ -141,16 +142,20 @@ export function NewGoalFrame({
           {/* 말풍선 */}
           {/* TODO: 타이핑 효과 넣기 */}
           <div className="relative mb-2 flex w-full flex-col items-center md:mb-6 lg:mb-12">
-            <div className="bg-bg-alternative relative flex min-h-16 w-full max-w-xs items-center justify-center rounded-3xl px-6 shadow-sm md:min-h-28 md:max-w-sm md:rounded-4xl lg:min-h-50">
+            <div
+              className={`bg-bg-alternative relative flex min-h-16 w-full max-w-xs items-center justify-center rounded-3xl px-6 shadow-sm md:min-h-28 md:max-w-sm md:rounded-4xl lg:min-h-50 ${
+                hasMultipleDialogues ? 'pr-8 pb-6 md:pr-12' : ''
+              }`}
+            >
               <p
-                className={`text-label-normal text-body-1 md:text-headline-1 lg:text-heading-2 text-center leading-relaxed font-bold break-keep whitespace-pre-line transition-opacity duration-300 ${
+                className={`text-label-normal md:text-headline-1 lg:text-heading-2 text-center text-sm leading-relaxed font-bold break-keep whitespace-pre-line transition-opacity duration-300 ${
                   isDialogueVisible ? 'opacity-100' : 'opacity-0'
                 }`}
               >
                 {currentDialogue}
               </p>
-              {currentStep.dialogue.length > 1 && (
-                <div className="absolute top-4 right-4 flex items-center gap-1">
+              {hasMultipleDialogues && (
+                <div className="absolute right-2 bottom-2 flex items-center gap-1">
                   {/* 이전 대사 전환 버튼 */}
                   <button
                     type="button"
