@@ -15,8 +15,8 @@ export default defineConfig({
     VitePWA({
       injectRegister: 'auto',
       manifest: {
-        name: 'web24-boostcamp',
-        short_name: 'web24',
+        name: '뚜웰',
+        short_name: '뚜웰',
         id: '/',
         start_url: '/',
         scope: '/',

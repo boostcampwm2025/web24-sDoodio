@@ -27,7 +27,7 @@ export const openApiDocument: OpenApiDocument = new OpenApiGeneratorV3(
 ).generateDocument({
   openapi: '3.0.0',
   info: {
-    title: 'Web24 API',
+    title: '뚜웰 API',
     version: '0.0.0',
   },
   servers: [{ url: '/api' }],
