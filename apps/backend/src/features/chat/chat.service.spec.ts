@@ -12,6 +12,7 @@ describe('ChatService', () => {
     find: jest.fn(),
     create: jest.fn((value) => value),
     save: jest.fn((value) => value),
+    createQueryBuilder: jest.mock,
   };
   const userRepository = {
     findOne: jest.fn(),
@@ -97,5 +98,70 @@ describe('ChatService', () => {
     ]);
 
     expect(result).toEqual({ reply: '반가워요!' });
+  });
+
+  describe('getDodoChatHistory', () => {
+    it('유저가 없으면 에러를 던진다', async () => {
+      userRepository.findOne.mockResolvedValue(null);
+      await expect(service.getDodoChatHistory('user-1')).rejects.toThrow('User not found');
+    });
+
+    it('히스토리를 반환한다 (더보기 없음)', async () => {
+      userRepository.findOne.mockResolvedValue({ id: 'user-1' });
+
+      const mockMessages = [
+        { id: 1, role: DODO_CHAT_ROLE.USER, content: 'msg1' },
+        { id: 2, role: DODO_CHAT_ROLE.ASSISTANT, content: 'msg2' },
+      ];
+      const queryBuilder: any = {
+        where: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue(mockMessages),
+      };
+
+      dodoChatRepository.createQueryBuilder = jest.fn().mockReturnValue(queryBuilder);
+
+      const result = await service.getDodoChatHistory('user-1', undefined, 10);
+
+      expect(queryBuilder.take).toHaveBeenCalledWith(11);
+      expect(result).toEqual({
+        messages: mockMessages.map((msg) => ({
+          id: msg.id,
+          role: msg.role,
+          content: msg.content,
+        })),
+        hasMore: false,
+        nextCursor: null,
+      });
+    });
+
+    it('히스토리를 반환한다 (더보기 있음)', async () => {
+      userRepository.findOne.mockResolvedValue({ id: 'user-1' });
+
+      const mockMessages = Array(11)
+        .fill(null)
+        .map((_, i) => ({
+          id: i + 1,
+          role: DODO_CHAT_ROLE.USER,
+          content: `msg${i + 1}`,
+        }));
+      const queryBuilder: any = {
+        where: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue(mockMessages),
+      };
+
+      dodoChatRepository.createQueryBuilder = jest.fn().mockReturnValue(queryBuilder);
+
+      const result = await service.getDodoChatHistory('user-1', undefined, 10);
+
+      expect(result.hasMore).toBe(true);
+      expect(result.messages.length).toBe(10);
+      expect(result.nextCursor).toBe(10); // 10th item's ID
+    });
   });
 });

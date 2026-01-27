@@ -7,10 +7,12 @@ describe('ChatController', () => {
   let controller: ChatController;
   const service = {
     getDodoChat: jest.fn(),
+    getDodoChatHistory: jest.fn(),
   };
 
   beforeEach(async () => {
     service.getDodoChat.mockReset();
+    service.getDodoChatHistory.mockReset();
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ChatController],
@@ -32,5 +34,20 @@ describe('ChatController', () => {
 
     expect(service.getDodoChat).toHaveBeenCalledWith('user-1', '안녕');
     expect(result).toEqual({ reply: '반가워요!' });
+  });
+
+  it('getDodoChatHistory는 서비스 결과를 반환한다', async () => {
+    const mockResponse = {
+      messages: [],
+      hasMore: false,
+      nextCursor: null,
+    };
+
+    service.getDodoChatHistory = jest.fn().mockResolvedValue(mockResponse);
+
+    const result = await controller.getDodoChatHistory('user-1', { limit: 10 });
+
+    expect(service.getDodoChatHistory).toHaveBeenCalledWith('user-1', undefined, 10);
+    expect(result).toEqual(mockResponse);
   });
 });

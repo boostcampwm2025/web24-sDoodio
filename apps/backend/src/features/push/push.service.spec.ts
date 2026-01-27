@@ -241,4 +241,55 @@ describe('PushService', () => {
       expect(result).toEqual({ sent: 0, failed: 1, removed: 0 });
     });
   });
+
+  describe('Scheduled Pushes', () => {
+    let mockQueryBuilder: any;
+
+    beforeEach(() => {
+      mockQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        distinctOn: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([]),
+      };
+      pushSubscriptionRepository.createQueryBuilder = jest.fn().mockReturnValue(mockQueryBuilder);
+    });
+
+    describe('handleLunchPush', () => {
+      it('점심 푸시를 전송한다', async () => {
+        const mockUser = { id: 'user-1' };
+        mockQueryBuilder.getMany.mockResolvedValue([{ user: mockUser }]);
+        jest.spyOn(service, 'sendToUser').mockResolvedValue({ sent: 1, failed: 0, removed: 0 });
+
+        await service.handleLunchPush();
+
+        expect(pushSubscriptionRepository.createQueryBuilder).toHaveBeenCalled();
+        expect(service.sendToUser).toHaveBeenCalledWith(
+          'user-1',
+          expect.objectContaining({
+            title: '두두의 메세지',
+            url: '/dodo-room',
+          }),
+        );
+      });
+    });
+
+    describe('handleEveningPush', () => {
+      it('저녁 푸시를 전송한다', async () => {
+        const mockUser = { id: 'user-1' };
+        mockQueryBuilder.getMany.mockResolvedValue([{ user: mockUser }]);
+        jest.spyOn(service, 'sendToUser').mockResolvedValue({ sent: 1, failed: 0, removed: 0 });
+
+        await service.handleEveningPush();
+
+        expect(pushSubscriptionRepository.createQueryBuilder).toHaveBeenCalled();
+        expect(service.sendToUser).toHaveBeenCalledWith(
+          'user-1',
+          expect.objectContaining({
+            title: '두두의 메세지',
+            url: '/dodo-room',
+          }),
+        );
+      });
+    });
+  });
 });
