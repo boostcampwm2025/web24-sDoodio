@@ -189,6 +189,15 @@ DB_PORT=5432
 DB_USER=your_db_username
 DB_PASS=your_db_password
 DB_NAME=your_db_name
+# Session
+SESSION_SECRET=session secret key
+SESSION_MAX_AGE_MS=session cookie max age in ms, 예: 604800000 -> 7일
+# CLOVA Studio API Key
+CLOVA_API_KEY=clova api
+# VAPID Key
+VAPID_PUBLIC_KEY=pnpm dlx web-push generate-vapid-keys
+VAPID_PRIVATE_KEY=pnpm dlx web-push generate-vapid-keys
+VAPID_SUBJECT=mailto:admin-example@web24.app
 ```
 
 ---
