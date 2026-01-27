@@ -5,14 +5,14 @@ type CommonSchemas = {
   errorResponse: ReturnType<OpenAPIRegistry['register']>;
 };
 
-export function registerAIApi(registry: OpenAPIRegistry, common: CommonSchemas) {
+export function registerChatApi(registry: OpenAPIRegistry, common: CommonSchemas) {
   const dodoChatRequest = registry.register('DodoChatRequest', DodoChatRequestSchema);
   const dodoChatResponse = registry.register('DodoChatResponse', DodoChatResponseSchema);
   const { errorResponse } = common;
 
   registry.registerPath({
     method: 'post',
-    path: '/ai/chat',
+    path: '/chat',
     request: {
       body: {
         content: {

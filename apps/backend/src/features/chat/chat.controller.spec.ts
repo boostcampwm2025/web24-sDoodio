@@ -1,10 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 
-import { AIController } from './ai.controller';
-import { AIService } from './ai.service';
+import { ChatController } from './chat.controller';
+import { ChatService } from './chat.service';
 
 describe('AIController', () => {
-  let controller: AIController;
+  let controller: ChatController;
   const service = {
     getDodoChat: jest.fn(),
   };
@@ -13,16 +13,16 @@ describe('AIController', () => {
     service.getDodoChat.mockReset();
 
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [AIController],
+      controllers: [ChatController],
       providers: [
         {
-          provide: AIService,
+          provide: ChatService,
           useValue: service,
         },
       ],
     }).compile();
 
-    controller = module.get<AIController>(AIController);
+    controller = module.get<ChatController>(ChatController);
   });
 
   it('getDodoChat은 서비스 결과를 반환한다', async () => {

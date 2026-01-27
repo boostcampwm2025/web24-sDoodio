@@ -3,18 +3,18 @@ import { SessionAuthGuard } from 'src/common/guards/session-auth.guard';
 import { UserId } from 'src/common/decorators/user-id.decorator';
 import { ZodValidationPipe } from 'src/common/pipes/zod-validation.pipe';
 import { DodoChatRequestSchema, type DodoChatRequest, type DodoChatResponse } from '@web24/shared';
-import { AIService } from './ai.service';
+import { ChatService } from './chat.service';
 
-@Controller('ai')
+@Controller('chat')
 @UseGuards(SessionAuthGuard)
-export class AIController {
-  constructor(private readonly aiService: AIService) {}
+export class ChatController {
+  constructor(private readonly chatService: ChatService) {}
 
-  @Post('chat')
+  @Post()
   async getDodoChat(
     @UserId() userId: string,
     @Body(new ZodValidationPipe(DodoChatRequestSchema)) body: DodoChatRequest,
   ): Promise<DodoChatResponse> {
-    return this.aiService.getDodoChat(userId, body.message);
+    return this.chatService.getDodoChat(userId, body.message);
   }
 }

@@ -1,10 +1,7 @@
-import { Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
+import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { InjectRepository } from '@nestjs/typeorm';
-import type { Repository } from 'typeorm';
 import { Goal } from '../goal/goal.entity';
-import { DodoChatMessage, DODO_CHAT_ROLE } from './dodo-chat-message.entity';
-import { User } from '../user/user.entity';
+import { DodoChatMessage } from '../chat/dodo-chat-message.entity';
 
 type ClovaChatResponse = {
   status: {
@@ -42,15 +39,7 @@ type AIBehaviorRecommendation = {
 export class AIService {
   private readonly logger = new Logger(AIService.name);
 
-  private static readonly CHAT_HISTORY_LIMIT = 12;
-
-  constructor(
-    private readonly configService: ConfigService,
-    @InjectRepository(DodoChatMessage)
-    private readonly dodoChatRepository: Repository<DodoChatMessage>,
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
-  ) {}
+  constructor(private readonly configService: ConfigService) {}
 
   async getAIBehaviorTitles(goal: Goal): Promise<string[]> {
     const goalTitle = goal.title;
@@ -165,18 +154,7 @@ JSON 외의 설명, 문장, 코드블록, 주석은 **절대 출력하지 마**.
     }
   }
 
-  async getDodoChat(userId: string, message: string) {
-    const user = await this.userRepository.findOne({ where: { id: userId } });
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    const history = await this.dodoChatRepository.find({
-      where: { user: { id: userId } },
-      order: { createdAt: 'DESC' },
-      take: AIService.CHAT_HISTORY_LIMIT,
-    });
-
+  async createDodoMessage(history: DodoChatMessage[], message: string) {
     const systemPrompt =
       '너는 행동 기록 서비스 "뚜웰"에서 사용자에게 친근하고 따뜻하게 응답하는 캐릭터 "두두"야. ' +
       '반말을 사용하고, 과하지 않은 말투로 짧고 긍정적으로 응답해줘.' +
@@ -222,19 +200,6 @@ JSON 외의 설명, 문장, 코드블록, 주석은 **절대 출력하지 마**.
     const responseJson = (await response.json()) as ClovaChatResponse;
     const reply = responseJson.result.message.content;
 
-    await this.dodoChatRepository.save([
-      this.dodoChatRepository.create({
-        user,
-        role: DODO_CHAT_ROLE.USER,
-        content: message,
-      }),
-      this.dodoChatRepository.create({
-        user,
-        role: DODO_CHAT_ROLE.ASSISTANT,
-        content: reply,
-      }),
-    ]);
-
-    return { reply };
+    return reply;
   }
 }

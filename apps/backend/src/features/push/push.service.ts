@@ -12,7 +12,7 @@ import type {
 } from '@web24/shared';
 import { User } from '../user/user.entity';
 import { PushSubscriptionEntity } from './push-subscription.entity';
-import { DodoChatMessage, DODO_CHAT_ROLE } from '../ai/dodo-chat-message.entity';
+import { DodoChatMessage, DODO_CHAT_ROLE } from '../chat/dodo-chat-message.entity';
 import { DODO_PUSH_MESSAGES, type DodoPushType } from './push.constants';
 
 @Injectable()

@@ -8,6 +8,7 @@ import type { PushSubscription, SendPushNotificationRequest } from '@web24/share
 import { PushService } from './push.service';
 import { PushSubscriptionEntity } from './push-subscription.entity';
 import { User } from '../user/user.entity';
+import { DodoChatMessage } from '../chat/dodo-chat-message.entity';
 
 jest.mock('web-push', () => ({
   __esModule: true,
@@ -60,6 +61,16 @@ describe('PushService', () => {
           useValue: {
             findOne: jest.fn(),
             findOneBy: jest.fn(),
+          },
+        },
+        {
+          provide: getRepositoryToken(DodoChatMessage),
+          useValue: {
+            find: jest.fn(),
+            findOne: jest.fn(),
+            save: jest.fn(),
+            create: jest.fn(),
+            remove: jest.fn(),
           },
         },
       ],
