@@ -45,7 +45,7 @@ export const useDodoChat = () => {
       const response = await fetchChatHistory(nextCursor ?? undefined, 10);
 
       if (response.messages.length > 0) {
-        const historyMessages: Message[] = response.messages.toReversed().map((msg) => ({
+        const historyMessages: Message[] = [...response.messages].reverse().map((msg) => ({
           id: msg.id,
           role: msg.role === 'assistant' ? 'dodo' : 'user',
           text: msg.content,
