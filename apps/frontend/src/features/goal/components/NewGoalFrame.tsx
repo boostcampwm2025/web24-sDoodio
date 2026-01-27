@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export interface NewGoalFrameStep {
@@ -31,6 +31,7 @@ export function NewGoalFrame({
   const [dialogueIdx, setDialogueIdx] = useState(0);
   const [isDialogueVisible, setIsDialogueVisible] = useState(true);
   const [resetTimer, setResetTimer] = useState(0);
+  const changeDialogueTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentStep = steps[currStepIdx];
   const isFirstStep = currStepIdx === 0;
@@ -73,6 +74,15 @@ export function NewGoalFrame({
       }
     };
   }, [dialogueIdx, isLastDialogue, resetTimer]);
+
+  useEffect(
+    () => () => {
+      if (changeDialogueTimerRef.current) {
+        clearTimeout(changeDialogueTimerRef.current);
+      }
+    },
+    [],
+  );
 
   const animationStyles = {
     next: '-translate-x-full opacity-0',
@@ -117,7 +127,10 @@ export function NewGoalFrame({
 
   const changeDialogue = (targetIdx: number) => {
     setIsDialogueVisible(false);
-    setTimeout(() => {
+    if (changeDialogueTimerRef.current) {
+      clearTimeout(changeDialogueTimerRef.current);
+    }
+    changeDialogueTimerRef.current = setTimeout(() => {
       setDialogueIdx(targetIdx);
       setIsDialogueVisible(true);
       setResetTimer((prev) => prev + 1);
