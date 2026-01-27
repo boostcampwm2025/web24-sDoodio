@@ -1,6 +1,16 @@
 @import 'tailwindcss';
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css');
 
+:root {
+  --header-h: 56px;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --header-h: 96px;
+  }
+}
+
 @theme {
   /* ===== Typography ===== */
   /* Font Family */

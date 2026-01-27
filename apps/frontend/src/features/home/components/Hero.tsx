@@ -6,7 +6,7 @@ interface HeroProps {
 
 export function Hero({ quote }: HeroProps) {
   return (
-    <section className="animate-fade-in mb-10 w-full">
+    <section className="animate-fade-in w-full">
       <DodoChat quote={quote} />
     </section>
   );

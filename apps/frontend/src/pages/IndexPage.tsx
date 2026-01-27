@@ -19,6 +19,7 @@ import type { GetGoalSummary } from '@web24/shared';
 import { getRandomElement } from '@/shared/utils/random';
 import useAuthStore from '@/stores/useAuthStore';
 import { useAutoWebPushSubscribe } from '@/features/push/hooks/useAutoWebPushSubscribe';
+import { useScroll } from '@/shared/hooks/useScroll';
 
 export function IndexPage() {
   const [behaviors, setBehaviors] = useState<Behavior[]>([]);
@@ -33,17 +34,31 @@ export function IndexPage() {
   const showToast = useDodoToast();
   const heroRef = useRef<HTMLDivElement>(null);
   const [isHeroVisible, setIsHeroVisible] = useState(true);
+  const isScrolled = useScroll(10);
+  const [isDesktop, setIsDesktop] = useState(false);
 
   const { user } = useAuthStore();
   useAutoWebPushSubscribe({ enabled: !!user, mode: 'silent' });
 
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 768px)');
+    const update = () => setIsDesktop(media.matches);
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
+
   // Hero 섹션 보이는지 확인
   useEffect(() => {
+    const headerHeightValue = getComputedStyle(document.documentElement)
+      .getPropertyValue('--header-h')
+      .trim();
+    const headerHeight = Number.parseFloat(headerHeightValue) || 0;
     const observer = new IntersectionObserver(
       ([entry]) => {
         setIsHeroVisible(entry.isIntersecting);
       },
-      { threshold: 0.1 },
+      { threshold: 0.1, rootMargin: `-${headerHeight}px 0px 0px 0px` },
     );
 
     if (heroRef.current) {
@@ -51,15 +66,14 @@ export function IndexPage() {
     }
 
     return () => observer.disconnect();
-  }, []);
+  }, [isDesktop, isScrolled]);
 
   const handleRewardInteraction = (templateId?: string) => {
     const lines = (templateId && REWARD_LINES[templateId]) || REWARD_LINES.default;
     const rewardQuote = getRandomElement(lines) || '';
 
-    if (isHeroVisible) {
-      useDodoChatStore.getState().setQuote(rewardQuote);
-    } else {
+    useDodoChatStore.getState().setQuote(rewardQuote);
+    if (!isHeroVisible) {
       showToast(rewardQuote, { position: 'top' });
     }
   };
@@ -151,7 +165,7 @@ export function IndexPage() {
   return (
     <div className="bg-bg-normal mx-auto flex max-w-5xl flex-col pt-2">
       {/* 두두의 말 */}
-      <div ref={heroRef}>
+      <div ref={heroRef} className="mb-10">
         <Hero quote={quote} />
       </div>
 
