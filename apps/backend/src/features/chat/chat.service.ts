@@ -66,6 +66,7 @@ export class ChatService {
     const messages = await queryBuilder.getMany();
     const hasMore = messages.length > limit;
     const resultMessages = hasMore ? messages.slice(0, limit) : messages;
+    const lastMessageId = resultMessages.at(-1)?.id ?? null;
 
     return {
       messages: resultMessages.map((msg) => ({
@@ -74,7 +75,7 @@ export class ChatService {
         content: msg.content,
       })),
       hasMore,
-      nextCursor: hasMore ? resultMessages[resultMessages.length - 1].id : null,
+      nextCursor: hasMore ? lastMessageId : null,
     };
   }
 }
