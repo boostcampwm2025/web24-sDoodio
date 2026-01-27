@@ -9,7 +9,6 @@ import { BehaviorSelection, type BehaviorItem } from '@/features/goal/components
 import { NewGoal } from '@/features/goal/components/NewGoal';
 import { createGoal } from '@/features/goal/apis/createGoal.api';
 import { v7 } from 'uuid';
-import { toast } from 'react-toastify';
 import { SummaryView } from '@/features/goal/components/SummaryView';
 
 export function NewGoalPage() {
@@ -208,13 +207,6 @@ export function NewGoalPage() {
   };
 
   const handleComplete = async () => {
-    const isDemoBlocked = import.meta.env.VITE_DEMO_LOCK_CREATE_GOAL === 'true';
-    if (isDemoBlocked) {
-      toast('구현중입니다.');
-      navigate('/', { replace: true });
-      return;
-    }
-
     const buildBehaviors = (difficulty: BehaviorDifficulty, behaviors: BehaviorItem[]) =>
       behaviors
         .map((behavior) => ({
