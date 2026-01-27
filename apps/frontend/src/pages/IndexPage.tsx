@@ -41,7 +41,7 @@ export function IndexPage() {
   useAutoWebPushSubscribe({ enabled: !!user, mode: 'silent' });
 
   useEffect(() => {
-    const media = window.matchMedia('(min-width: 768px)');
+    const media = globalThis.matchMedia('(min-width: 768px)');
     const update = () => setIsDesktop(media.matches);
     update();
     media.addEventListener('change', update);
