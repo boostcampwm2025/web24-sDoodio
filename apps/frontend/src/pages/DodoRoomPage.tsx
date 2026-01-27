@@ -6,13 +6,23 @@ import { useDodoChat } from '@/features/dodoroom/hooks/useDodoChat';
 
 export function DodoRoomPage() {
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
-  const { messages, input, setInput, canSend, latestDodoMessage, handleSend } = useDodoChat();
+  const {
+    messages,
+    input,
+    setInput,
+    canSend,
+    latestDodoMessage,
+    handleSend,
+    loadMoreMessages,
+    isLoadingHistory,
+    hasMore,
+  } = useDodoChat();
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col px-4 py-4">
-      <div className="flex h-100 flex-col gap-4 md:h-auto md:flex-row">
+      <div className="flex h-100 flex-col gap-4 md:h-[55vh] md:flex-row">
         <section
-          className="relative flex max-h-[55vh] flex-1 items-center justify-center overflow-hidden rounded-3xl border border-transparent bg-cover bg-center p-4 md:h-150 md:max-h-none md:min-w-92"
+          className="relative flex max-h-[55vh] flex-1 items-center justify-center overflow-hidden rounded-3xl border border-transparent bg-cover bg-center p-4 md:min-w-92"
           style={{ backgroundImage: "url('/BlueAndWhiteRoom.png')" }}
         >
           <div className="absolute inset-0" />
@@ -26,11 +36,14 @@ export function DodoRoomPage() {
           </div>
         </section>
 
-        <section className="border-primary-weak/60 bg-bg-light/80 hidden w-full max-w-md flex-col gap-4 rounded-3xl border p-4 md:flex">
+        <section className="border-primary-weak/60 bg-bg-light/80 hidden min-h-0 w-full max-w-md flex-col gap-4 rounded-3xl border p-4 md:flex">
           <div className="text-label-normal text-sm font-semibold">채팅</div>
-          <div className="flex-1">
-            <ChatMessages messages={messages} />
-          </div>
+          <ChatMessages
+            messages={messages}
+            onLoadMore={loadMoreMessages}
+            isLoading={isLoadingHistory}
+            hasMore={hasMore}
+          />
           <ChatInput value={input} canSend={canSend} onChange={setInput} onSend={handleSend} />
         </section>
       </div>
@@ -54,7 +67,7 @@ export function DodoRoomPage() {
             className="absolute inset-0 bg-black/30"
             onClick={() => setIsMobileSheetOpen(false)}
           />
-          <div className="border-primary-weak/60 bg-bg-light relative z-10 flex h-[60vh] w-full flex-col gap-4 rounded-t-3xl border p-4">
+          <div className="border-primary-weak/60 bg-bg-light relative z-10 flex h-[60vh] min-h-0 w-full flex-col gap-4 rounded-t-3xl border p-4">
             <div className="flex items-center justify-between">
               <span className="text-label-normal text-sm font-semibold">채팅</span>
               <button
@@ -65,9 +78,12 @@ export function DodoRoomPage() {
                 닫기
               </button>
             </div>
-            <div className="flex-1">
-              <ChatMessages messages={messages} />
-            </div>
+            <ChatMessages
+              messages={messages}
+              onLoadMore={loadMoreMessages}
+              isLoading={isLoadingHistory}
+              hasMore={hasMore}
+            />
             <ChatInput value={input} canSend={canSend} onChange={setInput} onSend={handleSend} />
           </div>
         </div>

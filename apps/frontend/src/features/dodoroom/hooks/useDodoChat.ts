@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { sendDodoChat } from '@/features/dodoroom/apis/sendDodoChat.api';
+import { fetchChatHistory } from '@/features/dodoroom/apis/fetchChatHistory.api';
 import type { Message } from '@/features/dodoroom/types/dodo-chat.types';
 
 const INITIAL_MESSAGES: Message[] = [
   {
     id: 'msg-1',
     role: 'dodo',
-    text: '안녕하세요! 전 두두에요',
+    text: '안녕! 난 두두야.',
   },
 ];
 
@@ -24,13 +25,53 @@ const createMessageId = () => {
 export const useDodoChat = () => {
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
   const [input, setInput] = useState('');
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const typingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isInitialLoadRef = useRef(true);
 
   const canSend = input.trim().length > 0;
   const latestDodoMessage = useMemo(
     () => [...messages].reverse().find((message) => message.role === 'dodo'),
     [messages],
   );
+
+  const loadMoreMessages = useCallback(async () => {
+    if (isLoadingHistory || !hasMore) return;
+
+    setIsLoadingHistory(true);
+    try {
+      const response = await fetchChatHistory(nextCursor ?? undefined, 10);
+
+      if (response.messages.length > 0) {
+        const historyMessages: Message[] = response.messages.reverse().map((msg) => ({
+          id: msg.id,
+          role: msg.role === 'assistant' ? 'dodo' : 'user',
+          text: msg.content,
+        }));
+
+        setMessages((prev) => {
+          const filteredPrev = prev.filter((msg) => msg.id !== 'msg-1');
+          return [...historyMessages, ...filteredPrev];
+        });
+      }
+
+      setHasMore(response.hasMore);
+      setNextCursor(response.nextCursor);
+    } catch {
+      // 히스토리 로드 실패 시 조용히 처리
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  }, [isLoadingHistory, hasMore, nextCursor]);
+
+  useEffect(() => {
+    if (isInitialLoadRef.current) {
+      isInitialLoadRef.current = false;
+      loadMoreMessages();
+    }
+  }, [loadMoreMessages]);
 
   useEffect(
     () => () => {
@@ -92,5 +133,8 @@ export const useDodoChat = () => {
     canSend,
     latestDodoMessage,
     handleSend,
+    loadMoreMessages,
+    isLoadingHistory,
+    hasMore,
   };
 };

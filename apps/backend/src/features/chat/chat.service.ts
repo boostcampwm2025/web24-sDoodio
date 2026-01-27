@@ -46,4 +46,35 @@ export class ChatService {
 
     return { reply };
   }
+
+  async getDodoChatHistory(userId: string, cursor?: string, limit: number = 10) {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const queryBuilder = this.dodoChatRepository
+      .createQueryBuilder('message')
+      .where('message.userId = :userId', { userId })
+      .orderBy('message.id', 'DESC')
+      .take(limit + 1); // 더 있는지 확인하는 용도
+
+    if (cursor) {
+      queryBuilder.andWhere('message.id < :cursor', { cursor });
+    }
+
+    const messages = await queryBuilder.getMany();
+    const hasMore = messages.length > limit;
+    const resultMessages = hasMore ? messages.slice(0, limit) : messages;
+
+    return {
+      messages: resultMessages.map((msg) => ({
+        id: msg.id,
+        role: msg.role,
+        content: msg.content,
+      })),
+      hasMore,
+      nextCursor: hasMore ? resultMessages[resultMessages.length - 1].id : null,
+    };
+  }
 }
