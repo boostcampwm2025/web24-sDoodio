@@ -70,10 +70,10 @@ export function TodayBehaviorList({
           <button
             type="button"
             onClick={onRefresh}
-            className="text-label-disable hover:text-label-normal inline-flex items-center gap-1 text-sm font-semibold transition"
+            className="text-label-disable hover:text-label-normal hover:bg-primary-weak/30 inline-flex items-center gap-1 rounded-lg p-2 text-sm font-semibold transition"
           >
             <RefreshCw size={ICON_SIZE.xxs} />
-            새로고침
+            오늘의 행동 다시 뽑기
           </button>
         )}
       </div>
