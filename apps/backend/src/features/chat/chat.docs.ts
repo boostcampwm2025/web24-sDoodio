@@ -18,7 +18,7 @@ export function registerChatApi(registry: OpenAPIRegistry, common: CommonSchemas
     DodoChatHistoryRequestSchema,
   );
   const dodoChatHistoryResponse = registry.register(
-    'DodoCHatHistoryResponse',
+    'DodoChatHistoryResponse',
     DodoChatHistoryResponseSchema,
   );
   const { errorResponse } = common;

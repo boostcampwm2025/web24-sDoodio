@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ChatController } from './chat.controller';
 import { ChatService } from './chat.service';
 
-describe('AIController', () => {
+describe('ChatController', () => {
   let controller: ChatController;
   const service = {
     getDodoChat: jest.fn(),
