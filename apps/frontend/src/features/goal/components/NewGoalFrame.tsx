@@ -140,7 +140,11 @@ export function NewGoalFrame({
           {/* 두두 */}
           <div className="mt-auto flex w-full items-center justify-center lg:block">
             <div className="w-full max-w-24 md:max-w-40 lg:max-w-75">
-              <img src="/DodoSit.png" alt="앉은 두두" className="h-full w-full object-contain" />
+              <img
+                src="/DodoSitdown.png"
+                alt="앉은 두두"
+                className="h-full w-full object-contain"
+              />
             </div>
           </div>
         </div>
