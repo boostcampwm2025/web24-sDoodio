@@ -23,7 +23,7 @@ export function registerAIApi(registry: OpenAPIRegistry, common: CommonSchemas) 
       },
     },
     responses: {
-      200: {
+      201: {
         description: '두두 대화를 생성하고, 이를 반환',
         content: {
           'application/json': {
