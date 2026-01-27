@@ -29,7 +29,7 @@ export function NewGoalFrame({
   const [isExiting, setIsExiting] = useState(false);
   const [direction, setDirection] = useState<'next' | 'prev'>('next');
   const [dialogueIdx, setDialogueIdx] = useState(0);
-  const [dialogueFade, setDialogueFade] = useState(true);
+  const [isDialogueVisible, setIsDialogueVisible] = useState(true);
   const [resetTimer, setResetTimer] = useState(0);
 
   const currentStep = steps[currStepIdx];
@@ -45,7 +45,7 @@ export function NewGoalFrame({
 
   useEffect(() => {
     setDialogueIdx(0);
-    setDialogueFade(true);
+    setIsDialogueVisible(true);
     setResetTimer((prev) => prev + 1);
   }, [currStepIdx]);
 
@@ -54,11 +54,11 @@ export function NewGoalFrame({
 
     const transitionToNextDialogue = () => {
       setDialogueIdx((prev) => prev + 1);
-      setDialogueFade(true);
+      setIsDialogueVisible(true);
     };
 
     const startTransition = () => {
-      setDialogueFade(false);
+      setIsDialogueVisible(false);
       setTimeout(transitionToNextDialogue, 300);
     };
 
@@ -115,10 +115,10 @@ export function NewGoalFrame({
   };
 
   const changeDialogue = (targetIdx: number) => {
-    setDialogueFade(false);
+    setIsDialogueVisible(false);
     setTimeout(() => {
       setDialogueIdx(targetIdx);
-      setDialogueFade(true);
+      setIsDialogueVisible(true);
       setResetTimer((prev) => prev + 1);
     }, 300);
   };
@@ -144,7 +144,7 @@ export function NewGoalFrame({
             <div className="bg-bg-alternative relative flex min-h-16 w-full max-w-xs items-center justify-center rounded-3xl px-6 shadow-sm md:min-h-28 md:max-w-sm md:rounded-4xl lg:min-h-50">
               <p
                 className={`text-label-normal text-body-1 md:text-headline-1 lg:text-heading-2 text-center leading-relaxed font-bold break-keep whitespace-pre-line transition-opacity duration-300 ${
-                  dialogueFade ? 'opacity-100' : 'opacity-0'
+                  isDialogueVisible ? 'opacity-100' : 'opacity-0'
                 }`}
               >
                 {currentDialogue}
