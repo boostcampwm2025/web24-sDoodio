@@ -14,7 +14,7 @@ const INITIAL_MESSAGES: Message[] = [
 ];
 
 const TYPING_ANIMATION_INTERVAL = 35;
-const ANIMATION_DURATION_MS = 3000; // 3초
+const ANIMATION_DURATION_MS = 5000; // 5초
 
 const updateMessageText = (messages: Message[], id: string, text: string) =>
   messages.map((message) => (message.id === id ? { ...message, text } : message));
