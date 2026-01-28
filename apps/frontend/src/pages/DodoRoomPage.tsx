@@ -4,6 +4,8 @@ import { ChatMessages } from '@/features/dodoroom/components/ChatMessages';
 import { DodoSpeechBubble } from '@/features/dodoroom/components/DodoSpeechBubble';
 import { useDodoChat } from '@/features/dodoroom/hooks/useDodoChat';
 import { DodoCharacter } from '@/features/dodoroom/components/DodoCharacter';
+import { DODO_ACTION_VALUES } from '@web24/shared';
+import { DodoActionButton } from '@/features/dodoroom/components/DodoActionButton';
 
 export function DodoRoomPage() {
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
@@ -18,6 +20,7 @@ export function DodoRoomPage() {
     loadMoreMessages,
     isLoadingHistory,
     hasMore,
+    handleActionButton,
   } = useDodoChat();
 
   return (
@@ -31,6 +34,11 @@ export function DodoRoomPage() {
           <div className="relative z-10 flex h-full w-full items-end justify-center rounded-2xl pb-10">
             <DodoSpeechBubble text={latestDodoMessage?.text} />
             <DodoCharacter action={dodoAction} />
+          </div>
+          <div className="absolute bottom-4 left-4 z-20 flex flex-col gap-2">
+            {DODO_ACTION_VALUES.filter((v) => v !== 'None').map((action) => (
+              <DodoActionButton key={action} action={action} onClick={handleActionButton} />
+            ))}
           </div>
         </section>
 

@@ -3,6 +3,7 @@ import { sendDodoChat } from '@/features/dodoroom/apis/sendDodoChat.api';
 import { fetchChatHistory } from '@/features/dodoroom/apis/fetchChatHistory.api';
 import type { Message } from '@/features/dodoroom/types/dodo-chat.types';
 import { DODO_ACTIONS, type DodoAction } from '@web24/shared';
+import { DODO_ACTION_COMMAND_MAP } from '../constants/dodo-action';
 
 const INITIAL_MESSAGES: Message[] = [
   {
@@ -120,31 +121,42 @@ export const useDodoChat = () => {
     }, ANIMATION_DURATION_MS);
   }, []);
 
-  const handleSend = useCallback(() => {
-    const value = input.trim();
-    if (!value) return;
-    const userMessageId = createMessageId();
-    setMessages((prev) => [...prev, { id: userMessageId, role: 'user', text: value }]);
-    setInput('');
+  const handleSend = useCallback(
+    (command?: string) => {
+      const value = command ?? input.trim();
+      if (!value) return;
+      const userMessageId = createMessageId();
+      setMessages((prev) => [...prev, { id: userMessageId, role: 'user', text: value }]);
+      setInput('');
 
-    sendDodoChat(value)
-      .then((data) => {
-        const dodoMessageId = createMessageId();
-        setMessages((prev) => [...prev, { id: dodoMessageId, role: 'dodo', text: '' }]);
-        animateDodoReply(dodoMessageId, data.reply);
-        animateDodoAction(data.action);
-      })
-      .catch(() => {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: createMessageId(),
-            role: 'dodo',
-            text: '잠시 후 다시 이야기해요.',
-          },
-        ]);
-      });
-  }, [animateDodoReply, animateDodoAction, input]);
+      sendDodoChat(value)
+        .then((data) => {
+          const dodoMessageId = createMessageId();
+          setMessages((prev) => [...prev, { id: dodoMessageId, role: 'dodo', text: '' }]);
+          animateDodoReply(dodoMessageId, data.reply);
+          animateDodoAction(data.action);
+        })
+        .catch(() => {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: createMessageId(),
+              role: 'dodo',
+              text: '잠시 후 다시 이야기해요.',
+            },
+          ]);
+        });
+    },
+    [animateDodoReply, animateDodoAction, input],
+  );
+
+  const handleActionButton = useCallback(
+    (action: Exclude<DodoAction, 'None'>) => {
+      const command = DODO_ACTION_COMMAND_MAP[action];
+      handleSend(command);
+    },
+    [handleSend],
+  );
 
   return {
     dodoAction,
@@ -157,5 +169,6 @@ export const useDodoChat = () => {
     loadMoreMessages,
     isLoadingHistory,
     hasMore,
+    handleActionButton,
   };
 };

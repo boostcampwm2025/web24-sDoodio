@@ -1,11 +1,5 @@
-import { DODO_ACTIONS, type DodoAction } from '@web24/shared';
-
-const DODO_ACTION_IMAGE_MAP: Record<DodoAction, string> = {
-  [DODO_ACTIONS.none]: '/DodoStand.png',
-  [DODO_ACTIONS.sitDown]: '/DodoSitdown.png',
-  [DODO_ACTIONS.wink]: '/DodoWink.png',
-  [DODO_ACTIONS.hurray]: '/DodoHurray.png',
-};
+import { type DodoAction } from '@web24/shared';
+import { DODO_ACTION_IMAGE_MAP } from '../constants/dodo-action';
 
 interface DodoCharacterProps {
   readonly action: DodoAction;
