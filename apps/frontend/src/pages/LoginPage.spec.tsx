@@ -56,7 +56,7 @@ describe('LoginPage', () => {
     storeState.user = {
       id: '019bd5d8-72dc-78ca-af5d-c93358058b32',
       nickname: 'G-abcd12',
-      kind: 'guest',
+      kind: 'user',
     };
 
     render(<LoginPage />);
@@ -70,7 +70,9 @@ describe('LoginPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '게스트로 로그인' }));
 
     await waitFor(() => expect(storeState.loginGuest).toHaveBeenCalled());
-    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/from', { replace: true }));
+    await waitFor(() =>
+      expect(mockNavigate).toHaveBeenCalledWith('/onboarding', { replace: true }),
+    );
   });
 
   it('에러가 있으면 메시지를 보여준다', () => {
