@@ -1,8 +1,10 @@
-import { Injectable, NotFoundException, type OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, type OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 import webpush from 'web-push';
+import { Cron } from '@nestjs/schedule';
+import pLimit from 'p-limit';
 import type {
   PushSubscription,
   SendPushNotificationRequest,
@@ -10,9 +12,13 @@ import type {
 } from '@web24/shared';
 import { User } from '../user/user.entity';
 import { PushSubscriptionEntity } from './push-subscription.entity';
+import { DodoChatMessage, DODO_CHAT_ROLE } from '../chat/dodo-chat-message.entity';
+import { DODO_PUSH_MESSAGES, type DodoPushType } from './push.constants';
 
 @Injectable()
 export class PushService implements OnModuleInit {
+  private readonly logger = new Logger(PushService.name);
+
   private readonly vapidPublicKey: string;
 
   private readonly vapidPrivateKey: string;
@@ -25,6 +31,8 @@ export class PushService implements OnModuleInit {
     private readonly pushSubscriptionRepository: Repository<PushSubscriptionEntity>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(DodoChatMessage)
+    private readonly dodoChatRepository: Repository<DodoChatMessage>,
   ) {
     this.vapidPublicKey = this.configService.getOrThrow<string>('VAPID_PUBLIC_KEY');
     this.vapidPrivateKey = this.configService.getOrThrow<string>('VAPID_PRIVATE_KEY');
@@ -114,6 +122,56 @@ export class PushService implements OnModuleInit {
         removed: acc.removed + item.removed,
       }),
       { sent: 0, failed: 0, removed: 0 },
+    );
+  }
+
+  @Cron('0 0 13 * * *', { name: 'dodo_lunch_push', timeZone: 'Asia/Seoul' })
+  async handleLunchPush() {
+    await this.sendDodoPush('LUNCH');
+  }
+
+  @Cron('0 0 19 * * *', { name: 'dodo_evening_push', timeZone: 'Asia/Seoul' })
+  async handleEveningPush() {
+    await this.sendDodoPush('EVENING');
+  }
+
+  private async sendDodoPush(type: DodoPushType) {
+    const messages = DODO_PUSH_MESSAGES[type];
+    const content = messages[Math.floor(Math.random() * messages.length)];
+
+    const subscriptions = await this.pushSubscriptionRepository
+      .createQueryBuilder('sub')
+      .leftJoinAndSelect('sub.user', 'user')
+      .distinctOn(['sub.userId'])
+      .getMany();
+
+    this.logger.log(`Starting Dodo push [${type}]: sending to ${subscriptions.length} users`);
+
+    const limit = pLimit(10);
+    await Promise.all(
+      subscriptions.map((sub) =>
+        limit(async () => {
+          try {
+            // 1. 채팅 내역 저장
+            await this.dodoChatRepository.save(
+              this.dodoChatRepository.create({
+                user: sub.user,
+                role: DODO_CHAT_ROLE.ASSISTANT,
+                content,
+              }),
+            );
+
+            // 2. 푸시 발송
+            await this.sendToUser(sub.user.id, {
+              title: '두두의 메세지',
+              body: content,
+              url: '/dodo-room',
+            });
+          } catch (error) {
+            this.logger.error(`Failed to send push message to user ${sub.user.id}:`, error);
+          }
+        }),
+      ),
     );
   }
 }

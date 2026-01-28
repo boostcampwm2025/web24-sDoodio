@@ -13,6 +13,7 @@ import { AIModule } from './features/ai/ai.module';
 import { AuthModule } from './features/auth/auth.module';
 import { StatModule } from './features/stat/stat.module';
 import { PushModule } from './features/push/push.module';
+import { ChatModule } from './features/chat/chat.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { PushModule } from './features/push/push.module';
     AuthModule,
     StatModule,
     PushModule,
+    ChatModule,
   ],
   controllers: [],
   providers: [

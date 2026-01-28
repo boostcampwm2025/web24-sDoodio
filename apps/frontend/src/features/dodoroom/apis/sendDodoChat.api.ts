@@ -1,7 +1,7 @@
 import { DodoChatResponseSchema } from '@web24/shared';
 
 export async function sendDodoChat(message: string) {
-  const res = await fetch('/api/ai/chat', {
+  const res = await fetch('/api/chat', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

@@ -8,6 +8,7 @@ import type { PushSubscription, SendPushNotificationRequest } from '@web24/share
 import { PushService } from './push.service';
 import { PushSubscriptionEntity } from './push-subscription.entity';
 import { User } from '../user/user.entity';
+import { DodoChatMessage } from '../chat/dodo-chat-message.entity';
 
 jest.mock('web-push', () => ({
   __esModule: true,
@@ -60,6 +61,16 @@ describe('PushService', () => {
           useValue: {
             findOne: jest.fn(),
             findOneBy: jest.fn(),
+          },
+        },
+        {
+          provide: getRepositoryToken(DodoChatMessage),
+          useValue: {
+            find: jest.fn(),
+            findOne: jest.fn(),
+            save: jest.fn(),
+            create: jest.fn(),
+            remove: jest.fn(),
           },
         },
       ],
@@ -228,6 +239,57 @@ describe('PushService', () => {
 
       expect(pushSubscriptionRepository.remove).not.toHaveBeenCalled();
       expect(result).toEqual({ sent: 0, failed: 1, removed: 0 });
+    });
+  });
+
+  describe('Scheduled Pushes', () => {
+    let mockQueryBuilder: any;
+
+    beforeEach(() => {
+      mockQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        distinctOn: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([]),
+      };
+      pushSubscriptionRepository.createQueryBuilder = jest.fn().mockReturnValue(mockQueryBuilder);
+    });
+
+    describe('handleLunchPush', () => {
+      it('점심 푸시를 전송한다', async () => {
+        const mockUser = { id: 'user-1' };
+        mockQueryBuilder.getMany.mockResolvedValue([{ user: mockUser }]);
+        jest.spyOn(service, 'sendToUser').mockResolvedValue({ sent: 1, failed: 0, removed: 0 });
+
+        await service.handleLunchPush();
+
+        expect(pushSubscriptionRepository.createQueryBuilder).toHaveBeenCalled();
+        expect(service.sendToUser).toHaveBeenCalledWith(
+          'user-1',
+          expect.objectContaining({
+            title: '두두의 메세지',
+            url: '/dodo-room',
+          }),
+        );
+      });
+    });
+
+    describe('handleEveningPush', () => {
+      it('저녁 푸시를 전송한다', async () => {
+        const mockUser = { id: 'user-1' };
+        mockQueryBuilder.getMany.mockResolvedValue([{ user: mockUser }]);
+        jest.spyOn(service, 'sendToUser').mockResolvedValue({ sent: 1, failed: 0, removed: 0 });
+
+        await service.handleEveningPush();
+
+        expect(pushSubscriptionRepository.createQueryBuilder).toHaveBeenCalled();
+        expect(service.sendToUser).toHaveBeenCalledWith(
+          'user-1',
+          expect.objectContaining({
+            title: '두두의 메세지',
+            url: '/dodo-room',
+          }),
+        );
+      });
     });
   });
 });

@@ -1,12 +1,73 @@
+import { useEffect, useRef, useLayoutEffect } from 'react';
 import type { Message } from '@/features/dodoroom/types/dodo-chat.types';
 
 type ChatMessagesProps = {
   messages: Message[];
+  onLoadMore?: () => void;
+  isLoading?: boolean;
+  hasMore?: boolean;
 };
 
-export function ChatMessages({ messages }: ChatMessagesProps) {
+const SCROLL_BOTTOM_THRESHOLD = 50;
+const LOAD_MORE_SCROLL_PERCENTAGE = 20;
+
+export function ChatMessages({ messages, onLoadMore, isLoading, hasMore }: ChatMessagesProps) {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const shouldScrollToBottomRef = useRef(true);
+  const isMountedRef = useRef(false);
+
+  useLayoutEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || isMountedRef.current) return;
+
+    isMountedRef.current = true;
+    container.scrollTop = container.scrollHeight;
+    shouldScrollToBottomRef.current = true;
+  }, []);
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return () => {};
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < SCROLL_BOTTOM_THRESHOLD;
+      shouldScrollToBottomRef.current = isAtBottom;
+
+      const scrollPercentage = (scrollTop / (scrollHeight - clientHeight)) * 100;
+
+      if (scrollPercentage <= LOAD_MORE_SCROLL_PERCENTAGE && !isLoading && hasMore && onLoadMore) {
+        onLoadMore();
+      }
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [isLoading, hasMore, onLoadMore]);
+
+  useLayoutEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container || !isMountedRef.current) return;
+
+    const currentScrollHeight = container.scrollHeight;
+
+    if (shouldScrollToBottomRef.current) {
+      container.scrollTop = currentScrollHeight;
+    }
+  }, [messages]);
+
   return (
-    <div className="flex h-full flex-col gap-3 overflow-y-auto pr-1">
+    <div
+      ref={scrollContainerRef}
+      className="scrollbar-pretty flex flex-1 flex-col gap-3 overflow-y-scroll pr-1"
+      style={{ minHeight: 0 }}
+    >
+      {isLoading && (
+        <div className="flex justify-center py-2">
+          <span className="text-label-assistive text-sm">이전 대화를 불러오는 중...</span>
+        </div>
+      )}
       {messages.map((message) => (
         <div
           key={message.id}

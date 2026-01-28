@@ -7,9 +7,11 @@ type ChatInputProps = {
 
 export function ChatInput({ value, canSend, onChange, onSend }: ChatInputProps) {
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
+    if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
       event.preventDefault();
-      onSend();
+      if (canSend) {
+        onSend();
+      }
     }
   };
 
