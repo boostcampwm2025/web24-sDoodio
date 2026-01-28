@@ -234,7 +234,7 @@ export function NewGoalFrame({
           </div>
 
           {/* 콘텐츠 영역 */}
-          <div className="relative mt-4 flex-1 overflow-x-hidden overflow-y-auto md:mt-8">
+          <div className="scrollbar-pretty relative mt-4 flex-1 overflow-x-hidden overflow-y-auto md:mt-8">
             <div className={`transition-all duration-300 ease-in-out ${currentAnimation}`}>
               <div className="flex min-h-full w-full py-4 lg:py-0">{currentStep.content}</div>
             </div>
