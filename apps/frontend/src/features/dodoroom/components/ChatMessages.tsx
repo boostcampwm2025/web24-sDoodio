@@ -13,17 +13,15 @@ const LOAD_MORE_SCROLL_PERCENTAGE = 20;
 
 export function ChatMessages({ messages, onLoadMore, isLoading, hasMore }: ChatMessagesProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const previousScrollHeightRef = useRef<number>(0);
-  const isUserScrollingRef = useRef(false);
   const shouldScrollToBottomRef = useRef(true);
   const isMountedRef = useRef(false);
+
   useLayoutEffect(() => {
     const container = scrollContainerRef.current;
     if (!container || isMountedRef.current) return;
 
     isMountedRef.current = true;
     container.scrollTop = container.scrollHeight;
-    previousScrollHeightRef.current = container.scrollHeight;
     shouldScrollToBottomRef.current = true;
   }, []);
 
@@ -40,7 +38,6 @@ export function ChatMessages({ messages, onLoadMore, isLoading, hasMore }: ChatM
       const scrollPercentage = (scrollTop / (scrollHeight - clientHeight)) * 100;
 
       if (scrollPercentage <= LOAD_MORE_SCROLL_PERCENTAGE && !isLoading && hasMore && onLoadMore) {
-        isUserScrollingRef.current = true;
         onLoadMore();
       }
     };
@@ -54,17 +51,10 @@ export function ChatMessages({ messages, onLoadMore, isLoading, hasMore }: ChatM
     if (!container || !isMountedRef.current) return;
 
     const currentScrollHeight = container.scrollHeight;
-    const previousScrollHeight = previousScrollHeightRef.current;
 
-    if (isUserScrollingRef.current && currentScrollHeight > previousScrollHeight) {
-      const heightDifference = currentScrollHeight - previousScrollHeight;
-      container.scrollTop += heightDifference;
-      isUserScrollingRef.current = false;
-    } else if (shouldScrollToBottomRef.current) {
+    if (shouldScrollToBottomRef.current) {
       container.scrollTop = currentScrollHeight;
     }
-
-    previousScrollHeightRef.current = currentScrollHeight;
   }, [messages]);
 
   return (

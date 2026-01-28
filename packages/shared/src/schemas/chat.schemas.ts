@@ -17,7 +17,7 @@ export const DodoChatMessageSchema = z.object({
 });
 
 export const DodoChatHistoryRequestSchema = z.object({
-  cursor: z.string().uuid().optional(),
+  cursor: z.uuid({ version: 'v7' }).optional(),
   limit: z.coerce.number().int().positive().max(50).default(10),
 });
 
