@@ -1,12 +1,12 @@
 import { DODO_ACTION_IMAGE_MAP } from '@/features/dodoroom/constants/dodo-action';
 import type { DodoAction } from '@web24/shared';
 
-interface DodoACtionButtonProps {
+interface DodoActionButtonProps {
   readonly action: Exclude<DodoAction, 'None'>;
   readonly onClick: (action: Exclude<DodoAction, 'None'>) => void;
 }
 
-export function DodoActionButton({ action, onClick }: DodoACtionButtonProps) {
+export function DodoActionButton({ action, onClick }: DodoActionButtonProps) {
   return (
     <button
       type="button"

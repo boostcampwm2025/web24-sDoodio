@@ -122,13 +122,12 @@ export const useDodoChat = () => {
     }, ANIMATION_DURATION_MS);
   }, []);
 
-  const handleSend = useCallback(
-    (command?: string) => {
-      const value = command ?? input.trim();
+  const send = useCallback(
+    (value: string) => {
       if (!value) return;
+
       const userMessageId = createMessageId();
       setMessages((prev) => [...prev, { id: userMessageId, role: 'user', text: value }]);
-      setInput('');
       setIsSendingMessage(true);
 
       sendDodoChat(value)
@@ -150,15 +149,23 @@ export const useDodoChat = () => {
         })
         .finally(() => setIsSendingMessage(false));
     },
-    [animateDodoReply, animateDodoAction, input],
+    [animateDodoReply, animateDodoAction],
   );
+
+  const handleSend = useCallback(() => {
+    const value = input.trim();
+    if (value) {
+      send(value);
+      setInput('');
+    }
+  }, [input, send]);
 
   const handleActionButton = useCallback(
     (action: Exclude<DodoAction, 'None'>) => {
       const command = DODO_ACTION_COMMAND_MAP[action];
-      handleSend(command);
+      send(command);
     },
-    [handleSend],
+    [send],
   );
 
   return {

@@ -171,22 +171,4 @@ describe('useDodoChat Hook', () => {
 
     expect(result.current.messages[2].text).toBe(dodoReply);
   });
-
-  it('handleSend에 command 인자를 직접 전달하면 input 상태와 무관하게 전송되어야 한다', async () => {
-    const { result } = renderHook(() => useDodoChat());
-    const command = '/test_command';
-    const dodoReply = '테스트 응답';
-
-    (sendDodoChat as any).mockResolvedValue({ reply: dodoReply, action: 'None' });
-
-    // input은 비어있는 상태
-    expect(result.current.input).toBe('');
-
-    await act(async () => {
-      result.current.handleSend(command);
-    });
-
-    expect(sendDodoChat).toHaveBeenCalledWith(command);
-    expect(result.current.messages[1].text).toBe(command);
-  });
 });
