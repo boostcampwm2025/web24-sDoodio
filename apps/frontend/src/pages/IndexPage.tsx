@@ -37,13 +37,18 @@ export function IndexPage() {
   const { user } = useAuthStore();
   useAutoWebPushSubscribe({ enabled: !!user, mode: 'silent' });
 
+  const headerHeightValue = getComputedStyle(document.documentElement)
+    .getPropertyValue('--header-h')
+    .trim();
+  const headerHeight = Number.parseFloat(headerHeightValue) || 0;
+
   // Hero 섹션 보이는지 확인
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         setIsHeroVisible(entry.isIntersecting);
       },
-      { threshold: 0.1 },
+      { threshold: 0.1, rootMargin: `-${headerHeight}px 0px 0px 0px` },
     );
 
     if (heroRef.current) {
@@ -51,15 +56,23 @@ export function IndexPage() {
     }
 
     return () => observer.disconnect();
-  }, []);
+  }, [headerHeight]);
 
   const handleRewardInteraction = (templateId?: string) => {
     const lines = (templateId && REWARD_LINES[templateId]) || REWARD_LINES.default;
-    const rewardQuote = getRandomElement(lines) || '';
+    let rewardQuote = getRandomElement(lines) || '';
+    if (lines.length > 1 && rewardQuote === quote) {
+      let nextQuote = rewardQuote;
+      let attempts = 0;
+      while (nextQuote === quote && attempts < 5) {
+        nextQuote = getRandomElement(lines) || '';
+        attempts += 1;
+      }
+      rewardQuote = nextQuote;
+    }
 
-    if (isHeroVisible) {
-      useDodoChatStore.getState().setQuote(rewardQuote);
-    } else {
+    useDodoChatStore.getState().setQuote(rewardQuote);
+    if (!isHeroVisible) {
       showToast(rewardQuote, { position: 'top' });
     }
   };
@@ -151,7 +164,7 @@ export function IndexPage() {
   return (
     <div className="bg-bg-normal mx-auto flex max-w-5xl flex-col pt-2">
       {/* 두두의 말 */}
-      <div ref={heroRef}>
+      <div ref={heroRef} className="mb-10">
         <Hero quote={quote} />
       </div>
 

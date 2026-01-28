@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
 import { GOAL_COLOR_STYLES } from '@/shared/constants/goalColor';
-import { MoreHorizontal } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
+import Modal from 'react-modal';
 import StickerCell from './StickerCell';
 import { DifficultyBadge } from './DifficultyBadge';
 
@@ -13,51 +14,31 @@ interface BehaviorProps {
 
 export function BehaviorCard({ behavior, onToggle, onDelete }: BehaviorProps) {
   const bgColor = GOAL_COLOR_STYLES[behavior.goalColor].bg;
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isMenuVisible, setIsMenuVisible] = useState(false);
-  const menuRef = useRef<HTMLDivElement | null>(null);
-  const ignoreNextOutsideRef = useRef(false);
+  const [isActionVisible, setIsActionVisible] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const canDelete = Boolean(onDelete) && !behavior.isChecked;
-
-  useEffect(() => {
-    const handleClickOutside = (event: PointerEvent) => {
-      if (!isMenuOpen && !isMenuVisible) return;
-      if (ignoreNextOutsideRef.current) {
-        ignoreNextOutsideRef.current = false;
-        return;
-      }
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsMenuOpen(false);
-        setIsMenuVisible(false);
-      }
-    };
-
-    document.addEventListener('pointerdown', handleClickOutside);
-
-    return () => {
-      document.removeEventListener('pointerdown', handleClickOutside);
-    };
-  }, [isMenuOpen, isMenuVisible]);
 
   const handleCardPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!canDelete) return;
     if (event.pointerType !== 'touch') return;
     if ((event.target as HTMLElement).closest('button')) return;
-    ignoreNextOutsideRef.current = true;
-    setIsMenuVisible(true);
+    setIsActionVisible(true);
   };
 
-  const menuTriggerClasses =
-    isMenuVisible || isMenuOpen
+  const actionTriggerClasses =
+    isActionVisible || isDeleteModalOpen
       ? 'pointer-events-auto opacity-100'
       : 'pointer-events-none opacity-0';
+
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setIsActionVisible(false);
+  };
 
   return (
     <div
       onPointerDown={handleCardPointerDown}
       className={`group bg-bg-light relative flex items-center gap-4 rounded-2xl px-7 py-5 transition-all duration-500 ${
-        isMenuOpen ? 'z-30' : ''
-      } ${
         behavior.isChecked
           ? 'border-bg-alternative bg-bg-light scale-[0.99] opacity-60 shadow-none saturate-50'
           : 'border-transparent shadow-(--shadow-normal) hover:-translate-y-1 hover:shadow-(--shadow-strong)'
@@ -72,34 +53,17 @@ export function BehaviorCard({ behavior, onToggle, onDelete }: BehaviorProps) {
               {behavior.goalTitle}
             </span>
             {canDelete && (
-              <div ref={menuRef} className="relative">
-                <button
-                  type="button"
-                  aria-label="행동 삭제 메뉴"
-                  onClick={() => {
-                    setIsMenuVisible(true);
-                    setIsMenuOpen((open) => !open);
-                  }}
-                  className={`text-label-alternative hover:text-label-normal transition ${menuTriggerClasses} md:pointer-events-none md:opacity-0 md:group-hover:pointer-events-auto md:group-hover:opacity-100`}
-                >
-                  <MoreHorizontal size={16} />
-                </button>
-                {isMenuOpen && (
-                  <div className="bg-bg-light border-bg-alternative absolute bottom-full left-0 z-50 mb-1 w-20 rounded-lg border p-1 shadow-(--shadow-normal)">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        setIsMenuVisible(false);
-                        onDelete?.();
-                      }}
-                      className="text-label-normal hover:bg-bg-alternative w-full rounded-md px-3 py-2 text-left text-xs font-semibold"
-                    >
-                      삭제
-                    </button>
-                  </div>
-                )}
-              </div>
+              <button
+                type="button"
+                aria-label="행동 삭제"
+                onClick={() => {
+                  setIsActionVisible(true);
+                  setIsDeleteModalOpen(true);
+                }}
+                className={`text-label-alternative hover:text-difficulty-4 transition ${actionTriggerClasses} pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100`}
+              >
+                <Trash2 size={16} />
+              </button>
             )}
           </div>
         </div>
@@ -123,6 +87,38 @@ export function BehaviorCard({ behavior, onToggle, onDelete }: BehaviorProps) {
         ariaPressed={behavior.isChecked}
         stickerColor={behavior.goalColor}
       />{' '}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onRequestClose={closeDeleteModal}
+        shouldCloseOnOverlayClick
+        overlayClassName="fixed inset-0 z-50 bg-black/30"
+        className="bg-bg-light fixed top-1/2 left-1/2 w-[min(24rem,calc(100%-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-2xl p-6 shadow-(--shadow-strong) focus:outline-none"
+        contentLabel="행동 삭제 확인"
+      >
+        <h4 className="text-label-normal text-base font-bold">행동을 삭제할까요?</h4>
+        <p className="text-label-alternative mt-2 text-sm">
+          삭제하면 오늘의 행동 목록에서 사라집니다.
+        </p>
+        <div className="mt-5 flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={closeDeleteModal}
+            className="bg-bg-alternative text-label-normal hover:bg-bg-alternative/80 rounded-lg px-4 py-2 text-sm font-semibold transition"
+          >
+            취소
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              closeDeleteModal();
+              onDelete?.();
+            }}
+            className="bg-difficulty-4 text-bg-light rounded-lg px-4 py-2 text-sm font-semibold transition hover:bg-[#c53a3a]"
+          >
+            삭제
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

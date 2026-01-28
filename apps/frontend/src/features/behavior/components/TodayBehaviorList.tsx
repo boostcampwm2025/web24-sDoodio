@@ -1,4 +1,3 @@
-import { BehaviorCard } from '@/shared/components/behavior/BehaviorCard';
 import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
 import { Plus, Info, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -7,7 +6,9 @@ import type { GetGoalSummary } from '@web24/shared';
 import { useTodayBehaviorAdd } from '@/features/behavior/hooks/useTodayBehaviorAdd';
 import { useFilteredTodayBehaviors } from '@/features/behavior/hooks/useFilteredTodayBehaviors';
 import { TodayBehaviorAddModal } from '@/features/behavior/components/TodayBehaviorAddModal';
+import { EmptyGoal } from '@/shared/components/goal/EmptyGoal';
 import { SwiperTabs } from './SwiperTabs';
+import { TodayBehaviorCardGrid } from './TodayBehaviorCardGrid';
 
 interface BehaviorListProps {
   goals: GetGoalSummary[];
@@ -70,10 +71,10 @@ export function TodayBehaviorList({
           <button
             type="button"
             onClick={onRefresh}
-            className="text-label-disable hover:text-label-normal inline-flex items-center gap-1 text-sm font-semibold transition"
+            className="text-label-disable hover:text-label-normal hover:bg-primary-weak/30 inline-flex items-center gap-1 rounded-lg p-2 text-sm font-semibold transition"
           >
             <RefreshCw size={ICON_SIZE.xxs} />
-            새로고침
+            오늘의 행동 다시 뽑기
           </button>
         )}
       </div>
@@ -99,33 +100,17 @@ export function TodayBehaviorList({
         </button>
       </div>
 
-      {/* 행동 카드들 */}
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-        {filteredBehaviors.map((behavior: Behavior) => (
-          <BehaviorCard
-            key={behavior.id}
-            behavior={behavior}
-            onToggle={() => onToggle(behavior.id)}
-            onDelete={onDelete ? () => onDelete(behavior.id) : undefined}
-          />
-        ))}
-
-        {/* 행동 추가 버튼 */}
-        <button
-          onClick={() => {
-            openAddModal();
-          }}
-          type="button"
-          className="group border-primary-weak text-primary-normal hover:border-primary-strong hover:text-primary-strong hover:bg-primary-weak/30 relative flex min-h-30 cursor-pointer items-center justify-center rounded-3xl border-2 border-dashed bg-transparent p-5 transition-all"
-        >
-          <div className="flex flex-col items-center gap-2">
-            <div className="bg-bg-alternative group-hover:bg-primary-strong group-hover:text-bg-light flex h-10 w-10 items-center justify-center rounded-full transition-colors">
-              <Plus size={20} strokeWidth={2.5} />
-            </div>
-            <span className="text-sm font-bold">행동 추가</span>
-          </div>
-        </button>
-      </div>
+      {/* 목표가 없으면 목표 추가 표시 있으면 해당하는 행동 카드 표시 */}
+      {goals.length === 0 ? (
+        <EmptyGoal />
+      ) : (
+        <TodayBehaviorCardGrid
+          behaviors={filteredBehaviors}
+          onToggle={onToggle}
+          onDelete={onDelete}
+          openAddModal={openAddModal}
+        />
+      )}
 
       <TodayBehaviorAddModal
         isOpen={isAddOpen}

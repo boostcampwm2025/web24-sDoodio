@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { IndexPage } from './IndexPage';
 
@@ -42,6 +42,25 @@ vi.mock('@/stores/useDodoToastStore', () => ({
 }));
 
 describe('IndexPage', () => {
+  const originalMatchMedia = window.matchMedia;
+
+  beforeAll(() => {
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+  });
+
+  afterAll(() => {
+    window.matchMedia = originalMatchMedia;
+  });
+
   it('IndexPage가 크래시 없이 렌더링된다', async () => {
     // useDodoToastStore가 반환할 showToast 모킹
     const showToastMock = vi.fn();
