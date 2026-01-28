@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useScroll } from '@/shared/hooks/useScroll';
+import { Outlet } from 'react-router-dom';
 import DesktopHeader from './DesktopHeader';
 import MobileHeader from './MobileHeader';
 import MobileTabBar from './MobileTabBar';
@@ -11,7 +12,7 @@ const HEADER_HEIGHTS = {
   desktopScrolled: 64,
 } as const;
 
-function Layout({ children }: { children: ReactNode }) {
+function Layout({ children }: { children?: ReactNode }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isScrolled = useScroll(10);
   const [isDesktop, setIsDesktop] = useState(false);
@@ -44,7 +45,7 @@ function Layout({ children }: { children: ReactNode }) {
 
       {/* 메인 컨텐츠 */}
       <main className="mx-auto w-full flex-1 px-4 pt-20 pb-24 transition-all duration-300 md:px-8 md:pt-28 md:pb-10">
-        {children}
+        {children ?? <Outlet />}
       </main>
 
       {/* 모바일 탭 바 */}
