@@ -127,15 +127,15 @@ export class PushService implements OnModuleInit {
 
   @Cron('0 0 13 * * *', { name: 'dodo_lunch_push', timeZone: 'Asia/Seoul' })
   async handleLunchPush() {
-    await this.processDodoPush('LUNCH');
+    await this.sendDodoPush('LUNCH');
   }
 
   @Cron('0 0 19 * * *', { name: 'dodo_evening_push', timeZone: 'Asia/Seoul' })
   async handleEveningPush() {
-    await this.processDodoPush('EVENING');
+    await this.sendDodoPush('EVENING');
   }
 
-  private async processDodoPush(type: DodoPushType) {
+  private async sendDodoPush(type: DodoPushType) {
     const messages = DODO_PUSH_MESSAGES[type];
     const content = messages[Math.floor(Math.random() * messages.length)];
 
