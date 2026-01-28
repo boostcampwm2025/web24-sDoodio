@@ -38,6 +38,7 @@ export function OnboardingPage() {
   const handleNext = () => {
     if (isLast) {
       navigateToIndex();
+      return;
     }
     swiperRef.current?.slideNext();
   };
