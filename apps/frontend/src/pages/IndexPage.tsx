@@ -19,7 +19,6 @@ import type { GetGoalSummary } from '@web24/shared';
 import { getRandomElement } from '@/shared/utils/random';
 import useAuthStore from '@/stores/useAuthStore';
 import { useAutoWebPushSubscribe } from '@/features/push/hooks/useAutoWebPushSubscribe';
-import { useScroll } from '@/shared/hooks/useScroll';
 
 export function IndexPage() {
   const [behaviors, setBehaviors] = useState<Behavior[]>([]);
@@ -34,26 +33,17 @@ export function IndexPage() {
   const showToast = useDodoToast();
   const heroRef = useRef<HTMLDivElement>(null);
   const [isHeroVisible, setIsHeroVisible] = useState(true);
-  const isScrolled = useScroll(10);
-  const [isDesktop, setIsDesktop] = useState(false);
 
   const { user } = useAuthStore();
   useAutoWebPushSubscribe({ enabled: !!user, mode: 'silent' });
 
-  useEffect(() => {
-    const media = globalThis.matchMedia('(min-width: 768px)');
-    const update = () => setIsDesktop(media.matches);
-    update();
-    media.addEventListener('change', update);
-    return () => media.removeEventListener('change', update);
-  }, []);
+  const headerHeightValue = getComputedStyle(document.documentElement)
+    .getPropertyValue('--header-h')
+    .trim();
+  const headerHeight = Number.parseFloat(headerHeightValue) || 0;
 
   // Hero 섹션 보이는지 확인
   useEffect(() => {
-    const headerHeightValue = getComputedStyle(document.documentElement)
-      .getPropertyValue('--header-h')
-      .trim();
-    const headerHeight = Number.parseFloat(headerHeightValue) || 0;
     const observer = new IntersectionObserver(
       ([entry]) => {
         setIsHeroVisible(entry.isIntersecting);
@@ -66,7 +56,7 @@ export function IndexPage() {
     }
 
     return () => observer.disconnect();
-  }, [isDesktop, isScrolled]);
+  }, [headerHeight]);
 
   const handleRewardInteraction = (templateId?: string) => {
     const lines = (templateId && REWARD_LINES[templateId]) || REWARD_LINES.default;
