@@ -45,7 +45,6 @@ vi.mock('swiper/react', () => {
 describe('OnboardingPage', () => {
   beforeEach(() => {
     mockNavigate.mockReset();
-    localStorage.removeItem('onboardingDone');
   });
 
   it('첫 번째 슬라이드를 렌더링한다', () => {
@@ -72,7 +71,7 @@ describe('OnboardingPage', () => {
     expect(screen.getByRole('button', { name: '바로 시작하기' })).toBeInTheDocument();
   });
 
-  it('바로 시작하기를 누르면 온보딩 완료 플래그를 저장하고 이동한다', () => {
+  it('바로 시작하기를 누르면 메인페이지로 이동한다', () => {
     render(<OnboardingPage />);
 
     fireEvent.click(screen.getByRole('button', { name: '바로 시작하기' }));
