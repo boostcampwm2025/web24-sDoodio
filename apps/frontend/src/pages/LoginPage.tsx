@@ -21,14 +21,15 @@ export function LoginPage() {
 
   useEffect(() => {
     if (user) {
-      navigate(from, { replace: true });
+      const target = user.kind === 'guest' ? '/onboarding' : from;
+      navigate(target, { replace: true });
     }
   }, [from, navigate, user]);
 
   const handleGuestLogin = async () => {
     await loginGuest();
     await ensureWebPushSubscribed({ mode: 'interactive' }).catch(() => null);
-    navigate(from, { replace: true });
+    navigate('/onboarding', { replace: true });
   };
 
   return (
