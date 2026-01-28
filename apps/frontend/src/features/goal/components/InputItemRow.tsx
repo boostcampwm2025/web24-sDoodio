@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { Minus, Plus } from 'lucide-react';
 
 interface InputItemRowProps {
@@ -17,6 +18,25 @@ export function InputItemRow({
   placeholder = '',
   variant = 'default',
 }: InputItemRowProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [isBlurVisible, setIsBlurVisible] = useState(false);
+
+  useEffect(() => {
+    const input = inputRef.current;
+    if (!input) return;
+    const isOverflowing = input.scrollWidth > input.clientWidth;
+    const isAtEnd = input.scrollLeft + input.clientWidth >= input.scrollWidth - 1;
+    setIsBlurVisible(isOverflowing && !isAtEnd);
+  }, [value]);
+
+  const handleScroll = () => {
+    const input = inputRef.current;
+    if (!input) return;
+    const isOverflowing = input.scrollWidth > input.clientWidth;
+    const isAtEnd = input.scrollLeft + input.clientWidth >= input.scrollWidth - 1;
+    setIsBlurVisible(isOverflowing && !isAtEnd);
+  };
+
   if (variant === 'add') {
     return (
       <button
@@ -31,13 +51,20 @@ export function InputItemRow({
 
   return (
     <div className="bg-bg-normal focus-within:ring-primary-weak flex h-16 w-full shrink-0 items-center gap-2 rounded-2xl px-6 transition-all focus-within:ring-2">
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange?.(e.target.value)}
-        placeholder={placeholder}
-        className="text-headline-1 text-label-normal placeholder:text-primary-weak h-full min-w-0 flex-1 bg-transparent font-semibold outline-none placeholder:font-normal"
-      />
+      <div className="relative min-w-0 flex-1">
+        <input
+          ref={inputRef}
+          type="text"
+          value={value}
+          onScroll={handleScroll}
+          onChange={(e) => onChange?.(e.target.value)}
+          placeholder={placeholder}
+          className="text-label-normal placeholder:text-primary-weak md:text-headline-1 h-full w-full bg-transparent text-sm font-semibold outline-none placeholder:font-normal"
+        />
+        {isBlurVisible && (
+          <div className="from-bg-normal pointer-events-none absolute top-0 right-0 h-full w-6 bg-linear-to-l to-transparent" />
+        )}
+      </div>
       {onDelete && (
         <button
           type="button"
