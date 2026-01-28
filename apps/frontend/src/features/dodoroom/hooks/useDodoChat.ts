@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { sendDodoChat } from '@/features/dodoroom/apis/sendDodoChat.api';
 import { fetchChatHistory } from '@/features/dodoroom/apis/fetchChatHistory.api';
 import type { Message } from '@/features/dodoroom/types/dodo-chat.types';
+import { DODO_ACTIONS, type DodoAction } from '@web24/shared';
 
 const INITIAL_MESSAGES: Message[] = [
   {
@@ -12,6 +13,7 @@ const INITIAL_MESSAGES: Message[] = [
 ];
 
 const TYPING_ANIMATION_INTERVAL = 35;
+const ANIMATION_DURATION_MS = 3000; // 3초
 
 const updateMessageText = (messages: Message[], id: string, text: string) =>
   messages.map((message) => (message.id === id ? { ...message, text } : message));
@@ -23,6 +25,7 @@ const createMessageId = () => {
 };
 
 export const useDodoChat = () => {
+  const [dodoAction, setDodoAction] = useState<DodoAction>(DODO_ACTIONS.none);
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
   const [input, setInput] = useState('');
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
@@ -30,6 +33,7 @@ export const useDodoChat = () => {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const typingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isInitialLoadRef = useRef(true);
+  const actionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const canSend = input.trim().length > 0;
   const latestDodoMessage = useMemo(
@@ -101,6 +105,21 @@ export const useDodoChat = () => {
     }, TYPING_ANIMATION_INTERVAL);
   }, []);
 
+  const animateDodoAction = useCallback((action: DodoAction) => {
+    if (action === 'None') return;
+
+    if (actionTimeoutRef.current) {
+      clearTimeout(actionTimeoutRef.current);
+    }
+
+    setDodoAction(action);
+
+    actionTimeoutRef.current = setTimeout(() => {
+      setDodoAction('None');
+      actionTimeoutRef.current = null;
+    }, ANIMATION_DURATION_MS);
+  }, []);
+
   const handleSend = useCallback(() => {
     const value = input.trim();
     if (!value) return;
@@ -113,6 +132,7 @@ export const useDodoChat = () => {
         const dodoMessageId = createMessageId();
         setMessages((prev) => [...prev, { id: dodoMessageId, role: 'dodo', text: '' }]);
         animateDodoReply(dodoMessageId, data.reply);
+        animateDodoAction(data.action);
       })
       .catch(() => {
         setMessages((prev) => [
@@ -124,9 +144,10 @@ export const useDodoChat = () => {
           },
         ]);
       });
-  }, [animateDodoReply, input]);
+  }, [animateDodoReply, animateDodoAction, input]);
 
   return {
+    dodoAction,
     messages,
     input,
     setInput,

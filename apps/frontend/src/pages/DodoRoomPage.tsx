@@ -3,10 +3,12 @@ import { ChatInput } from '@/features/dodoroom/components/ChatInput';
 import { ChatMessages } from '@/features/dodoroom/components/ChatMessages';
 import { DodoSpeechBubble } from '@/features/dodoroom/components/DodoSpeechBubble';
 import { useDodoChat } from '@/features/dodoroom/hooks/useDodoChat';
+import { DodoCharacter } from '@/features/dodoroom/components/DodoCharacter';
 
 export function DodoRoomPage() {
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
   const {
+    dodoAction,
     messages,
     input,
     setInput,
@@ -28,11 +30,7 @@ export function DodoRoomPage() {
           <div className="absolute inset-0" />
           <div className="relative z-10 flex h-full w-full items-end justify-center rounded-2xl pb-10">
             <DodoSpeechBubble text={latestDodoMessage?.text} />
-            <img
-              src="/DodoStand.png"
-              alt="두두 캐릭터"
-              className="h-[60%] max-h-90 w-auto select-none"
-            />
+            <DodoCharacter action={dodoAction} />
           </div>
         </section>
 
