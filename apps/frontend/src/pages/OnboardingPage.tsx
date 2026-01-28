@@ -80,6 +80,8 @@ export function OnboardingPage() {
           type="button"
           onClick={navigateToIndex}
           disabled={isLast}
+          aria-hidden={isLast}
+          aria-label={isLast ? '' : '바로 시작하기'}
           className="bg-bg-alternative text-label-normal hover:bg-bg-alternative/80 rounded-2xl px-4 py-3 text-sm font-semibold transition-colors disabled:invisible"
         >
           바로 시작하기
@@ -99,6 +101,7 @@ export function OnboardingPage() {
         <button
           type="button"
           onClick={handleNext}
+          aria-label={isLast ? '바로 시작하기' : '다음'}
           className="bg-primary-strong text-bg-light hover:bg-primary-strong/90 disabled:bg-primary-weak rounded-2xl px-6 py-3 text-sm font-semibold transition-colors"
         >
           {isLast ? '바로 시작하기' : '다음'}
