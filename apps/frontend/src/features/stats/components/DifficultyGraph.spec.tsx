@@ -55,6 +55,23 @@ describe('DifficultyGraph', () => {
     expect(screen.getByText('2회')).toBeInTheDocument();
   });
 
+  it('빈 데이터인 날짜는 두두 이미지로 표시하고 선택 보더가 생기지 않는다', async () => {
+    mockedFetchDifficultyStats.mockResolvedValue(mockStats);
+    const { container } = render(<DifficultyGraph />);
+
+    await waitFor(() => {
+      expect(screen.getByText('어제')).toBeInTheDocument();
+    });
+
+    const dodos = screen.getAllByAltText('두두');
+    expect(dodos).toHaveLength(1);
+
+    const bars = screen.getAllByRole('button');
+    fireEvent.click(bars[2]);
+
+    expect(container.querySelectorAll('.border-primary-strong')).toHaveLength(0);
+  });
+
   it('막대를 클릭하면 해당 날짜 데이터만 표시한다', async () => {
     mockedFetchDifficultyStats.mockResolvedValue(mockStats);
     render(<DifficultyGraph />);

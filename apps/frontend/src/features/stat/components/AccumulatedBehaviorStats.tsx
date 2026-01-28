@@ -59,6 +59,8 @@ export function AccumulatedBehaviorStats({
     color: `var(--color-goal-${item.goalColor})`,
   }));
 
+  const hasData = currentData.items.length > 0;
+
   const goalTabs = [
     { label: 'ALL', value: 'ALL' },
     ...goalTopBehaviors.map((b) => ({
@@ -66,6 +68,14 @@ export function AccumulatedBehaviorStats({
       value: b.id,
     })),
   ];
+
+  if (!hasData) {
+    return (
+      <div className="text-label-disable flex h-40 flex-col items-center justify-center gap-2">
+        <p className="text-body-1 font-semibold">조금 더 쌓이면 보여줄 수 있어요.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -80,6 +90,7 @@ export function AccumulatedBehaviorStats({
             sortByValue
             arcLabel="label"
             arcLabelsTextColor="#252322"
+            theme={{ labels: { text: { fontWeight: 800 } } }}
             enableArcLinkLabels={false}
             activeOuterRadiusOffset={8}
             // colors={(item) => item.data.color}

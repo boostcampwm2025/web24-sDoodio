@@ -12,7 +12,9 @@ export function DifficultyGraph() {
   useEffect(() => {
     fetchDifficultyStats()
       .then(setStats)
-      .catch(setError)
+      .catch((err) => {
+        setError(err);
+      })
       .finally(() => setIsLoading(false));
   }, []);
 
@@ -73,10 +75,18 @@ export function DifficultyGraph() {
             <div key={`${labels[idx]}`} className="flex flex-1 flex-col items-center gap-5">
               <button
                 type="button"
-                className="bg-primary-weak hover:bg-primary-normal relative flex h-32 w-4 flex-col-reverse overflow-hidden rounded-t-md transition-all sm:w-8"
+                className={`relative flex h-32 w-4 min-w-8 shrink-0 flex-col-reverse overflow-hidden rounded-t-md transition-all ${
+                  isEmpty ? 'bg-transparent' : 'bg-primary-weak hover:bg-primary-normal'
+                } ${isSelected ? 'opacity-100' : 'opacity-40'}`}
                 onClick={() => setSelectedIndex(selectedIndex === idx ? null : idx)}
               >
-                {!isEmpty &&
+                {isEmpty ? (
+                  <img
+                    src="/DodoStand.png"
+                    alt="두두"
+                    className="absolute inset-x-0 bottom-0 mx-auto w-full px-0.5 opacity-60"
+                  />
+                ) : (
                   BEHAVIOR_DIFFICULTIES.map((diff) => {
                     const count = day[diff];
                     if (count === 0) return null;
@@ -87,15 +97,14 @@ export function DifficultyGraph() {
                       <div
                         key={`${labels[idx]}-${diff}`}
                         style={{ height: `${ratioHeight}%` }}
-                        className={`${DIFFICULTY_COLOR_STYLES[diff].bg} w-full transition-opacity ${
-                          isSelected ? 'opacity-100' : 'opacity-40'
-                        }`}
+                        className={`${DIFFICULTY_COLOR_STYLES[diff].bg} w-full`}
                       />
                     );
-                  })}
+                  })
+                )}
 
                 {/* 선택 오버레이 */}
-                {selectedIndex === idx && (
+                {selectedIndex === idx && !isEmpty && (
                   <div className="border-primary-strong absolute inset-0 rounded-t-md border-2" />
                 )}
               </button>

@@ -133,7 +133,6 @@ vi.mock('@/features/goal/components/NewGoalFrame', () => ({
 
 describe('NewGoalPage', () => {
   beforeEach(() => {
-    vi.stubEnv('VITE_DEMO_LOCK_CREATE_GOAL', 'false');
     let idCounter = 0;
     const randomUUID = vi.fn(() => {
       const id = `uuid-${idCounter}`;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export interface NewGoalFrameStep {
@@ -29,8 +29,9 @@ export function NewGoalFrame({
   const [isExiting, setIsExiting] = useState(false);
   const [direction, setDirection] = useState<'next' | 'prev'>('next');
   const [dialogueIdx, setDialogueIdx] = useState(0);
-  const [dialogueFade, setDialogueFade] = useState(true);
+  const [isDialogueVisible, setIsDialogueVisible] = useState(true);
   const [resetTimer, setResetTimer] = useState(0);
+  const changeDialogueTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentStep = steps[currStepIdx];
   const isFirstStep = currStepIdx === 0;
@@ -40,11 +41,13 @@ export function NewGoalFrame({
   const isProgressShown = progressSteps.includes(currentStep.step);
 
   const currentDialogue = currentStep.dialogue[dialogueIdx] || '';
+  const hasMultipleDialogues = currentStep.dialogue.length > 1;
+  const isFirstDialogue = dialogueIdx <= 0;
   const isLastDialogue = dialogueIdx >= currentStep.dialogue.length - 1;
 
   useEffect(() => {
     setDialogueIdx(0);
-    setDialogueFade(true);
+    setIsDialogueVisible(true);
     setResetTimer((prev) => prev + 1);
   }, [currStepIdx]);
 
@@ -53,11 +56,11 @@ export function NewGoalFrame({
 
     const transitionToNextDialogue = () => {
       setDialogueIdx((prev) => prev + 1);
-      setDialogueFade(true);
+      setIsDialogueVisible(true);
     };
 
     const startTransition = () => {
-      setDialogueFade(false);
+      setIsDialogueVisible(false);
       setTimeout(transitionToNextDialogue, 300);
     };
 
@@ -71,6 +74,15 @@ export function NewGoalFrame({
       }
     };
   }, [dialogueIdx, isLastDialogue, resetTimer]);
+
+  useEffect(
+    () => () => {
+      if (changeDialogueTimerRef.current) {
+        clearTimeout(changeDialogueTimerRef.current);
+      }
+    },
+    [],
+  );
 
   const animationStyles = {
     next: '-translate-x-full opacity-0',
@@ -113,6 +125,28 @@ export function NewGoalFrame({
     onSkip?.();
   };
 
+  const changeDialogue = (targetIdx: number) => {
+    setIsDialogueVisible(false);
+    if (changeDialogueTimerRef.current) {
+      clearTimeout(changeDialogueTimerRef.current);
+    }
+    changeDialogueTimerRef.current = setTimeout(() => {
+      setDialogueIdx(targetIdx);
+      setIsDialogueVisible(true);
+      setResetTimer((prev) => prev + 1);
+    }, 300);
+  };
+
+  const handlePrevDialogue = () => {
+    if (isFirstDialogue) return;
+    changeDialogue(dialogueIdx - 1);
+  };
+
+  const handleNextDialogue = () => {
+    if (isLastDialogue) return;
+    changeDialogue(dialogueIdx + 1);
+  };
+
   return (
     <div className="bg-bg-normal flex h-full w-full items-center justify-center p-4 md:p-8 lg:p-12">
       <div className="bg-bg-light shadow-heavy flex h-[700px] w-full max-w-sm flex-shrink-0 flex-col overflow-hidden rounded-3xl md:h-[800px] md:max-w-3xl md:rounded-4xl lg:h-[850px] lg:max-w-[1240px] lg:flex-row">
@@ -121,14 +155,42 @@ export function NewGoalFrame({
           {/* 말풍선 */}
           {/* TODO: 타이핑 효과 넣기 */}
           <div className="relative mb-2 flex w-full flex-col items-center md:mb-6 lg:mb-12">
-            <div className="bg-bg-alternative relative flex min-h-16 w-full max-w-xs items-center justify-center rounded-3xl px-6 shadow-sm md:min-h-28 md:max-w-sm md:rounded-4xl lg:min-h-50">
+            <div
+              className={`bg-bg-alternative relative flex min-h-16 w-full max-w-xs items-center justify-center rounded-3xl px-6 shadow-sm md:min-h-28 md:max-w-sm md:rounded-4xl lg:min-h-50 ${
+                hasMultipleDialogues ? 'pr-8 pb-6 md:pr-12' : ''
+              }`}
+            >
               <p
-                className={`text-label-normal text-body-1 md:text-headline-1 lg:text-heading-2 text-center leading-relaxed font-bold break-keep whitespace-pre-line transition-opacity duration-300 ${
-                  dialogueFade ? 'opacity-100' : 'opacity-0'
+                className={`text-label-normal md:text-headline-1 lg:text-heading-2 text-center text-sm leading-relaxed font-bold break-keep whitespace-pre-line transition-opacity duration-300 ${
+                  isDialogueVisible ? 'opacity-100' : 'opacity-0'
                 }`}
               >
                 {currentDialogue}
               </p>
+              {hasMultipleDialogues && (
+                <div className="absolute right-2 bottom-2 flex items-center gap-1">
+                  {/* 이전 대사 전환 버튼 */}
+                  <button
+                    type="button"
+                    onClick={handlePrevDialogue}
+                    disabled={isFirstDialogue}
+                    className="disabled:opacity-40"
+                    aria-label="Previous Dialogue"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  {/* 다음 대사 전환 버튼 */}
+                  <button
+                    type="button"
+                    onClick={handleNextDialogue}
+                    disabled={isLastDialogue}
+                    className="disabled:opacity-40"
+                    aria-label="Next Dialogue"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </div>
+              )}
             </div>
             <div className="absolute -bottom-10 left-10 flex flex-col gap-1 md:-bottom-18 md:left-16 md:gap-2">
               <div className="bg-bg-alternative -ml-4 h-3 w-3 rounded-full opacity-80 md:-ml-8 md:h-6 md:w-6" />
@@ -140,7 +202,11 @@ export function NewGoalFrame({
           {/* 두두 */}
           <div className="mt-auto flex w-full items-center justify-center lg:block">
             <div className="w-full max-w-24 md:max-w-40 lg:max-w-75">
-              <img src="/DodoSit.png" alt="앉은 두두" className="h-full w-full object-contain" />
+              <img
+                src="/DodoSitdown.png"
+                alt="앉은 두두"
+                className="h-full w-full object-contain"
+              />
             </div>
           </div>
         </div>
@@ -168,7 +234,7 @@ export function NewGoalFrame({
           </div>
 
           {/* 콘텐츠 영역 */}
-          <div className="relative mt-4 flex-1 overflow-x-hidden overflow-y-auto md:mt-8">
+          <div className="scrollbar-pretty relative mt-4 flex-1 overflow-x-hidden overflow-y-auto md:mt-8">
             <div className={`transition-all duration-300 ease-in-out ${currentAnimation}`}>
               <div className="flex min-h-full w-full py-4 lg:py-0">{currentStep.content}</div>
             </div>

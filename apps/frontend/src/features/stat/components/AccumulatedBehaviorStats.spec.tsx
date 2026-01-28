@@ -120,4 +120,16 @@ describe('AccumulatedBehaviorStats', () => {
     expect(screen.getByText('행동 A')).toBeInTheDocument();
     expect(screen.getByText('행동 B')).toBeInTheDocument();
   });
+
+  it('데이터가 없으면 안내 문구를 표시한다', () => {
+    render(
+      <AccumulatedBehaviorStats
+        allTopBehaviors={{ totalCount: 0, items: [] }}
+        goalTopBehaviors={[]}
+      />,
+    );
+
+    expect(screen.getByText('조금 더 쌓이면 보여줄 수 있어요.')).toBeInTheDocument();
+    expect(screen.queryByTestId('pie-chart')).not.toBeInTheDocument();
+  });
 });
