@@ -30,6 +30,7 @@ export const useDodoChat = () => {
   const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
   const [input, setInput] = useState('');
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const typingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -128,6 +129,7 @@ export const useDodoChat = () => {
       const userMessageId = createMessageId();
       setMessages((prev) => [...prev, { id: userMessageId, role: 'user', text: value }]);
       setInput('');
+      setIsSendingMessage(true);
 
       sendDodoChat(value)
         .then((data) => {
@@ -145,7 +147,8 @@ export const useDodoChat = () => {
               text: '잠시 후 다시 이야기해요.',
             },
           ]);
-        });
+        })
+        .finally(() => setIsSendingMessage(false));
     },
     [animateDodoReply, animateDodoAction, input],
   );
@@ -166,6 +169,7 @@ export const useDodoChat = () => {
     canSend,
     latestDodoMessage,
     handleSend,
+    isSendingMessage,
     loadMoreMessages,
     isLoadingHistory,
     hasMore,

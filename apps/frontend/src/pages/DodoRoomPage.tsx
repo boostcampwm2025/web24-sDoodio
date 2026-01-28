@@ -19,6 +19,7 @@ export function DodoRoomPage() {
     handleSend,
     loadMoreMessages,
     isLoadingHistory,
+    isSendingMessage,
     hasMore,
     handleActionButton,
   } = useDodoChat();
@@ -48,14 +49,25 @@ export function DodoRoomPage() {
             messages={messages}
             onLoadMore={loadMoreMessages}
             isLoading={isLoadingHistory}
+            isSendingMessage={isSendingMessage}
             hasMore={hasMore}
           />
-          <ChatInput value={input} canSend={canSend} onChange={setInput} onSend={handleSend} />
+          <ChatInput
+            value={input}
+            canSend={canSend}
+            onChange={setInput}
+            onSend={() => handleSend()}
+          />
         </section>
       </div>
 
       <div className="mt-4 flex flex-col gap-3 md:hidden">
-        <ChatInput value={input} canSend={canSend} onChange={setInput} onSend={handleSend} />
+        <ChatInput
+          value={input}
+          canSend={canSend}
+          onChange={setInput}
+          onSend={() => handleSend()}
+        />
         <button
           type="button"
           onClick={() => setIsMobileSheetOpen(true)}
@@ -90,7 +102,12 @@ export function DodoRoomPage() {
               isLoading={isLoadingHistory}
               hasMore={hasMore}
             />
-            <ChatInput value={input} canSend={canSend} onChange={setInput} onSend={handleSend} />
+            <ChatInput
+              value={input}
+              canSend={canSend}
+              onChange={setInput}
+              onSend={() => handleSend()}
+            />
           </div>
         </div>
       )}
