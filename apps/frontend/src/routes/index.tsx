@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { NewGoalPage } from '@/pages/NewGoalPage';
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import { IndexPage } from '@/pages/IndexPage';
@@ -14,14 +14,19 @@ import Layout from '@/shared/components/layout/Layout';
 function RequireAuth() {
   const location = useLocation();
   const { user, fetchMe, isLoading } = useAuthStore();
+  const [hasUserChecked, setHasUserChecked] = useState(false);
 
   useEffect(() => {
     if (!user) {
-      fetchMe().catch(() => null);
+      fetchMe()
+        .catch(() => null)
+        .finally(() => setHasUserChecked(true));
+      return;
     }
+    setHasUserChecked(true);
   }, [fetchMe, user]);
 
-  if (isLoading) {
+  if (!hasUserChecked || isLoading) {
     return <div className="text-label-disable text-center">로딩 중...</div>;
   }
 
