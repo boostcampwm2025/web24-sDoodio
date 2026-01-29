@@ -6,19 +6,31 @@ import { fetchDifficultyStats } from '../apis/fetchDifficultyStats.api';
 export function DifficultyGraph() {
   const [stats, setStats] = useState<GetDifficultyStatsResponse>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showLoading, setShowLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const LOADING_DELAY_MS = 200;
 
   useEffect(() => {
+    const loadingTimer = globalThis.setTimeout(() => setShowLoading(true), LOADING_DELAY_MS);
+
     fetchDifficultyStats()
       .then(setStats)
       .catch((err) => {
         setError(err);
       })
-      .finally(() => setIsLoading(false));
+      .finally(() => {
+        globalThis.clearTimeout(loadingTimer);
+        setIsLoading(false);
+      });
+
+    return () => globalThis.clearTimeout(loadingTimer);
   }, []);
 
   if (isLoading) {
+    if (!showLoading) {
+      return <div className="h-40" />;
+    }
     return <div className="flex h-40 items-center justify-center">데이터를 불러오는 중...</div>;
   }
 

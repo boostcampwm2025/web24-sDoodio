@@ -20,10 +20,15 @@ describe('DifficultyGraph', () => {
     vi.clearAllMocks();
   });
 
-  it('로딩 중일 때 로딩 메시지를 표시한다', () => {
+  it('로딩이 지연되면 로딩 메시지를 표시한다', () => {
     mockedFetchDifficultyStats.mockReturnValue(new Promise(() => {}));
+    vi.useFakeTimers();
     render(<DifficultyGraph />);
+    expect(screen.queryByText('데이터를 불러오는 중...')).not.toBeInTheDocument();
+
+    vi.advanceTimersByTime(200);
     expect(screen.getByText('데이터를 불러오는 중...')).toBeInTheDocument();
+    vi.useRealTimers();
   });
 
   it('데이터가 없을 때 대체 메시지를 표시한다', async () => {
