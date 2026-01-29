@@ -523,9 +523,16 @@ describe('GoalService', () => {
       const behaviorRepoMock = {
         softDelete: jest.fn(),
       };
+      const todayBehaviorRepoMock = {
+        update: jest.fn(),
+      };
 
       const managerMock = {
-        getRepository: jest.fn(() => behaviorRepoMock),
+        getRepository: jest.fn((entity) => {
+          if (entity === Behavior) return behaviorRepoMock;
+          if (entity === TodayBehavior) return todayBehaviorRepoMock;
+          return behaviorRepoMock;
+        }),
       };
 
       const goalRepository = {
@@ -551,6 +558,15 @@ describe('GoalService', () => {
         id: expect.anything(),
         goal: { id: goalId },
       });
+      expect(todayBehaviorRepoMock.update).toHaveBeenCalledWith(
+        {
+          behavior: { id: expect.anything() },
+          user: { id: user.id },
+          date: expect.any(String),
+          status: expect.anything(),
+        },
+        { status: 'deleted' },
+      );
     });
   });
 });
