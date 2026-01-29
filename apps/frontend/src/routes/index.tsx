@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { NewGoalPage } from '@/pages/NewGoalPage';
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import { IndexPage } from '@/pages/IndexPage';
@@ -7,19 +7,26 @@ import { GoalDetailPage } from '@/pages/GoalDetailPage';
 import { StatsPage } from '@/pages/StatsPage';
 import { DodoRoomPage } from '@/pages/DodoRoomPage';
 import { LoginPage } from '@/pages/LoginPage';
+import { OnboardingPage } from '@/pages/OnboardingPage';
 import useAuthStore from '@/stores/useAuthStore';
+import Layout from '@/shared/components/layout/Layout';
 
 function RequireAuth() {
   const location = useLocation();
   const { user, fetchMe, isLoading } = useAuthStore();
+  const [hasUserChecked, setHasUserChecked] = useState(false);
 
   useEffect(() => {
     if (!user) {
-      fetchMe().catch(() => null);
+      fetchMe()
+        .catch(() => null)
+        .finally(() => setHasUserChecked(true));
+      return;
     }
+    setHasUserChecked(true);
   }, [fetchMe, user]);
 
-  if (isLoading) {
+  if (!hasUserChecked || isLoading) {
     return <div className="text-label-disable text-center">로딩 중...</div>;
   }
 
@@ -33,19 +40,24 @@ function RequireAuth() {
 export function AppRoutes() {
   return (
     <Routes>
+      {/* 레이아웃 미포함 페이지 */}
+      <Route element={<OnboardingPage />} path="/onboarding" />
       <Route element={<LoginPage />} path="/login" />
-      <Route element={<RequireAuth />}>
-        <Route element={<IndexPage />} index />
-        <Route element={<NewGoalPage />} path="/goals/new" />
-        <Route element={<AllGoalsPage />} path="/all-goals" />
-        <Route element={<GoalDetailPage />} path="/goals/:goalId" />
-        <Route element={<StatsPage />} path="/stats" />
-        <Route element={<DodoRoomPage />} path="/dodo-room" />
+      {/* 레이아웃 포함 페이지 */}
+      <Route element={<Layout />}>
+        <Route element={<RequireAuth />}>
+          <Route element={<IndexPage />} index />
+          <Route element={<NewGoalPage />} path="/goals/new" />
+          <Route element={<AllGoalsPage />} path="/all-goals" />
+          <Route element={<GoalDetailPage />} path="/goals/:goalId" />
+          <Route element={<StatsPage />} path="/stats" />
+          <Route element={<DodoRoomPage />} path="/dodo-room" />
+        </Route>
+        <Route
+          element={<div className="text-label-disable text-center">구현 예정입니다</div>}
+          path="*"
+        />
       </Route>
-      <Route
-        element={<div className="text-label-disable text-center">구현 예정입니다</div>}
-        path="*"
-      />
     </Routes>
   );
 }
