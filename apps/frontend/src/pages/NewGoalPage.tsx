@@ -110,7 +110,6 @@ export function NewGoalPage() {
     {
       step: 3,
       headerText: BEHAVIOR_DIFFICULTIES[0],
-      unskippable: true,
       dialogue: DODO_LINES.open,
       content: (
         <BehaviorSelection
@@ -145,7 +144,6 @@ export function NewGoalPage() {
     {
       step: 4,
       headerText: BEHAVIOR_DIFFICULTIES[1],
-      unskippable: true,
       dialogue: DODO_LINES.start,
       content: (
         <BehaviorSelection
@@ -180,7 +178,6 @@ export function NewGoalPage() {
     {
       step: 5,
       headerText: BEHAVIOR_DIFFICULTIES[2],
-      unskippable: true,
       dialogue: DODO_LINES.continue,
       content: (
         <BehaviorSelection
@@ -215,7 +212,6 @@ export function NewGoalPage() {
     {
       step: 6,
       headerText: BEHAVIOR_DIFFICULTIES[3],
-      unskippable: true,
       dialogue: DODO_LINES.deep,
       content: (
         <BehaviorSelection

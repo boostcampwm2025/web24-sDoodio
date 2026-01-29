@@ -127,6 +127,7 @@ export function NewGoalFrame({
   };
 
   const handleSkip = () => {
+    if (currentStep.validate && !currentStep.validate()) return;
     onSkip?.();
   };
 
@@ -231,7 +232,7 @@ export function NewGoalFrame({
               <button
                 onClick={handleSkip}
                 type="button"
-                className="text-label-1 text-primary-weak hover:text-primary-strong md:text-headline-1 transition-colors md:font-bold"
+                className="text-label-1 text-primary-weak hover:text-primary-strong md:text-headline-1 font-bold transition-colors"
               >
                 skip
               </button>
