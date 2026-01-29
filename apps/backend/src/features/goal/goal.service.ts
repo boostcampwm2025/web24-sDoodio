@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   CreateGoalResponseSchema,
@@ -11,6 +11,8 @@ import {
   type CreateGoalBehaviorsRequest,
   type UpdateGoalBehaviorsRequest,
   type DeleteGoalBehaviorsRequest,
+  GOAL_ERROR_MESSAGES,
+  BEHAVIOR_DIFFICULTIES,
 } from '@web24/shared';
 import { In, Repository } from 'typeorm';
 import { Behavior } from '../behavior/behavior.entity';
@@ -121,11 +123,30 @@ export class GoalService {
   }
 
   async createGoal(userId: string, request: CreateGoalRequest): Promise<CreateGoalResponse> {
+    const requiredDifficulties = BEHAVIOR_DIFFICULTIES.filter((d) => d !== 'AI');
+    const difficultySet = new Set();
+    const behaviorNameSet = new Set();
+    request.behaviors.forEach((b) => {
+      difficultySet.add(b.difficulty);
+      behaviorNameSet.add(b.title);
+    });
+    if (difficultySet.size < requiredDifficulties.length)
+      throw new BadRequestException(GOAL_ERROR_MESSAGES.empty_actions_by_difficulty);
+    if (behaviorNameSet.size < request.behaviors.length)
+      throw new BadRequestException(GOAL_ERROR_MESSAGES.duplicate_action_title_in_goal);
+
     return this.goalRepository.manager.transaction(async (manager) => {
       const user = await manager.getRepository(User).findOne({ where: { id: userId } });
 
       if (!user) {
         throw new NotFoundException('User not found');
+      }
+
+      const duplicatedGoal = await manager.getRepository(Goal).findOne({
+        where: { title: request.goalTitle.trim(), user: { id: userId } },
+      });
+      if (duplicatedGoal) {
+        throw new BadRequestException(GOAL_ERROR_MESSAGES.duplicate_goal_title);
       }
 
       const goal = manager.getRepository(Goal).create({
