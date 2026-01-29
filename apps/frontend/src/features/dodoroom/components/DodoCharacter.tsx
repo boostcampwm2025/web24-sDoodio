@@ -8,8 +8,8 @@ interface DodoCharacterProps {
 export function DodoCharacter({ action }: DodoCharacterProps) {
   return (
     <img
-      src={DODO_ACTION_IMAGE_MAP[action]}
-      alt="두두 캐릭터"
+      src={DODO_ACTION_IMAGE_MAP[action].src}
+      alt={DODO_ACTION_IMAGE_MAP[action].alt}
       className="h-[60%] max-h-90 w-auto select-none"
     />
   );

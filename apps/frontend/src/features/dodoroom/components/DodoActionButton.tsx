@@ -15,8 +15,8 @@ export function DodoActionButton({ action, onClick }: DodoActionButtonProps) {
     >
       <img
         className="h-full w-full object-contain select-none"
-        src={DODO_ACTION_IMAGE_MAP[action]}
-        alt="두두 캐릭터"
+        src={DODO_ACTION_IMAGE_MAP[action].src}
+        alt={DODO_ACTION_IMAGE_MAP[action].alt}
       />
     </button>
   );
