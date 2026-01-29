@@ -7,6 +7,7 @@ export interface NewGoalFrameStep {
   headerText: string;
   dialogue: string[]; // string[]로 변경
   content: React.ReactNode;
+  validate?: () => boolean;
 }
 
 export interface NewGoalFrameProps {
@@ -96,9 +97,13 @@ export function NewGoalFrame({
 
     // 마지막 스텝이면 완료
     if (isLastStep) {
+      if (currentStep.validate && !currentStep.validate()) return;
       onComplete?.();
       return;
     }
+
+    // 검증 로직 수행
+    if (currentStep.validate && !currentStep.validate()) return;
 
     // 다음 스텝으로
     setDirection('next');
