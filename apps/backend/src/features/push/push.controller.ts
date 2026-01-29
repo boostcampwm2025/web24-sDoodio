@@ -59,4 +59,13 @@ export class PushController {
     const result = await this.pushService.sendToUser(userId, body);
     return result;
   }
+
+  @Post('notifications/test/all')
+  async sendTestNotificationToALl(
+    @Body(new ZodValidationPipe(SendPushNotificationRequestSchema))
+    body: SendPushNotificationRequest,
+  ): Promise<SendPushNotificationResponse> {
+    const result = await this.pushService.sendToAllUsers(body);
+    return result;
+  }
 }
