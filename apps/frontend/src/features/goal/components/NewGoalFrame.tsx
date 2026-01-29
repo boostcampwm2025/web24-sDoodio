@@ -41,7 +41,6 @@ export function NewGoalFrame({
   const currentProgressIndex = progressSteps.indexOf(currentStep.step);
   const isProgressShown = progressSteps.includes(currentStep.step);
 
-  const currentDialogue = currentStep.dialogue[dialogueIdx] || '';
   const hasMultipleDialogues = currentStep.dialogue.length > 1;
   const isFirstDialogue = dialogueIdx <= 0;
   const isLastDialogue = dialogueIdx >= currentStep.dialogue.length - 1;
@@ -108,6 +107,7 @@ export function NewGoalFrame({
     // 다음 스텝으로
     setDirection('next');
     setIsExiting(true);
+    setIsDialogueVisible(false);
     setTimeout(() => {
       onMove(currStepIdx + 1);
       setIsExiting(false);
@@ -120,6 +120,7 @@ export function NewGoalFrame({
     // 이전 스텝으로
     setDirection('prev');
     setIsExiting(true);
+    setIsDialogueVisible(false);
     setTimeout(() => {
       onMove(currStepIdx - 1);
       setIsExiting(false);
@@ -154,27 +155,26 @@ export function NewGoalFrame({
   };
 
   return (
-    <div className="bg-bg-normal flex h-full w-full items-center justify-center p-4 md:p-8 lg:p-12">
-      <div className="bg-bg-light shadow-heavy flex h-175 w-full max-w-sm shrink-0 flex-col overflow-hidden rounded-3xl md:h-200 md:max-w-3xl md:rounded-4xl lg:h-212.5 lg:max-w-310 lg:flex-row">
+    <div className="bg-bg-normal flex h-full w-full items-center justify-center p-4">
+      <div className="bg-bg-light shadow-heavy flex h-150 w-full max-w-sm shrink-0 flex-col overflow-hidden rounded-3xl md:h-180 md:max-w-3xl md:rounded-4xl lg:h-180 lg:max-w-250 lg:flex-row">
         {/* 왼쪽 - 두두 캐릭터 및 대사 영역 */}
-        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center p-6 pb-0 md:p-8 md:pb-0 lg:p-12 lg:pb-12">
-          {/* 말풍선 */}
-          {/* TODO: 타이핑 효과 넣기 */}
-          <div className="relative mb-2 flex w-full flex-col items-center md:mb-6 lg:mb-12">
+        <div className="relative flex flex-none flex-col items-center p-4 pb-0 md:p-6 md:pb-0 lg:flex-1 lg:justify-center lg:p-12 lg:pb-12">
+          {/* 말풍선 컨테이너 (너비 고정 및 꼬리 정렬용) */}
+          <div className="relative mb-8 flex w-full max-w-xs flex-col items-center md:mb-10 md:max-w-sm lg:mb-20 lg:max-w-md">
             <div
-              className={`bg-bg-alternative relative flex min-h-16 w-full max-w-xs items-center justify-center rounded-3xl px-6 shadow-sm md:min-h-28 md:max-w-sm md:rounded-4xl lg:min-h-50 ${
-                hasMultipleDialogues ? 'pr-8 pb-6 md:pr-12' : ''
+              className={`bg-bg-alternative relative flex min-h-20 w-full items-center justify-center rounded-3xl px-10 py-8 shadow-sm md:min-h-32 md:rounded-4xl lg:min-h-50 ${
+                hasMultipleDialogues ? 'pr-12 pb-8 md:pr-14' : ''
               }`}
             >
               <p
-                className={`text-label-normal md:text-headline-1 lg:text-heading-2 text-center text-sm leading-relaxed font-bold break-keep whitespace-pre-line transition-opacity duration-300 ${
+                className={`text-label-normal md:text-headline-1 lg:text-heading-2 text-center text-sm leading-relaxed font-bold break-keep whitespace-pre-line transition-opacity duration-300 md:text-base ${
                   isDialogueVisible ? 'opacity-100' : 'opacity-0'
                 }`}
               >
-                {currentDialogue}
+                {currentStep.dialogue[dialogueIdx] || ''}
               </p>
               {hasMultipleDialogues && (
-                <div className="absolute right-2 bottom-2 flex items-center gap-1">
+                <div className="absolute right-3 bottom-3 flex items-center gap-1.5 md:right-4 md:bottom-4">
                   {/* 이전 대사 전환 버튼 */}
                   <button
                     type="button"
@@ -198,16 +198,17 @@ export function NewGoalFrame({
                 </div>
               )}
             </div>
-            <div className="absolute -bottom-10 left-10 flex flex-col gap-1 md:-bottom-18 md:left-16 md:gap-2">
-              <div className="bg-bg-alternative -ml-4 h-3 w-3 rounded-full opacity-80 md:-ml-8 md:h-6 md:w-6" />
-              <div className="bg-bg-alternative -ml-3 h-2 w-2 rounded-full opacity-60 md:-ml-5 md:h-4 md:w-4" />
-              <div className="bg-bg-alternative -ml-2 h-1.5 w-1.5 rounded-full opacity-50 md:h-2 md:w-2" />
+            {/* 말풍선 꼬리 (말풍선 왼쪽 정렬) */}
+            <div className="absolute -bottom-10 left-6 flex flex-col gap-1 md:-bottom-16 md:left-10 md:gap-2">
+              <div className="bg-bg-alternative h-3 w-3 rounded-full opacity-80 md:h-6 md:w-6" />
+              <div className="bg-bg-alternative h-2 w-2 rounded-full opacity-60 md:h-4 md:w-4" />
+              <div className="bg-bg-alternative h-1.5 w-1.5 rounded-full opacity-50 md:h-2 md:w-2" />
             </div>
           </div>
 
           {/* 두두 */}
-          <div className="mt-auto flex w-full items-center justify-center lg:block">
-            <div className="w-full max-w-24 md:max-w-40 lg:max-w-75">
+          <div className="mt-2 flex w-full items-center justify-center lg:mt-auto lg:block">
+            <div className="w-full max-w-16 md:max-w-24 lg:max-w-50">
               <img
                 src="/DodoSitdown.png"
                 alt="앉은 두두"
