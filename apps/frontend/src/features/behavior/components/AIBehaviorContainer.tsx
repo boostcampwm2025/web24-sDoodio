@@ -1,6 +1,7 @@
 import { BehaviorCard } from '@/shared/components/behavior/BehaviorCard';
 import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
 import { ICON_SIZE } from '@/shared/constants/icon';
+import { useEffect, useState } from 'react';
 
 interface AIBehaviorContainerProps {
   behaviors: Behavior[];
@@ -18,6 +19,8 @@ function MakingIndicator() {
   );
 }
 
+const MIN_LOADING_TIME_MS = 500;
+
 export function AIBehaviorContainer({
   behaviors,
   onToggle,
@@ -27,7 +30,20 @@ export function AIBehaviorContainer({
   const containerClassName =
     'animate-in fade-in slide-in-from-top-4 border-primary-weak/60 bg-primary-weak/30 relative mb-10 overflow-hidden rounded-4xl border p-6 duration-500 min-h-55';
 
-  if (isLoading || isMaking) {
+  const [isMinLoading, setIsMinLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsMinLoading(false);
+    }, MIN_LOADING_TIME_MS);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // 실제 데이터 로딩 중이거나, 생성 중이거나, 최소 시간이 지나지 않았으면 로딩 표시
+  const showLoading = isLoading || isMaking || isMinLoading;
+
+  if (showLoading) {
     return (
       <div className={containerClassName}>
         <div className="absolute inset-0 flex items-center justify-center">
