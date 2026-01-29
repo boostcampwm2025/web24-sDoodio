@@ -19,6 +19,19 @@ export function AllGoalsPage() {
 
   const { allBehaviors, isLoading: isBehaviorsLoading } = useAllBehaviors(isAllExpanded);
 
+  // 전체 토글 상태 동기화 로직
+  useEffect(() => {
+    if (!goals) return;
+
+    const totalGoals = goals.length;
+
+    if (totalGoals > 0 && expandedGoalIds.size === totalGoals) {
+      setIsAllExpanded(true);
+    } else if (isAllExpanded) {
+      setIsAllExpanded(false);
+    }
+  }, [expandedGoalIds, goals, isAllExpanded]);
+
   const behaviorsByGoal = allBehaviors?.reduce(
     (acc: Record<string, Behavior[]>, behavior: Behavior) => {
       const { goalId } = behavior;
@@ -59,11 +72,9 @@ export function AllGoalsPage() {
     if (isAllExpanded) {
       setIsAllExpanded(false);
       setExpandedGoalIds(new Set());
-    } else {
+    } else if (goals) {
       setIsAllExpanded(true);
-      if (goals) {
-        setExpandedGoalIds(new Set(goals.map((g) => g.id)));
-      }
+      setExpandedGoalIds(new Set(goals.map((g) => g.id)));
     }
   };
 
@@ -72,7 +83,6 @@ export function AllGoalsPage() {
       const next = new Set(prev);
       if (next.has(id)) {
         next.delete(id);
-        setIsAllExpanded(false);
       } else {
         next.add(id);
       }
