@@ -61,7 +61,7 @@ export class PushController {
   }
 
   @Post('notifications/test/all')
-  async sendTestNotificationToALl(
+  async sendTestNotificationToAll(
     @Body(new ZodValidationPipe(SendPushNotificationRequestSchema))
     body: SendPushNotificationRequest,
   ): Promise<SendPushNotificationResponse> {
