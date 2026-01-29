@@ -17,6 +17,7 @@ describe('PushController', () => {
             upsertSubscription: jest.fn(),
             removeSubscription: jest.fn(),
             sendToUser: jest.fn(),
+            sendToAllUsers: jest.fn(),
           },
         },
       ],
@@ -77,6 +78,18 @@ describe('PushController', () => {
 
       expect(pushService.sendToUser).toHaveBeenCalledWith('user-id', payload);
       expect(result).toEqual({ sent: 1, failed: 0, removed: 0 });
+    });
+  });
+
+  describe('sendTestNotificationToALl', () => {
+    it('전체 사용자에게 테스트 푸시를 전송하고 결과를 반환한다', async () => {
+      const payload = { title: 'Hello', body: 'World', url: '/home' };
+      pushService.sendToAllUsers.mockResolvedValue({ sent: 2, failed: 0, removed: 0 });
+
+      const result = await controller.sendTestNotificationToALl(payload);
+
+      expect(pushService.sendToAllUsers).toHaveBeenCalledWith(payload);
+      expect(result).toEqual({ sent: 2, failed: 0, removed: 0 });
     });
   });
 });
