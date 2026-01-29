@@ -7,6 +7,7 @@ import { useTodayBehaviorAdd } from '@/features/behavior/hooks/useTodayBehaviorA
 import { useFilteredTodayBehaviors } from '@/features/behavior/hooks/useFilteredTodayBehaviors';
 import { TodayBehaviorAddModal } from '@/features/behavior/components/TodayBehaviorAddModal';
 import { EmptyGoal } from '@/shared/components/goal/EmptyGoal';
+import { useState } from 'react';
 import { SwiperTabs } from './SwiperTabs';
 import { TodayBehaviorCardGrid } from './TodayBehaviorCardGrid';
 
@@ -43,6 +44,7 @@ export function TodayBehaviorList({
     handleBehaviorSelect,
     resetGoalSelection,
   } = useTodayBehaviorAdd({ goals, onAddBehavior });
+  const [showTooltip, setShowTooltip] = useState(false);
 
   return (
     <div className="mb-4 flex-col items-center justify-between px-4">
@@ -50,18 +52,25 @@ export function TodayBehaviorList({
         <h3 className="flex items-center gap-2 text-lg font-bold">
           <span>오늘의 행동</span>
           <span className="rounded-full px-2 py-0.5 text-xs font-bold">{behaviors.length}</span>
-          <span className="group relative inline-flex">
+          <span className="relative inline-flex">
             <button
               type="button"
               aria-label="오늘의 행동 안내"
               aria-describedby="today-behavior-tooltip"
+              aria-expanded={showTooltip}
+              // 데스크톱: 마우스 올리면 보이고, 떼면 숨김
+              onMouseEnter={() => setShowTooltip(true)}
+              onMouseLeave={() => setShowTooltip(false)}
+              // 모바일 & 데스크톱: 클릭(터치) 시 토글
+              onClick={() => setShowTooltip((prev) => !prev)}
             >
               <Info size={ICON_SIZE.xxs} />
             </button>
+
             <span
               id="today-behavior-tooltip"
               role="tooltip"
-              className="bg-bg-light text-label-normal border-bg-alternative pointer-events-none absolute top-1/2 left-full z-20 ml-2 w-max max-w-[50vw] -translate-y-1/2 rounded-xl border px-3 py-2 text-xs font-medium break-words whitespace-normal opacity-0 shadow-(--shadow-normal) transition-opacity duration-200 group-focus-within:opacity-100 group-hover:opacity-100"
+              className={`bg-bg-light text-label-normal border-bg-alternative pointer-events-none absolute top-1/2 left-full z-20 ml-2 w-max max-w-[50vw] -translate-y-1/2 rounded-xl border px-3 py-2 text-xs font-medium wrap-break-word whitespace-normal shadow-(--shadow-normal) transition-opacity duration-200 ${showTooltip ? 'visible opacity-100' : 'invisible opacity-0'} `}
             >
               오늘을 위해 추출된 행동만 보여줍니다
             </span>
@@ -71,7 +80,7 @@ export function TodayBehaviorList({
           <button
             type="button"
             onClick={onRefresh}
-            className="text-label-disable hover:text-label-normal hover:bg-primary-weak/30 inline-flex items-center gap-1 rounded-lg p-2 text-sm font-semibold transition"
+            className="text-label-disable hover:text-label-normal hover:bg-primary-weak/30 inline-flex items-center gap-1 rounded-lg text-sm font-semibold transition"
           >
             <RefreshCw size={ICON_SIZE.xxs} />
             오늘의 행동 다시 뽑기
