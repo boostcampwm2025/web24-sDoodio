@@ -59,6 +59,8 @@ export function AccumulatedBehaviorStats({
     color: `var(--color-goal-${item.goalColor})`,
   }));
 
+  const truncateLabel = (label: string) => (label.length > 10 ? `${label.slice(0, 10)}…` : label);
+
   const hasData = currentData.items.length > 0;
 
   const goalTabs = [
@@ -88,9 +90,10 @@ export function AccumulatedBehaviorStats({
             data={chartData}
             margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
             sortByValue
-            arcLabel="label"
+            arcLabel={(datum) => truncateLabel(String(datum.label))}
             arcLabelsTextColor="#252322"
-            theme={{ labels: { text: { fontWeight: 800 } } }}
+            arcLabelsSkipAngle={12}
+            theme={{ labels: { text: { fontSize: 11, fontWeight: 700 } } }}
             enableArcLinkLabels={false}
             activeOuterRadiusOffset={8}
             // colors={(item) => item.data.color}
