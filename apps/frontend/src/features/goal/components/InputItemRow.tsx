@@ -21,22 +21,24 @@ export function InputItemRow({
   maxLength,
 }: InputItemRowProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [isBlurVisible, setIsBlurVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isLeftBlurVisible, setIsLeftBlurVisible] = useState(false);
+  const [isRightBlurVisible, setIsRightBlurVisible] = useState(false);
+
+  const updateBlurs = () => {
+    const container = containerRef.current;
+    if (!container) return;
+    const { scrollLeft, scrollWidth, clientWidth } = container;
+    setIsLeftBlurVisible(scrollLeft > 0);
+    setIsRightBlurVisible(scrollLeft + clientWidth < scrollWidth - 1);
+  };
 
   useEffect(() => {
-    const input = inputRef.current;
-    if (!input) return;
-    const isOverflowing = input.scrollWidth > input.clientWidth;
-    const isAtEnd = input.scrollLeft + input.clientWidth >= input.scrollWidth - 1;
-    setIsBlurVisible(isOverflowing && !isAtEnd);
+    updateBlurs();
   }, [value]);
 
   const handleScroll = () => {
-    const input = inputRef.current;
-    if (!input) return;
-    const isOverflowing = input.scrollWidth > input.clientWidth;
-    const isAtEnd = input.scrollLeft + input.clientWidth >= input.scrollWidth - 1;
-    setIsBlurVisible(isOverflowing && !isAtEnd);
+    updateBlurs();
   };
 
   if (variant === 'add') {
@@ -55,19 +57,40 @@ export function InputItemRow({
 
   return (
     <div className="bg-bg-normal group focus-within:ring-primary-weak flex h-16 w-full shrink-0 items-center gap-2 rounded-2xl px-6 transition-all focus-within:ring-2">
-      <div className="relative min-w-0 flex-1">
-        <input
-          ref={inputRef}
-          type="text"
-          value={value}
+      <div className="relative flex h-full min-w-0 flex-1 items-center">
+        <div
+          ref={containerRef}
           onScroll={handleScroll}
-          onChange={(e) => onChange?.(e.target.value)}
-          placeholder={placeholder}
-          maxLength={maxLength}
-          className="text-label-normal placeholder:text-primary-weak md:text-headline-1 h-full w-full bg-transparent text-sm font-semibold outline-none placeholder:font-normal"
-        />
-        {isBlurVisible && (
-          <div className="from-bg-normal pointer-events-none absolute top-0 right-0 h-full w-6 bg-linear-to-l to-transparent" />
+          className="no-scrollbar h-full w-full overflow-x-auto scroll-smooth"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          <div className="relative flex h-full w-max min-w-full items-center">
+            <input
+              ref={inputRef}
+              type="text"
+              value={value}
+              onChange={(e) => onChange?.(e.target.value)}
+              onFocus={updateBlurs}
+              placeholder={placeholder}
+              maxLength={maxLength}
+              className="text-label-normal placeholder:text-primary-weak md:text-headline-1 text-body-1 absolute inset-0 h-full w-full bg-transparent font-semibold outline-none placeholder:font-normal"
+            />
+            <span
+              className={`text-body-1 md:text-headline-1 invisible whitespace-pre ${
+                value ? 'font-semibold' : 'font-normal'
+              }`}
+            >
+              {value || placeholder}
+            </span>
+          </div>
+        </div>
+
+        {/* Blur overlays */}
+        {isLeftBlurVisible && (
+          <div className="from-bg-normal pointer-events-none absolute inset-y-0 -left-px z-10 w-6.25 bg-linear-to-r to-transparent" />
+        )}
+        {isRightBlurVisible && (
+          <div className="from-bg-normal pointer-events-none absolute inset-y-0 -right-px z-10 w-6.25 bg-linear-to-l to-transparent" />
         )}
       </div>
 
