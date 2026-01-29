@@ -59,6 +59,9 @@
   --color-label-alternative: #383533;
   --color-label-disable: #6b5a4a;
 
+  /* Accent Colors */
+  --color-accent-red: #d84343;
+
   /* ===== Shadows ===== */
   --shadow-normal:
     0px 1px 2px rgba(0, 0, 0, 0.12), 0px 0px 1px rgba(0, 0, 0, 0.08),
