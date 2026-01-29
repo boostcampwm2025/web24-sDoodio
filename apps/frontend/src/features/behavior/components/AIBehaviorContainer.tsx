@@ -30,18 +30,19 @@ export function AIBehaviorContainer({
   const containerClassName =
     'animate-in fade-in slide-in-from-top-4 border-primary-weak/60 bg-primary-weak/30 relative mb-10 overflow-hidden rounded-4xl border p-6 duration-500 min-h-55';
 
-  const [isMinLoading, setIsMinLoading] = useState(true);
+  const [showLoading, setShowLoading] = useState(isLoading || isMaking);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsMinLoading(false);
-    }, MIN_LOADING_TIME_MS);
-
+    let timer: NodeJS.Timeout;
+    if (isLoading || isMaking) {
+      setShowLoading(true);
+    } else {
+      timer = setTimeout(() => {
+        setShowLoading(false);
+      }, MIN_LOADING_TIME_MS);
+    }
     return () => clearTimeout(timer);
-  }, []);
-
-  // 실제 데이터 로딩 중이거나, 생성 중이거나, 최소 시간이 지나지 않았으면 로딩 표시
-  const showLoading = isLoading || isMaking || isMinLoading;
+  }, [isLoading, isMaking]);
 
   if (showLoading) {
     return (

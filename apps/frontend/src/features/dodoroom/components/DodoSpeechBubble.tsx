@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface DodoSpeechBubbleProps {
   text?: string;
@@ -10,17 +10,16 @@ export function DodoSpeechBubble({ text }: DodoSpeechBubbleProps) {
   const [showBottomBlur, setShowBottomBlur] = useState(false);
 
   // 스크롤 위치에 따라 상/하단 블러 표시 여부 결정
-  const handleScroll = () => {
+  const handleScroll = useCallback(() => {
     if (!scrollRef.current) return;
     const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-
     setShowTopBlur(scrollTop > 0);
     setShowBottomBlur(scrollTop + clientHeight < scrollHeight - 1);
-  };
+  }, []);
 
   useEffect(() => {
     handleScroll();
-  }, [text]);
+  }, [text, handleScroll]);
 
   if (!text) return null;
 
