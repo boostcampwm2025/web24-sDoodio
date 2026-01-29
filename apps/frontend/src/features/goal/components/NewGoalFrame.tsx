@@ -149,7 +149,7 @@ export function NewGoalFrame({
 
   return (
     <div className="bg-bg-normal flex h-full w-full items-center justify-center p-4 md:p-8 lg:p-12">
-      <div className="bg-bg-light shadow-heavy flex h-[700px] w-full max-w-sm flex-shrink-0 flex-col overflow-hidden rounded-3xl md:h-[800px] md:max-w-3xl md:rounded-4xl lg:h-[850px] lg:max-w-[1240px] lg:flex-row">
+      <div className="bg-bg-light shadow-heavy flex h-175 w-full max-w-sm shrink-0 flex-col overflow-hidden rounded-3xl md:h-200 md:max-w-3xl md:rounded-4xl lg:h-212.5 lg:max-w-310 lg:flex-row">
         {/* 왼쪽 - 두두 캐릭터 및 대사 영역 */}
         <div className="relative flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center p-6 pb-0 md:p-8 md:pb-0 lg:p-12 lg:pb-12">
           {/* 말풍선 */}
