@@ -28,12 +28,12 @@ describe('ChatController', () => {
   });
 
   it('getDodoChat은 서비스 결과를 반환한다', async () => {
-    service.getDodoChat.mockResolvedValue({ reply: '반가워요!' });
+    service.getDodoChat.mockResolvedValue({ reply: '반가워요!', action: 'None' });
 
     const result = await controller.getDodoChat('user-1', { message: '안녕' });
 
     expect(service.getDodoChat).toHaveBeenCalledWith('user-1', '안녕');
-    expect(result).toEqual({ reply: '반가워요!' });
+    expect(result).toEqual({ reply: '반가워요!', action: 'None' });
   });
 
   it('getDodoChatHistory는 서비스 결과를 반환한다', async () => {

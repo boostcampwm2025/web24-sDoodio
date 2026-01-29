@@ -1,5 +1,6 @@
 import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { DODO_ACTION_VALUES, DODO_ACTIONS, type DodoAction } from '@web24/shared';
 import { Goal } from '../goal/goal.entity';
 import { DodoChatMessage } from '../chat/dodo-chat-message.entity';
 
@@ -201,5 +202,60 @@ JSON 외의 설명, 문장, 코드블록, 주석은 **절대 출력하지 마**.
     const reply = responseJson.result.message.content;
 
     return reply;
+  }
+
+  async getDodoAction(message: string): Promise<DodoAction> {
+    const systemPrompt = `
+      너는 행동 기록 서비스 "뚜웰"의 캐릭터 "두두"가 취할 적절한 행동을 정해야 한다.
+      두두는 다음 네가지 행동을 할 수 있다.
+      "${DODO_ACTION_VALUES.join('", "')}"
+      반드시 위 네가지 행동 중에 하나만을 응답하고, 그 외의 다른 말은 일체 하지마.
+      응답 기준은 질문에 대해서 두두가 취할 답변과 가장 어울리는 행동이야.
+      특별히 어울리는 게 없다면 "${DODO_ACTIONS.none}"을 출력해.
+
+      ## 예시
+      사랑해 -> ${DODO_ACTIONS.wink}
+      두두 예쁘다 -> ${DODO_ACTIONS.wink}
+      오늘 할 일 다 했어 -> ${DODO_ACTIONS.hurray}
+      두두야 다리 안아파? -> ${DODO_ACTIONS.sitDown}
+      힘드네 좀 쉬고 싶어 -> ${DODO_ACTIONS.sitDown}
+      심심해 -> ${DODO_ACTIONS.none}
+      점심 먹었어? -> ${DODO_ACTIONS.none}
+    `;
+
+    const messages = [
+      {
+        role: 'system' as const,
+        content: [{ type: 'text', text: systemPrompt }],
+      },
+      {
+        role: 'user' as const,
+        content: [{ type: 'text', text: message }],
+      },
+    ];
+
+    const modelName = 'HCX-005';
+    const clovaApiUrl = `https://clovastudio.stream.ntruss.com/v3/chat-completions/${modelName}`;
+    const clovaApiKey = this.configService.getOrThrow<string>('CLOVA_API_KEY');
+
+    const response = await fetch(clovaApiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${clovaApiKey}`,
+      },
+      body: JSON.stringify({ messages }),
+    });
+
+    if (!response.ok) {
+      this.logger.error(`CLOVA API error: ${response.status}`);
+      throw new ServiceUnavailableException('Failed to fetch CLOVA response');
+    }
+
+    const responseJson = (await response.json()) as ClovaChatResponse;
+    const action = responseJson.result.message.content as DodoAction;
+
+    if (DODO_ACTION_VALUES.includes(action)) return action;
+    return DODO_ACTIONS.none;
   }
 }

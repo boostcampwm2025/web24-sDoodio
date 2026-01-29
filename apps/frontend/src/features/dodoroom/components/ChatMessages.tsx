@@ -2,16 +2,23 @@ import { useEffect, useRef, useLayoutEffect } from 'react';
 import type { Message } from '@/features/dodoroom/types/dodo-chat.types';
 
 type ChatMessagesProps = {
-  messages: Message[];
-  onLoadMore?: () => void;
-  isLoading?: boolean;
-  hasMore?: boolean;
+  readonly messages: Message[];
+  readonly onLoadMore?: () => void;
+  readonly isLoading?: boolean;
+  readonly isSendingMessage?: boolean;
+  readonly hasMore?: boolean;
 };
 
 const SCROLL_BOTTOM_THRESHOLD = 50;
 const LOAD_MORE_SCROLL_PERCENTAGE = 20;
 
-export function ChatMessages({ messages, onLoadMore, isLoading, hasMore }: ChatMessagesProps) {
+export function ChatMessages({
+  messages,
+  onLoadMore,
+  isLoading,
+  hasMore,
+  isSendingMessage,
+}: ChatMessagesProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const shouldScrollToBottomRef = useRef(true);
   const isMountedRef = useRef(false);
@@ -84,6 +91,13 @@ export function ChatMessages({ messages, onLoadMore, isLoading, hasMore }: ChatM
           </div>
         </div>
       ))}
+      {isSendingMessage ? (
+        <div className="flex justify-start">
+          <div className="bg-bg-light text-label-normal border-primary-weak/60 max-w-[75%] rounded-2xl border px-3 py-2 text-sm">
+            ...
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

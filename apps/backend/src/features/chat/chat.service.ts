@@ -29,7 +29,10 @@ export class ChatService {
       take: ChatService.CHAT_HISTORY_LIMIT,
     });
 
-    const reply = await this.aiService.createDodoMessage(history, message);
+    const [reply, action] = await Promise.all([
+      this.aiService.createDodoMessage(history, message),
+      this.aiService.getDodoAction(message),
+    ]);
 
     await this.dodoChatRepository.save([
       this.dodoChatRepository.create({
@@ -44,7 +47,7 @@ export class ChatService {
       }),
     ]);
 
-    return { reply };
+    return { reply, action };
   }
 
   async getDodoChatHistory(userId: string, cursor?: string, limit: number = 10) {

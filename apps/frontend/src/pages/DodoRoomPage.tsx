@@ -3,10 +3,14 @@ import { ChatInput } from '@/features/dodoroom/components/ChatInput';
 import { ChatMessages } from '@/features/dodoroom/components/ChatMessages';
 import { DodoSpeechBubble } from '@/features/dodoroom/components/DodoSpeechBubble';
 import { useDodoChat } from '@/features/dodoroom/hooks/useDodoChat';
+import { DodoCharacter } from '@/features/dodoroom/components/DodoCharacter';
+import { DODO_ACTION_VALUES } from '@web24/shared';
+import { DodoActionButton } from '@/features/dodoroom/components/DodoActionButton';
 
 export function DodoRoomPage() {
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
   const {
+    dodoAction,
     messages,
     input,
     setInput,
@@ -15,7 +19,9 @@ export function DodoRoomPage() {
     handleSend,
     loadMoreMessages,
     isLoadingHistory,
+    isSendingMessage,
     hasMore,
+    handleActionButton,
   } = useDodoChat();
 
   return (
@@ -28,11 +34,12 @@ export function DodoRoomPage() {
           <div className="absolute inset-0" />
           <div className="relative z-10 flex h-full w-full items-end justify-center rounded-2xl pb-10">
             <DodoSpeechBubble text={latestDodoMessage?.text} />
-            <img
-              src="/DodoStand.png"
-              alt="두두 캐릭터"
-              className="h-[60%] max-h-90 w-auto select-none"
-            />
+            <DodoCharacter action={dodoAction} />
+          </div>
+          <div className="absolute bottom-4 left-4 z-20 flex flex-col gap-2">
+            {DODO_ACTION_VALUES.filter((v) => v !== 'None').map((action) => (
+              <DodoActionButton key={action} action={action} onClick={handleActionButton} />
+            ))}
           </div>
         </section>
 
@@ -42,14 +49,25 @@ export function DodoRoomPage() {
             messages={messages}
             onLoadMore={loadMoreMessages}
             isLoading={isLoadingHistory}
+            isSendingMessage={isSendingMessage}
             hasMore={hasMore}
           />
-          <ChatInput value={input} canSend={canSend} onChange={setInput} onSend={handleSend} />
+          <ChatInput
+            value={input}
+            canSend={canSend}
+            onChange={setInput}
+            onSend={() => handleSend()}
+          />
         </section>
       </div>
 
       <div className="mt-4 flex flex-col gap-3 md:hidden">
-        <ChatInput value={input} canSend={canSend} onChange={setInput} onSend={handleSend} />
+        <ChatInput
+          value={input}
+          canSend={canSend}
+          onChange={setInput}
+          onSend={() => handleSend()}
+        />
         <button
           type="button"
           onClick={() => setIsMobileSheetOpen(true)}
@@ -84,7 +102,12 @@ export function DodoRoomPage() {
               isLoading={isLoadingHistory}
               hasMore={hasMore}
             />
-            <ChatInput value={input} canSend={canSend} onChange={setInput} onSend={handleSend} />
+            <ChatInput
+              value={input}
+              canSend={canSend}
+              onChange={setInput}
+              onSend={() => handleSend()}
+            />
           </div>
         </div>
       )}

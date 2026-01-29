@@ -20,10 +20,11 @@ describe('ChatService', () => {
   const configService = {
     getOrThrow: jest.fn().mockReturnValue('test-key'),
   };
-  const aiService = { createDodoMessage: jest.fn() };
+  const aiService = { createDodoMessage: jest.fn(), getDodoAction: jest.fn() };
 
   beforeEach(async () => {
     aiService.createDodoMessage.mockReset();
+    aiService.getDodoAction.mockReset();
     dodoChatRepository.find.mockReset();
     dodoChatRepository.save.mockReset();
     dodoChatRepository.create.mockReset();
@@ -65,7 +66,7 @@ describe('ChatService', () => {
     await expect(service.getDodoChat('user-1', '안녕')).rejects.toThrow('User not found');
   });
 
-  it('getDodoChat은 응답을 저장하고 reply를 반환한다', async () => {
+  it('getDodoChat은 응답을 저장하고 reply와 action을 반환한다', async () => {
     userRepository.findOne.mockResolvedValue({ id: 'user-1' });
 
     dodoChatRepository.find.mockResolvedValue([
@@ -74,6 +75,7 @@ describe('ChatService', () => {
     ]);
 
     aiService.createDodoMessage.mockResolvedValue('반가워요!');
+    aiService.getDodoAction.mockResolvedValue('None');
 
     const result = await service.getDodoChat('user-1', '안녕');
 
@@ -84,6 +86,7 @@ describe('ChatService', () => {
       ],
       '안녕',
     );
+    expect(aiService.getDodoAction).toHaveBeenCalledWith('안녕');
 
     expect(dodoChatRepository.save).toHaveBeenCalledTimes(1);
     expect(dodoChatRepository.save).toHaveBeenCalledWith([
@@ -97,7 +100,7 @@ describe('ChatService', () => {
       }),
     ]);
 
-    expect(result).toEqual({ reply: '반가워요!' });
+    expect(result).toEqual({ reply: '반가워요!', action: 'None' });
   });
 
   describe('getDodoChatHistory', () => {

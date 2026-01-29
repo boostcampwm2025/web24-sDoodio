@@ -1,3 +1,4 @@
+import { DODO_ACTION_VALUES } from '../types';
 import { z } from '../zod';
 
 export const DodoChatRequestSchema = z.object({
@@ -7,6 +8,7 @@ export type DodoChatRequest = z.infer<typeof DodoChatRequestSchema>;
 
 export const DodoChatResponseSchema = z.object({
   reply: z.string().min(1),
+  action: z.enum(DODO_ACTION_VALUES),
 });
 export type DodoChatResponse = z.infer<typeof DodoChatResponseSchema>;
 

@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { sendDodoChat } from '@/features/dodoroom/apis/sendDodoChat.api';
 import { fetchChatHistory } from '@/features/dodoroom/apis/fetchChatHistory.api';
 import { useDodoChat } from './useDodoChat';
+import { DODO_ACTION_COMMAND_MAP } from '../constants/dodo-action';
 
 // --- Mocks ---
 vi.mock('@/features/dodoroom/apis/sendDodoChat.api', () => ({
@@ -59,7 +60,7 @@ describe('useDodoChat Hook', () => {
     const userMessage = '안녕 두두';
     const dodoReply = '반가워!';
 
-    (sendDodoChat as any).mockResolvedValue({ reply: dodoReply });
+    (sendDodoChat as any).mockResolvedValue({ reply: dodoReply, action: 'None' });
 
     act(() => {
       result.current.setInput(userMessage);
@@ -136,5 +137,38 @@ describe('useDodoChat Hook', () => {
     // 메시지 병합 확인
     expect(result.current.messages).toHaveLength(2);
     expect(result.current.hasMore).toBe(false);
+  });
+
+  it('handleActionButton 호출 시 해당 액션에 매핑된 명령어로 메시지를 전송해야 한다', async () => {
+    vi.useFakeTimers();
+
+    const { result } = renderHook(() => useDodoChat());
+    const action = 'Wink';
+    const command = DODO_ACTION_COMMAND_MAP[action];
+    const dodoReply = '폴짝!';
+
+    (sendDodoChat as any).mockResolvedValue({ reply: dodoReply, action });
+
+    // handleActionButton 호출
+    await act(async () => {
+      result.current.handleActionButton(action as any);
+    });
+
+    expect(result.current.messages).toHaveLength(3); // 초기 + 유저 + 두두
+
+    const userMsg = result.current.messages[1];
+    expect(userMsg.role).toBe('user');
+    expect(userMsg.text).toBe(command);
+
+    expect(sendDodoChat).toHaveBeenCalledWith(command);
+
+    const dodoMsg = result.current.messages[2];
+    expect(dodoMsg.role).toBe('dodo');
+
+    act(() => {
+      vi.advanceTimersByTime(35 * dodoReply.length + 100);
+    });
+
+    expect(result.current.messages[2].text).toBe(dodoReply);
   });
 });
