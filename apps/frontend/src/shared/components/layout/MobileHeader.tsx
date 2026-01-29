@@ -1,4 +1,4 @@
-import { Menu, Bell } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 function MobileHeader({ onMenuClick }: { onMenuClick: () => void }) {
@@ -10,12 +10,6 @@ function MobileHeader({ onMenuClick }: { onMenuClick: () => void }) {
         <h1 className="text-label-normal text-lg font-bold">뚜웰</h1>
       </button>
       <div className="flex items-center gap-1">
-        <button
-          className="text-label-disable active:bg-bg-alternative rounded-full p-2"
-          type="button"
-        >
-          <Bell size={22} />
-        </button>
         <button
           className="text-label-normal active:bg-bg-alternative rounded-full p-2"
           type="button"
