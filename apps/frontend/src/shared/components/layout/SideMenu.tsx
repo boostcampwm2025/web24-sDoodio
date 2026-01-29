@@ -48,7 +48,7 @@ function SideMenu({ isOpen, onClose }: SideMenuProps) {
 
       {/* 슬라이딩 메뉴 */}
       <div
-        className={`bg-bg-light fixed top-0 right-0 bottom-0 z-50 w-64 transform shadow-[var(--shadow-strong)] transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'} `}
+        className={`bg-bg-light fixed top-0 right-0 bottom-0 z-50 w-64 transform shadow-(--shadow-strong) transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'} `}
       >
         <div className="flex h-full flex-col p-5">
           <div className="mb-8 flex items-center justify-between">
@@ -62,11 +62,7 @@ function SideMenu({ isOpen, onClose }: SideMenuProps) {
             </button>
           </div>
 
-          <div className="flex-1 space-y-4">
-            <div className="bg-bg-alternative h-10 animate-pulse rounded-lg" />
-            <div className="bg-bg-alternative h-10 animate-pulse rounded-lg" />
-            <div className="bg-bg-alternative h-10 animate-pulse rounded-lg" />
-          </div>
+          <div className="flex-1 space-y-4" />
 
           {user ? (
             <button
