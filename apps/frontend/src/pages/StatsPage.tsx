@@ -29,6 +29,7 @@ export function StatsPage() {
   });
   const [goalTopBehaviors, setGoalTopBehaviors] = useState<GoalBehaviorStat[]>([]);
   const [totalCompletedCount, setTotalCompletedCount] = useState<number>(0);
+  const [showTooltip, setShowTooltip] = useState(false);
 
   useEffect(() => {
     fetchTopBehaviors().then((data) => {
@@ -55,13 +56,17 @@ export function StatsPage() {
               type="button"
               aria-label="통계 집계 기준 안내"
               aria-describedby="stats-summary-tooltip"
+              aria-expanded={showTooltip}
+              onMouseEnter={() => setShowTooltip(true)}
+              onMouseLeave={() => setShowTooltip(false)}
+              onClick={() => setShowTooltip((prev) => !prev)}
             >
               <Info size={ICON_SIZE.xxs} />
             </button>
             <span
               id="stats-summary-tooltip"
               role="tooltip"
-              className="bg-bg-light text-label-normal border-bg-alternative pointer-events-none absolute top-full right-0 z-20 mt-2 w-max max-w-[70vw] rounded-xl border px-3 py-2 text-xs font-medium break-words whitespace-normal opacity-0 shadow-(--shadow-normal) transition-opacity duration-200 group-focus-within:opacity-100 group-hover:opacity-100"
+              className={`bg-bg-light text-label-normal border-bg-alternative pointer-events-none absolute top-full right-0 z-20 mt-2 w-max max-w-[70vw] rounded-xl border px-3 py-2 text-xs font-medium break-words whitespace-normal shadow-(--shadow-normal) transition-opacity duration-200 ${showTooltip ? 'visible opacity-100' : 'invisible opacity-0'}`}
             >
               모든 통계는 어제까지의 기록이 집계됩니다
             </span>
