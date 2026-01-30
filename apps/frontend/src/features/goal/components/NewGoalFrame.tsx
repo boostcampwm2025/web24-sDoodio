@@ -156,7 +156,7 @@ export function NewGoalFrame({
 
   return (
     <div className="bg-bg-normal flex h-full w-full items-center justify-center p-4">
-      <div className="bg-bg-light shadow-heavy flex h-150 w-full max-w-sm shrink-0 flex-col overflow-hidden rounded-3xl md:h-180 md:max-w-3xl md:rounded-4xl lg:h-180 lg:max-w-250 lg:flex-row">
+      <div className="bg-bg-light shadow-heavy flex h-170 w-full max-w-sm shrink-0 flex-col overflow-hidden rounded-3xl md:h-180 md:max-w-3xl md:rounded-4xl lg:h-180 lg:max-w-250 lg:flex-row">
         {/* 왼쪽 - 두두 캐릭터 및 대사 영역 */}
         <div className="relative flex flex-none flex-col items-center p-4 pb-0 md:p-6 md:pb-0 lg:flex-1 lg:justify-center lg:p-12 lg:pb-12">
           {/* 말풍선 컨테이너 (너비 고정 및 꼬리 정렬용) */}
