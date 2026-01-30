@@ -104,17 +104,6 @@ describe('createGoal', () => {
         goalColor: 'blue',
         behaviors: [{ title: '물 한 컵 마시기', difficulty: '마음열기' }],
       }),
-    ).rejects.toThrow(DomainError);
-
-    try {
-      await createGoal({
-        goalTitle: '건강',
-        goalColor: 'blue',
-        behaviors: [{ title: '물 한 컵 마시기', difficulty: '마음열기' }],
-      });
-    } catch (error) {
-      expect(error).toBeInstanceOf(DomainError);
-      expect((error as DomainError).message).toBe(errorMessage);
-    }
+    ).rejects.toThrow(new DomainError(errorMessage));
   });
 });
