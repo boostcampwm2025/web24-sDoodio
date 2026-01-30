@@ -125,6 +125,52 @@ export class PushService implements OnModuleInit {
     );
   }
 
+  async sendToAllUsers(
+    payload: SendPushNotificationRequest,
+  ): Promise<SendPushNotificationResponse> {
+    const subscriptions = await this.pushSubscriptionRepository.find();
+
+    if (subscriptions.length === 0) {
+      return { sent: 0, failed: 0, removed: 0 };
+    }
+
+    const payloadString = JSON.stringify({
+      title: payload.title,
+      body: payload.body ?? '',
+      url: payload.url ?? '/',
+    });
+
+    const limit = pLimit(10);
+    const results = await Promise.all(
+      subscriptions.map((subscription) =>
+        limit(async () => {
+          try {
+            await webpush.sendNotification(subscription.subscription, payloadString);
+            return { sent: 1, failed: 0, removed: 0 };
+          } catch (error) {
+            if (error && typeof error === 'object' && 'statusCode' in error) {
+              const { statusCode } = error as { statusCode: number };
+              if (statusCode === 404 || statusCode === 410) {
+                await this.pushSubscriptionRepository.remove(subscription);
+                return { sent: 0, failed: 1, removed: 1 };
+              }
+            }
+            return { sent: 0, failed: 1, removed: 0 };
+          }
+        }),
+      ),
+    );
+
+    return results.reduce(
+      (acc, item) => ({
+        sent: acc.sent + item.sent,
+        failed: acc.failed + item.failed,
+        removed: acc.removed + item.removed,
+      }),
+      { sent: 0, failed: 0, removed: 0 },
+    );
+  }
+
   @Cron('0 0 13 * * *', { name: 'dodo_lunch_push', timeZone: 'Asia/Seoul' })
   async handleLunchPush() {
     await this.sendDodoPush('LUNCH');

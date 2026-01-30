@@ -242,6 +242,84 @@ describe('PushService', () => {
     });
   });
 
+  describe('sendToAllUsers', () => {
+    const payload: SendPushNotificationRequest = {
+      title: 'Hello',
+      body: 'World',
+      url: '/home',
+    };
+
+    it('구독이 없으면 0건으로 응답한다', async () => {
+      pushSubscriptionRepository.find.mockResolvedValue([]);
+
+      const result = await service.sendToAllUsers(payload);
+
+      expect(result).toEqual({ sent: 0, failed: 0, removed: 0 });
+      expect(mockWebpush.sendNotification).not.toHaveBeenCalled();
+    });
+
+    it('정상 전송하면 성공 카운트를 올린다', async () => {
+      const subscription = {
+        id: 'sub-id',
+        subscription: {
+          endpoint: 'https://example.com/push/1',
+          keys: { p256dh: 'p256dh', auth: 'auth' },
+        },
+      } as PushSubscriptionEntity;
+
+      pushSubscriptionRepository.find.mockResolvedValue([subscription]);
+      mockWebpush.sendNotification.mockResolvedValue(undefined);
+
+      const result = await service.sendToAllUsers(payload);
+
+      expect(mockWebpush.sendNotification).toHaveBeenCalledWith(
+        subscription.subscription,
+        JSON.stringify({
+          title: payload.title,
+          body: payload.body,
+          url: payload.url,
+        }),
+      );
+      expect(result).toEqual({ sent: 1, failed: 0, removed: 0 });
+    });
+
+    it('410/404 에러면 구독을 제거한다', async () => {
+      const subscription = {
+        id: 'sub-id',
+        subscription: {
+          endpoint: 'https://example.com/push/1',
+          keys: { p256dh: 'p256dh', auth: 'auth' },
+        },
+      } as PushSubscriptionEntity;
+
+      pushSubscriptionRepository.find.mockResolvedValue([subscription]);
+      mockWebpush.sendNotification.mockRejectedValue({ statusCode: 410 });
+
+      const result = await service.sendToAllUsers(payload);
+
+      expect(pushSubscriptionRepository.remove).toHaveBeenCalledWith(subscription);
+      expect(result).toEqual({ sent: 0, failed: 1, removed: 1 });
+    });
+
+    it('기타 에러면 실패 카운트만 올린다', async () => {
+      const subscription = {
+        id: 'sub-id',
+        subscription: {
+          endpoint: 'https://example.com/push/1',
+          keys: { p256dh: 'p256dh', auth: 'auth' },
+        },
+      } as PushSubscriptionEntity;
+
+      pushSubscriptionRepository.find.mockResolvedValue([subscription]);
+      mockWebpush.sendNotification.mockRejectedValue(new Error('send failed'));
+
+      const result = await service.sendToAllUsers(payload);
+
+      expect(pushSubscriptionRepository.remove).not.toHaveBeenCalled();
+      expect(result).toEqual({ sent: 0, failed: 1, removed: 0 });
+    });
+  });
+
   describe('Scheduled Pushes', () => {
     let mockQueryBuilder: any;
 

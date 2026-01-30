@@ -142,4 +142,28 @@ export function registerPushApi(registry: OpenAPIRegistry, common: CommonSchemas
       },
     },
   });
+
+  registry.registerPath({
+    method: 'post',
+    path: '/push/notifications/test/all',
+    request: {
+      body: {
+        content: {
+          'application/json': {
+            schema: sendPushNotificationRequest,
+          },
+        },
+      },
+    },
+    responses: {
+      201: {
+        description: '전체 사용자에게 테스트 푸시 알림을 전송한다.',
+        content: {
+          'application/json': {
+            schema: sendPushNotificationResponse,
+          },
+        },
+      },
+    },
+  });
 }
