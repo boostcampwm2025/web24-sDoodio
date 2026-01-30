@@ -1,5 +1,5 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
 import { AIBehaviorContainer } from './AIBehaviorContainer';
 
@@ -25,6 +25,14 @@ describe('AIBehaviorContainer', () => {
     },
   ];
 
+  beforeEach(() => {
+    vi.useFakeTimers(); // 가짜 타이머 활성화
+  });
+
+  afterEach(() => {
+    vi.clearAllTimers(); // 타이머 초기화 (RealTimer로 복구하지 않음)
+  });
+
   it('로딩 중이거나 데이터가 없으면 빈 컨테이너를 렌더링한다', () => {
     const { container } = render(
       <AIBehaviorContainer behaviors={[]} onToggle={vi.fn()} isLoading isMaking={false} />,
@@ -49,6 +57,11 @@ describe('AIBehaviorContainer', () => {
         isMaking={false}
       />,
     );
+
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+
     expect(screen.getByText('AI 맞춤 추천')).toBeInTheDocument();
     expect(screen.getByText('Behavior 1')).toBeInTheDocument();
     expect(screen.getByText('Behavior 2')).toBeInTheDocument();
@@ -64,6 +77,10 @@ describe('AIBehaviorContainer', () => {
         isMaking={false}
       />,
     );
+
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
 
     const toggleButton = screen.getByLabelText('Behavior 1 완료 토글');
     fireEvent.click(toggleButton);
