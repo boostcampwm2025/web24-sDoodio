@@ -1,6 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { In } from 'typeorm';
 import type {
   CreateGoalBehaviorsRequest,
   CreateGoalRequest,
@@ -560,10 +561,10 @@ describe('GoalService', () => {
       });
       expect(todayBehaviorRepoMock.update).toHaveBeenCalledWith(
         {
-          behavior: { id: expect.anything() },
+          behavior: { id: In(request5.behaviorIds) },
           user: { id: user.id },
           date: expect.any(String),
-          status: expect.anything(),
+          status: In(['pending', 'skipped', 'ignored', 'completed']),
         },
         { status: 'deleted' },
       );
