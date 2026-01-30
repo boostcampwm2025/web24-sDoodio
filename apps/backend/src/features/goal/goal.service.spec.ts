@@ -1,6 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { In } from 'typeorm';
 import type {
   CreateGoalBehaviorsRequest,
   CreateGoalRequest,
@@ -523,9 +524,16 @@ describe('GoalService', () => {
       const behaviorRepoMock = {
         softDelete: jest.fn(),
       };
+      const todayBehaviorRepoMock = {
+        update: jest.fn(),
+      };
 
       const managerMock = {
-        getRepository: jest.fn(() => behaviorRepoMock),
+        getRepository: jest.fn((entity) => {
+          if (entity === Behavior) return behaviorRepoMock;
+          if (entity === TodayBehavior) return todayBehaviorRepoMock;
+          return behaviorRepoMock;
+        }),
       };
 
       const goalRepository = {
@@ -551,6 +559,15 @@ describe('GoalService', () => {
         id: expect.anything(),
         goal: { id: goalId },
       });
+      expect(todayBehaviorRepoMock.update).toHaveBeenCalledWith(
+        {
+          behavior: { id: In(request5.behaviorIds) },
+          user: { id: user.id },
+          date: expect.any(String),
+          status: In(['pending', 'skipped', 'ignored', 'completed']),
+        },
+        { status: 'deleted' },
+      );
     });
   });
 });

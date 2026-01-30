@@ -1,5 +1,5 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { DifficultyGraph } from './DifficultyGraph';
 import { fetchDifficultyStats } from '../apis/fetchDifficultyStats.api';
 
@@ -20,9 +20,19 @@ describe('DifficultyGraph', () => {
     vi.clearAllMocks();
   });
 
-  it('로딩 중일 때 로딩 메시지를 표시한다', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('로딩이 지연되면 로딩 메시지를 표시한다', () => {
     mockedFetchDifficultyStats.mockReturnValue(new Promise(() => {}));
+    vi.useFakeTimers();
     render(<DifficultyGraph />);
+    expect(screen.queryByText('데이터를 불러오는 중...')).not.toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
     expect(screen.getByText('데이터를 불러오는 중...')).toBeInTheDocument();
   });
 

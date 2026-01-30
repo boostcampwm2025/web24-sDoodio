@@ -18,6 +18,7 @@ import { User } from '../user/user.entity';
 import { Goal } from './goal.entity';
 import { TodayBehavior } from '../behavior/today-behavior.entity';
 import { AIBehavior } from '../behavior/ai-behavior.entity';
+import { getKstDayKey } from '../../common/utils/time.utils';
 
 @Injectable()
 export class GoalService {
@@ -282,6 +283,18 @@ export class GoalService {
         id: In(request.behaviorIds),
         goal: { id: goalId },
       });
+
+      // 오늘 행동에 포함된 삭제 대상은 status를 deleted로 변경
+      const todayDate = getKstDayKey();
+      await manager.getRepository(TodayBehavior).update(
+        {
+          behavior: { id: In(request.behaviorIds) },
+          user: { id: userId },
+          date: todayDate,
+          status: In(['pending', 'skipped', 'ignored', 'completed']),
+        },
+        { status: 'deleted' },
+      );
     });
   }
 }
