@@ -1,3 +1,4 @@
+import { BEHAVIOR_TITLE_MAX_LENGTH } from '@web24/shared';
 import { InputItemRow } from './InputItemRow';
 
 export interface BehaviorItem {
@@ -31,6 +32,7 @@ export function BehaviorSelection({
           onAdd={onAdd}
           placeholder="행동 이름"
           variant="default"
+          maxLength={BEHAVIOR_TITLE_MAX_LENGTH}
         />
       ))}
 

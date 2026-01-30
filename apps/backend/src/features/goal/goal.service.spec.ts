@@ -85,7 +85,12 @@ describe('GoalService', () => {
   const request: CreateGoalRequest = {
     goalTitle: '건강',
     goalColor: 'blue',
-    behaviors: [{ title: '물 한 컵 마시기', difficulty: '마음열기' }],
+    behaviors: [
+      { title: '물 한 컵 마시기', difficulty: '마음열기' },
+      { title: '스트레칭 5분', difficulty: '시작하기' },
+      { title: '산책 20분', difficulty: '이어가기' },
+      { title: '러닝 30분', difficulty: '몰입하기' },
+    ],
   };
 
   describe('getGoals', () => {
@@ -120,6 +125,32 @@ describe('GoalService', () => {
 
       await expect(service.getGoals(userId)).rejects.toBeInstanceOf(NotFoundException);
       expect(goalRepository.find).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getGoal', () => {
+    it('goalId와 userId로 목표를 반환한다', async () => {
+      const userId = 'user-1';
+      const goalId = 'goal-1';
+      const goal = { id: goalId, title: '건강', color: 'blue' };
+      const goalRepository = { findOne: jest.fn().mockResolvedValue(goal) };
+
+      const { service } = await createService({ goalRepository });
+
+      await expect(service.getGoal(userId, goalId)).resolves.toEqual(goal);
+      expect(goalRepository.findOne).toHaveBeenCalledWith({
+        where: { id: goalId, user: { id: userId } },
+      });
+    });
+
+    it('목표가 없으면 NotFoundException을 던진다', async () => {
+      const userId = 'user-1';
+      const goalId = 'goal-1';
+      const goalRepository = { findOne: jest.fn().mockResolvedValue(null) };
+
+      const { service } = await createService({ goalRepository });
+
+      await expect(service.getGoal(userId, goalId)).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 
@@ -248,35 +279,102 @@ describe('GoalService', () => {
       expect(goalRepository.save).not.toHaveBeenCalled();
     });
 
+    it('필수 난이도가 누락되면 BadRequestException을 던진다', async () => {
+      const userId = 'user-1';
+      const incompleteRequest: CreateGoalRequest = {
+        goalTitle: '건강',
+        goalColor: 'blue',
+        behaviors: [{ title: '물 한 컵 마시기', difficulty: '마음열기' }],
+      };
+
+      const { service } = await createService();
+
+      await expect(service.createGoal(userId, incompleteRequest)).rejects.toThrow(
+        expect.objectContaining({ status: 400 }),
+      );
+    });
+
+    it('행동 제목이 중복되면 BadRequestException을 던진다', async () => {
+      const userId = 'user-1';
+      const duplicatedRequest: CreateGoalRequest = {
+        goalTitle: '건강',
+        goalColor: 'blue',
+        behaviors: [
+          { title: '물 한 컵 마시기', difficulty: '마음열기' },
+          { title: '물 한 컵 마시기', difficulty: '시작하기' },
+          { title: '산책 20분', difficulty: '이어가기' },
+          { title: '러닝 30분', difficulty: '몰입하기' },
+        ],
+      };
+
+      const { service } = await createService();
+
+      await expect(service.createGoal(userId, duplicatedRequest)).rejects.toThrow(
+        expect.objectContaining({ status: 400 }),
+      );
+    });
+
+    it('목표 제목이 중복되면 BadRequestException을 던진다', async () => {
+      const userId = 'user-1';
+      const user = { id: userId, nickname: '테스트유저' };
+      const userRepository = { findOne: jest.fn().mockResolvedValue(user) };
+      const goalRepository = {
+        findOne: jest.fn().mockResolvedValue({ id: 'existing-goal' }),
+      };
+
+      const manager = {
+        getRepository: jest.fn((entity: Function) => {
+          if (entity === User) return userRepository;
+          if (entity === Goal) return goalRepository;
+          return null;
+        }),
+      };
+
+      const goalRepositoryWithManager = {
+        manager: {
+          transaction: jest.fn((callback: (manager: TransactionManager) => Promise<unknown>) =>
+            callback(manager),
+          ),
+        },
+      };
+
+      const { service } = await createService({ goalRepository: goalRepositoryWithManager });
+
+      await expect(service.createGoal(userId, request)).rejects.toThrow(
+        expect.objectContaining({ status: 400 }),
+      );
+    });
+
     it('목표와 행동을 저장하고 응답을 반환한다', async () => {
       const userId = 'user-1';
       const user = { id: userId, nickname: '테스트유저' };
       const userRepository = { findOne: jest.fn().mockResolvedValue(user) };
 
-      const goal = { title: request.goalTitle, color: request.goalColor, user };
+      const goal = {
+        title: request.goalTitle,
+        color: request.goalColor,
+        templateId: undefined,
+        user,
+      };
       const savedGoal = {
         id: '01890fba-7e6a-7b6b-9e5d-0f3c9b8b4c6d',
         ...goal,
       };
 
       const goalRepository = {
+        findOne: jest.fn().mockResolvedValue(null),
         create: jest.fn().mockReturnValue(goal),
         save: jest.fn().mockResolvedValue(savedGoal),
       };
 
-      const behavior = {
-        title: request.behaviors[0].title,
-        difficulty: request.behaviors[0].difficulty,
-        goal: savedGoal,
-      };
-      const savedBehavior = {
-        id: '01890fba-7e6a-7b6c-9e5d-0f3c9b8b4c6e',
-        ...behavior,
-      };
-
       const behaviorRepository = {
-        create: jest.fn().mockReturnValue(behavior),
-        save: jest.fn().mockResolvedValue([savedBehavior]),
+        create: jest.fn().mockImplementation((b) => b),
+        save: jest.fn(async (arr) =>
+          arr.map((b, i) => ({
+            id: `01890fba-7e6a-7b6c-9e5d-0f3c9b8b4c6${i + 1}`,
+            ...b,
+          })),
+        ),
       };
 
       const manager = {
@@ -298,31 +396,92 @@ describe('GoalService', () => {
 
       const { service } = await createService({ goalRepository: goalRepositoryWithManager });
 
-      await expect(service.createGoal(userId, request)).resolves.toEqual({
+      const result = await service.createGoal(userId, request);
+
+      expect(result).toEqual({
         id: '01890fba-7e6a-7b6b-9e5d-0f3c9b8b4c6d',
         title: '건강',
         color: 'blue',
-        behaviors: [
-          {
-            id: '01890fba-7e6a-7b6c-9e5d-0f3c9b8b4c6e',
-            title: '물 한 컵 마시기',
-            difficulty: '마음열기',
-          },
-        ],
+        templateId: undefined,
+        behaviors: request.behaviors.map((b, i) => ({
+          id: `01890fba-7e6a-7b6c-9e5d-0f3c9b8b4c6${i + 1}`,
+          title: b.title,
+          difficulty: b.difficulty,
+        })),
       });
+
       expect(userRepository.findOne).toHaveBeenCalledWith({ where: { id: userId } });
+      expect(goalRepository.findOne).toHaveBeenCalledWith({
+        where: { title: request.goalTitle.trim(), user: { id: userId } },
+      });
       expect(goalRepository.create).toHaveBeenCalledWith({
         title: request.goalTitle,
         color: request.goalColor,
+        templateId: undefined,
         user,
       });
       expect(goalRepository.save).toHaveBeenCalledWith(goal);
-      expect(behaviorRepository.create).toHaveBeenCalledWith({
-        title: request.behaviors[0].title,
-        difficulty: request.behaviors[0].difficulty,
-        goal: savedGoal,
-      });
-      expect(behaviorRepository.save).toHaveBeenCalledWith([behavior]);
+      expect(behaviorRepository.save).toHaveBeenCalledWith(
+        request.behaviors.map((b) => ({
+          title: b.title,
+          difficulty: b.difficulty,
+          goal: savedGoal,
+        })),
+      );
+    });
+
+    it('templateId가 포함된 목표를 저장하고 응답을 반환한다', async () => {
+      const userId = 'user-1';
+      const user = { id: userId, nickname: '테스트유저' };
+      const userRepository = { findOne: jest.fn().mockResolvedValue(user) };
+      const templateId = 'template-123';
+      const requestWithTemplate = { ...request, templateId };
+
+      const goal = {
+        title: requestWithTemplate.goalTitle,
+        color: requestWithTemplate.goalColor,
+        templateId: requestWithTemplate.templateId,
+        user,
+      };
+      const savedGoal = {
+        id: '01890fba-7e6a-7b6b-9e5d-0f3c9b8b4c6d',
+        ...goal,
+      };
+
+      const goalRepository = {
+        findOne: jest.fn().mockResolvedValue(null),
+        create: jest.fn().mockReturnValue(goal),
+        save: jest.fn().mockResolvedValue(savedGoal),
+      };
+
+      const behaviorRepository = {
+        create: jest.fn().mockImplementation((b) => b),
+        save: jest.fn().mockResolvedValue([]),
+      };
+
+      const manager = {
+        getRepository: jest.fn((entity: Function) => {
+          if (entity === User) return userRepository;
+          if (entity === Goal) return goalRepository;
+          if (entity === Behavior) return behaviorRepository;
+          return null;
+        }),
+      };
+
+      const goalRepositoryWithManager = {
+        manager: {
+          transaction: jest.fn((callback: (manager: TransactionManager) => Promise<unknown>) =>
+            callback(manager),
+          ),
+        },
+      };
+
+      const { service } = await createService({ goalRepository: goalRepositoryWithManager });
+
+      const result = await service.createGoal(userId, requestWithTemplate);
+
+      expect(result.templateId).toBe(templateId);
+      expect(goalRepository.create).toHaveBeenCalledWith(expect.objectContaining({ templateId }));
     });
   });
 
@@ -406,6 +565,20 @@ describe('GoalService', () => {
       });
     });
 
+    it('updateGoal: 목표가 없으면 NotFoundException을 던진다', async () => {
+      const userId = 'user-1';
+      const goalId = 'goal-1';
+      const goalRepository = { findOne: jest.fn().mockResolvedValue(null) };
+
+      const { service } = await createService({ goalRepository });
+
+      const updateRequest: UpdateGoalRequest = { title: '제목', color: 'blue' };
+
+      await expect(service.updateGoal(userId, goalId, updateRequest)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+
     it('createGoalBehaviors: 새로운 행동 생성', async () => {
       const goalId = 'goal-1';
       const user = { id: 'user-1', nickname: '테스트유저' };
@@ -454,6 +627,21 @@ describe('GoalService', () => {
           goal,
         },
       ]);
+    });
+
+    it('createGoalBehaviors: 목표가 없으면 NotFoundException을 던진다', async () => {
+      const goalId = 'goal-1';
+      const userId = 'user-1';
+      const goalRepository = {
+        findOne: jest.fn().mockResolvedValue(null),
+        manager: { transaction: jest.fn((cb) => cb({})) },
+      };
+
+      const { service } = await createService({ goalRepository });
+
+      await expect(
+        service.createGoalBehaviors(userId, goalId, { behaviors: [] }),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
 
     it('updateGoalBehaviors: 행동 업데이트', async () => {
@@ -516,6 +704,38 @@ describe('GoalService', () => {
       ]);
     });
 
+    it('updateGoalBehaviors: 목표가 없으면 NotFoundException을 던진다', async () => {
+      const goalId = 'goal-1';
+      const userId = 'user-1';
+      const goalRepository = {
+        findOne: jest.fn().mockResolvedValue(null),
+        manager: { transaction: jest.fn((cb) => cb({})) },
+      };
+
+      const { service } = await createService({ goalRepository });
+
+      await expect(
+        service.updateGoalBehaviors(userId, goalId, {
+          behaviors: [{ id: 'b1', title: 't', difficulty: '시작하기' }],
+        }),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('updateGoalBehaviors: 행동이 제공되지 않으면 NotFoundException을 던진다', async () => {
+      const goalId = 'goal-1';
+      const userId = 'user-1';
+      const goalRepository = {
+        findOne: jest.fn().mockResolvedValue({ id: goalId }),
+        manager: { transaction: jest.fn((cb) => cb({})) },
+      };
+
+      const { service } = await createService({ goalRepository });
+
+      await expect(service.updateGoalBehaviors(userId, goalId, { behaviors: [] })).rejects.toThrow(
+        expect.objectContaining({ status: 404 }),
+      );
+    });
+
     it('deleteGoalBehaviors: 행동 soft delete', async () => {
       const goalId = 'goal-1';
       const user = { id: 'user-1', nickname: '테스트유저' };
@@ -568,6 +788,21 @@ describe('GoalService', () => {
         },
         { status: 'deleted' },
       );
+    });
+
+    it('deleteGoalBehaviors: 목표가 없으면 NotFoundException을 던진다', async () => {
+      const goalId = 'goal-1';
+      const userId = 'user-1';
+      const goalRepository = {
+        findOne: jest.fn().mockResolvedValue(null),
+        manager: { transaction: jest.fn((cb) => cb({})) },
+      };
+
+      const { service } = await createService({ goalRepository });
+
+      await expect(
+        service.deleteGoalBehaviors(userId, goalId, { behaviorIds: ['b1'] }),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 });

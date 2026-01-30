@@ -10,9 +10,12 @@ import { NewGoal } from '@/features/goal/components/NewGoal';
 import { createGoal } from '@/features/goal/apis/createGoal.api';
 import { v7 } from 'uuid';
 import { SummaryView } from '@/features/goal/components/SummaryView';
+import { useDodoToast } from '@/shared/hooks/useDodoToast';
+import { DomainError } from '@/shared/errors/domain-error';
 
 export function NewGoalPage() {
   const navigate = useNavigate();
+  const showToast = useDodoToast();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
@@ -76,6 +79,13 @@ export function NewGoalPage() {
           }}
         />
       ),
+      validate: () => {
+        if (!selectedTemplateId) {
+          showToast('아무 것도 선택되지 않았어!', { position: 'top' });
+          return false;
+        }
+        return true;
+      },
     },
     {
       step: 2,
@@ -89,11 +99,17 @@ export function NewGoalPage() {
           setColor={(color) => setNewGoalColor(color)}
         />
       ),
+      validate: () => {
+        if (newGoalTitle.trim().length === 0) {
+          showToast('목표 이름이 비어있어!', { position: 'top' });
+          return false;
+        }
+        return true;
+      },
     },
     {
       step: 3,
       headerText: BEHAVIOR_DIFFICULTIES[0],
-      unskippable: true,
       dialogue: DODO_LINES.open,
       content: (
         <BehaviorSelection
@@ -113,11 +129,21 @@ export function NewGoalPage() {
           }}
         />
       ),
+      validate: () => {
+        const cleaned = openBehaviors.filter((b) => b.title.trim().length > 0);
+
+        if (cleaned.length === 0) {
+          showToast(`${BEHAVIOR_DIFFICULTIES[0]} 행동을 하나 이상 입력해줘!`, { position: 'top' });
+          return false;
+        }
+
+        setOpenBehaviors(cleaned);
+        return true;
+      },
     },
     {
       step: 4,
       headerText: BEHAVIOR_DIFFICULTIES[1],
-      unskippable: true,
       dialogue: DODO_LINES.start,
       content: (
         <BehaviorSelection
@@ -137,11 +163,21 @@ export function NewGoalPage() {
           }}
         />
       ),
+      validate: () => {
+        const cleaned = startBehaviors.filter((b) => b.title.trim().length > 0);
+
+        if (cleaned.length === 0) {
+          showToast(`${BEHAVIOR_DIFFICULTIES[1]} 행동을 하나 이상 입력해줘!`, { position: 'top' });
+          return false;
+        }
+
+        setStartBehaviors(cleaned);
+        return true;
+      },
     },
     {
       step: 5,
       headerText: BEHAVIOR_DIFFICULTIES[2],
-      unskippable: true,
       dialogue: DODO_LINES.continue,
       content: (
         <BehaviorSelection
@@ -161,11 +197,21 @@ export function NewGoalPage() {
           }}
         />
       ),
+      validate: () => {
+        const cleaned = continueBehaviors.filter((b) => b.title.trim().length > 0);
+
+        if (cleaned.length === 0) {
+          showToast(`${BEHAVIOR_DIFFICULTIES[2]} 행동을 하나 이상 입력해줘!`, { position: 'top' });
+          return false;
+        }
+
+        setContinueBehaviors(cleaned);
+        return true;
+      },
     },
     {
       step: 6,
       headerText: BEHAVIOR_DIFFICULTIES[3],
-      unskippable: true,
       dialogue: DODO_LINES.deep,
       content: (
         <BehaviorSelection
@@ -185,6 +231,17 @@ export function NewGoalPage() {
           }}
         />
       ),
+      validate: () => {
+        const cleaned = deepBehaviors.filter((b) => b.title.trim().length > 0);
+
+        if (cleaned.length === 0) {
+          showToast(`${BEHAVIOR_DIFFICULTIES[3]} 행동을 하나 이상 입력해줘!`, { position: 'top' });
+          return false;
+        }
+
+        setDeepBehaviors(cleaned);
+        return true;
+      },
     },
     {
       step: 7,
@@ -232,7 +289,11 @@ export function NewGoalPage() {
       });
       navigate('/', { replace: true });
     } catch (error) {
-      console.error(error);
+      if (error instanceof DomainError) {
+        showToast(error.message, { position: 'top' });
+      } else {
+        showToast('알 수 없는 문제가 생겼네.');
+      }
     }
   };
 

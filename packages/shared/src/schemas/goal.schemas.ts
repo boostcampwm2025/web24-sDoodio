@@ -1,5 +1,8 @@
-import { BEHAVIOR_TITLE_MAX_LENGTH } from '../constants/behavior.constants';
-import { GOAL_TITLE_MAX_LENGTH } from '../constants/goal.constants';
+import {
+  BEHAVIOR_ERROR_MESSAGES,
+  BEHAVIOR_TITLE_MAX_LENGTH,
+} from '../constants/behavior.constants';
+import { GOAL_ERROR_MESSAGES, GOAL_TITLE_MAX_LENGTH } from '../constants/goal.constants';
 import { BEHAVIOR_DIFFICULTIES } from '../types/behavior.types';
 import { GOAL_COLORS } from '../types/goal.types';
 import { z } from '../zod';
@@ -23,12 +26,18 @@ export type GoalTemplate = z.infer<typeof GoalTemplateSchema>;
 export type GoalTemplateListResponse = z.infer<typeof GoalTemplateListResponseSchema>;
 
 export const CreateGoalBehaviorSchema = z.object({
-  title: z.string().min(1).max(BEHAVIOR_TITLE_MAX_LENGTH),
+  title: z
+    .string()
+    .min(1, BEHAVIOR_ERROR_MESSAGES.title_length)
+    .max(BEHAVIOR_TITLE_MAX_LENGTH, BEHAVIOR_ERROR_MESSAGES.title_length),
   difficulty: z.enum(BEHAVIOR_DIFFICULTIES),
 });
 
 export const CreateGoalRequestSchema = z.object({
-  goalTitle: z.string().min(1).max(GOAL_TITLE_MAX_LENGTH),
+  goalTitle: z
+    .string()
+    .min(1, GOAL_ERROR_MESSAGES.title_length)
+    .max(GOAL_TITLE_MAX_LENGTH, GOAL_ERROR_MESSAGES.title_length),
   goalColor: z.enum(GOAL_COLORS),
   templateId: z.string().optional(),
   behaviors: z.array(CreateGoalBehaviorSchema).min(1),

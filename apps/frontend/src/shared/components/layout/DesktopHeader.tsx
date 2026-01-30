@@ -1,9 +1,7 @@
 import { useScroll } from '@/shared/hooks/useScroll';
-import { Bell } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import { MENU_ITEMS } from '@/shared/constants/menu';
-import { toast } from 'react-toastify';
 import useAuthStore from '@/stores/useAuthStore';
 
 function DesktopHeader() {
@@ -31,7 +29,7 @@ function DesktopHeader() {
 
   return (
     <header
-      className={`bg-bg-normal border-bg-alternative fixed top-0 right-0 left-0 z-30 hidden justify-center border-b transition-all duration-300 ease-in-out md:flex ${isScrolled ? 'h-16 shadow-[var(--shadow-normal)]' : 'h-24 shadow-none'} `}
+      className={`bg-bg-normal border-bg-alternative fixed top-0 right-0 left-0 z-30 hidden justify-center border-b transition-all duration-300 ease-in-out md:flex ${isScrolled ? 'h-16 shadow-(--shadow-normal)' : 'h-24 shadow-none'} `}
     >
       <div className="flex h-full w-full max-w-5xl items-center justify-between px-8">
         {/* 로고 */}
@@ -68,16 +66,6 @@ function DesktopHeader() {
 
         {/* 우측 아이콘 */}
         <div className="flex items-center gap-3">
-          <button
-            className="text-label-disable hover:text-label-normal relative p-2 transition-colors"
-            type="button"
-            onClick={() => {
-              toast('구현 예정입니다.');
-            }}
-          >
-            <Bell size={20} />
-            <span className="bg-goal-2 border-bg-light absolute top-2 right-2 h-1.5 w-1.5 rounded-full border" />
-          </button>
           {user ? (
             <div className="relative" ref={profileRef}>
               <button
