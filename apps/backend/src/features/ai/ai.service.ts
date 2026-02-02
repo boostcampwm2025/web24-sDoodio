@@ -1,15 +1,11 @@
 import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ChatOpenAI } from '@langchain/openai';
-import { BaseMessageLike } from '@langchain/core/messages';
-import { DODO_ACTION_VALUES, DODO_ACTIONS, type DodoAction } from '@web24/shared';
+import { AIMessage, BaseMessage, BaseMessageLike, HumanMessage } from '@langchain/core/messages';
 import { Goal } from '../goal/goal.entity';
 import { DodoChatMessage } from '../chat/dodo-chat-message.entity';
-import {
-  buildBehaviorRecommendationPrompt,
-  buildDodoActionPrompt,
-  buildDodoChatSystemPrompt,
-} from './ai.prompt';
+import { buildBehaviorRecommendationPrompt } from './ai.prompt';
+import { DodoAgentState, LangGraphService } from './lang-graph.service';
 
 type AIBehaviorRecommendation = {
   마음열기: string;
@@ -22,7 +18,10 @@ type AIBehaviorRecommendation = {
 export class AIService {
   private readonly logger = new Logger(AIService.name);
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly langGraphService: LangGraphService,
+  ) {}
 
   async getAIBehaviorTitles(goal: Goal): Promise<string[]> {
     const systemPrompt = buildBehaviorRecommendationPrompt(goal);
@@ -57,50 +56,24 @@ export class AIService {
     }
   }
 
-  async createDodoMessage(history: DodoChatMessage[], message: string) {
-    const systemPrompt = buildDodoChatSystemPrompt();
+  async invokeDodoAgent(message: string, history: DodoChatMessage[]) {
+    const messages: BaseMessage[] = history
+      .slice()
+      .reverse()
+      .map((entry) =>
+        entry.role === 'assistant' ? new AIMessage(entry.content) : new HumanMessage(entry.content),
+      );
 
-    const messages: BaseMessageLike[] = [
-      {
-        role: 'system' as const,
-        content: [{ type: 'text', text: systemPrompt }],
-      },
-      ...history
-        .slice()
-        .reverse()
-        .map((entry) => ({
-          role: entry.role,
-          content: [{ type: 'text' as const, text: entry.content }],
-        })),
-      {
-        role: 'user' as const,
-        content: [{ type: 'text', text: message }],
-      },
-    ];
+    const state: DodoAgentState = {
+      messages,
+      userInput: message,
+      dodoAction: undefined,
+      dodoReply: undefined,
+      final: undefined,
+      llmCalls: 0,
+    };
 
-    const reply = await this.callClova(messages);
-
-    return reply;
-  }
-
-  async getDodoAction(message: string): Promise<DodoAction> {
-    const systemPrompt = buildDodoActionPrompt();
-
-    const messages: BaseMessageLike[] = [
-      {
-        role: 'system' as const,
-        content: [{ type: 'text', text: systemPrompt }],
-      },
-      {
-        role: 'user' as const,
-        content: [{ type: 'text', text: message }],
-      },
-    ];
-
-    const action = (await this.callClova(messages)) as DodoAction;
-
-    if (DODO_ACTION_VALUES.includes(action)) return action;
-    return DODO_ACTIONS.none;
+    return this.langGraphService.invokeDodoAgent(state);
   }
 
   private extractContent(content: unknown): string {
@@ -120,9 +93,10 @@ export class AIService {
     return String(content ?? '');
   }
 
-  private async callClova(messages: BaseMessageLike[]): Promise<string> {
+  private async callClova(messages: BaseMessageLike[], model?: string): Promise<string> {
+    const DEFAULT_MODEL = 'HCX-005';
     const llm = new ChatOpenAI({
-      model: 'HCX-005',
+      model: model ?? DEFAULT_MODEL,
       apiKey: this.configService.getOrThrow<string>('CLOVA_API_KEY'),
       configuration: {
         baseURL: 'https://clovastudio.stream.ntruss.com/v1/openai',
