@@ -75,11 +75,22 @@ function DesktopHeader() {
               >
                 {user.nickname.charAt(0)}
               </button>
-              {isProfileOpen ? (
-                <div className="border-bg-alternative bg-bg-light shadow-emphasize absolute right-0 mt-2 w-36 rounded-xl border p-2">
+              {isProfileOpen && (
+                <div className="border-bg-alternative bg-bg-light shadow-emphasize absolute right-0 mt-2 w-36 overflow-hidden rounded-xl border">
                   <button
                     type="button"
-                    className="hover:bg-bg-alternative w-full rounded-lg px-3 py-2 text-left text-sm text-[#d84343]"
+                    className="hover:bg-bg-alternative text-label-normal block w-full px-4 py-2 text-left text-sm transition-colors"
+                    onClick={() => {
+                      setIsProfileOpen(false);
+                      navigate('/mypage');
+                    }}
+                  >
+                    마이페이지
+                  </button>
+                  <div className="bg-bg-alternative h-px w-full" />
+                  <button
+                    type="button"
+                    className="hover:bg-bg-alternative block w-full px-4 py-2 text-left text-sm text-[#d84343] transition-colors"
                     onClick={async () => {
                       await logout();
                       setIsProfileOpen(false);
@@ -89,7 +100,7 @@ function DesktopHeader() {
                     로그아웃
                   </button>
                 </div>
-              ) : null}
+              )}
             </div>
           ) : null}
         </div>

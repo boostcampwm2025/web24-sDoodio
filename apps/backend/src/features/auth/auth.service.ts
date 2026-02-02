@@ -51,6 +51,35 @@ export class AuthService {
     return { user, isNew };
   }
 
+  async linkGuestToSocial(
+    userId: string,
+    profile: SocialProfile,
+  ): Promise<{ user: User; isNew: boolean }> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+
+    if (!user || user.kind !== USER_KINDS.guest) {
+      return this.findOrCreateSocialUser(profile);
+    }
+
+    const existingUser = await this.userRepository.findOne({
+      where: { provider: profile.provider, providerId: profile.id },
+    });
+
+    if (existingUser) {
+      // 이미 연동된 계정이 있다면 해당 계정으로 로그인
+      return { user: existingUser, isNew: false };
+    }
+
+    user.provider = profile.provider;
+    user.providerId = profile.id;
+    user.email = profile.email;
+    user.kind = profile.provider;
+
+    await this.userRepository.save(user);
+
+    return { user, isNew: false };
+  }
+
   private generateGuestNickname(): string {
     const random = Math.random().toString(36).slice(2, 8);
     return `G-${random}`;

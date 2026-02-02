@@ -52,7 +52,7 @@ function SideMenu({ isOpen, onClose }: SideMenuProps) {
       >
         <div className="flex h-full flex-col p-5">
           <div className="mb-8 flex items-center justify-between">
-            <h2 className="text-label-normal text-xl font-bold">Menu</h2>
+            <h2 className="text-label-normal text-xl font-bold">메뉴</h2>
             <button
               type="button"
               className="hover:bg-bg-alternative rounded-full p-1 transition-colors"
@@ -62,7 +62,18 @@ function SideMenu({ isOpen, onClose }: SideMenuProps) {
             </button>
           </div>
 
-          <div className="flex-1 space-y-4" />
+          <div className="flex-1 space-y-4">
+            <button
+              type="button"
+              className="hover:bg-bg-alternative text-label-normal w-full rounded-lg px-3 py-2 text-left text-sm transition-colors"
+              onClick={() => {
+                navigate('/mypage');
+                onClose();
+              }}
+            >
+              마이페이지
+            </button>
+          </div>
 
           {user ? (
             <button
