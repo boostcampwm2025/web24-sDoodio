@@ -10,9 +10,10 @@ import type { User } from '../user/user.entity';
 describe('AuthController', () => {
   let controller: AuthController;
   let authService: jest.Mocked<AuthService>;
+  let module: TestingModule;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
         {
@@ -20,10 +21,15 @@ describe('AuthController', () => {
           useValue: {
             createGuestUser: jest.fn(),
             getUserById: jest.fn(),
-            updateUserRatio: jest.fn(),
+            updateUserBehaviorRatio: jest.fn(),
           },
         },
-        { provide: ConfigService, useValue: {} },
+        {
+          provide: ConfigService,
+          useValue: {
+            getOrThrow: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -84,6 +90,38 @@ describe('AuthController', () => {
     });
   });
 
+  describe('googleCallback', () => {
+    it('새로운 유저라면 온보딩 페이지로 리다이렉트한다', async () => {
+      const user = { id: 'user-id', isNew: true } as any;
+      const req = { user, session: {} } as Request;
+      const res = { redirect: jest.fn() } as unknown as Response;
+
+      const configService = module.get<ConfigService>(ConfigService);
+      (configService.getOrThrow as jest.Mock).mockReturnValue('http://frontend.com');
+
+      await controller.googleCallback(req, res);
+
+      expect(req.session.userId).toBe('user-id');
+      expect(req.session.isGuest).toBe(false);
+      expect(res.redirect).toHaveBeenCalledWith('http://frontend.com/onboarding');
+    });
+
+    it('기존 유저라면 메인 페이지로 리다이렉트한다', async () => {
+      const user = { id: 'user-id', isNew: false } as any;
+      const req = { user, session: {} } as Request;
+      const res = { redirect: jest.fn() } as unknown as Response;
+
+      const configService = module.get<ConfigService>(ConfigService);
+      (configService.getOrThrow as jest.Mock).mockReturnValue('http://frontend.com');
+
+      await controller.googleCallback(req, res);
+
+      expect(req.session.userId).toBe('user-id');
+      expect(req.session.isGuest).toBe(false);
+      expect(res.redirect).toHaveBeenCalledWith('http://frontend.com');
+    });
+  });
+
   describe('logout', () => {
     it('세션을 파기하고 쿠키를 제거한다', async () => {
       const destroy = jest.fn((cb: (err?: Error) => void) => cb());
@@ -94,6 +132,18 @@ describe('AuthController', () => {
 
       expect(destroy).toHaveBeenCalled();
       expect(res.clearCookie).toHaveBeenCalledWith('connect.sid');
+      expect(result).toEqual({ success: true });
+    });
+  });
+
+  describe('updateBehaviorRatio', () => {
+    it('유저의 행동 비율을 업데이트한다', async () => {
+      const userId = 'user-id';
+      const behaviorRatio = 0.5;
+
+      const result = await controller.updateBehaviorRatio(userId, behaviorRatio);
+
+      expect(authService.updateUserBehaviorRatio).toHaveBeenCalledWith(userId, behaviorRatio);
       expect(result).toEqual({ success: true });
     });
   });
