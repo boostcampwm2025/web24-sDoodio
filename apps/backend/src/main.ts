@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/nestjs';
+import { nodeProfilingIntegration } from '@sentry/profiling-node';
 import { SwaggerModule } from '@nestjs/swagger';
 import type { OpenAPIObject } from '@nestjs/swagger';
 import { NestFactory } from '@nestjs/core';
@@ -14,6 +15,8 @@ async function bootstrap() {
     environment: process.env.SENTRY_ENV ?? process.env.NODE_ENV ?? 'development',
     release: process.env.SENTRY_RELEASE,
     tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? 0.1),
+    profilesSampleRate: Number(process.env.SENTRY_PROFILES_SAMPLE_RATE ?? 0.01),
+    integrations: [nodeProfilingIntegration()],
   });
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule);

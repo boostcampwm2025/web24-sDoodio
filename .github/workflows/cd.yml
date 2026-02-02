@@ -108,6 +108,7 @@ jobs:
             SENTRY_ENV=staging
             SENTRY_RELEASE=${{ github.sha }}
             SENTRY_TRACES_SAMPLE_RATE=${{ secrets.STAGING_SENTRY_TRACES_SAMPLE_RATE }}
+            SENTRY_PROFILES_SAMPLE_RATE=${{ secrets.STAGING_SENTRY_PROFILES_SAMPLE_RATE }}
             VAPID_PUBLIC_KEY=${{ secrets.STAGING_VAPID_PUBLIC_KEY }}
             VAPID_PRIVATE_KEY=${{ secrets.STAGING_VAPID_PRIVATE_KEY }}
             VAPID_SUBJECT=${{ secrets.STAGING_VAPID_SUBJECT }}
@@ -152,6 +153,7 @@ jobs:
             SENTRY_ENV=production
             SENTRY_RELEASE=${{ github.sha }}
             SENTRY_TRACES_SAMPLE_RATE=${{ secrets.PROD_SENTRY_TRACES_SAMPLE_RATE }}
+            SENTRY_PROFILES_SAMPLE_RATE=${{ secrets.PROD_SENTRY_PROFILES_SAMPLE_RATE }}
             VAPID_PUBLIC_KEY=${{ secrets.PROD_VAPID_PUBLIC_KEY }}
             VAPID_PRIVATE_KEY=${{ secrets.PROD_VAPID_PRIVATE_KEY }}
             VAPID_SUBJECT=${{ secrets.PROD_VAPID_SUBJECT }}
