@@ -1,8 +1,8 @@
 # 🐣 뚜웰 (DooWell)
-
-![두두](./apps/frontend/public/dodo.png)
-
 > 전부 채우지 않아도 괜찮아, 쌓이는 것만 기억해.
+<img width="700" alt="배너" src="https://github.com/user-attachments/assets/365cae8f-35a8-4b00-8942-cb12a3c22a1a" />
+
+
 
 ---
 
@@ -11,40 +11,6 @@
 **뚜웰**은 행동을 시작하지 못하게 만드는 심리적 부담을 줄이고,  
 아주 작은 행동이라도 **“했다”는 경험을 차곡차곡 쌓을 수 있도록 돕는** 행동 기록 서비스입니다.  
 날짜 연속 체크나 목표 달성률 대신, 행동이 **누적되는 경험 자체**에 집중합니다.
-
----
-
-## 👥 팀원 소개
-
-> 프로젝트는 FE/BE 구분 없이 협업하여 진행했으며,  
-> 포지션 표기는 각 팀원이 가장 깊이 고민하고 주도적으로 기여한 영역을 기준으로 표기했습니다.
-
-<div align="center">
-<table role="table">
-<thead>
-<tr>
-<td align="center"><strong>J001_강내원</strong></td>
-<td align="center"><strong>J039_김민우</strong></td>
-<td align="center"><strong>J165_유태근</strong></td>
-<td align="center"><strong>J200_이예은</strong></td>
-</tr>
-</thead>
-<tbody>
-<tr>
-<th align="center"><a href="https://github.com/KangNaewon"><img src="https://avatars.githubusercontent.com/u/81740350?v=4" width="150" height="150"></a></th>
-<th align="center"><a href="https://github.com/philosophy-engineer"><img src="https://avatars.githubusercontent.com/u/137793034?v=4" width="150" height="150"></a></th>
-<th align="center"><a href="https://github.com/tgy1201"><img src="https://avatars.githubusercontent.com/u/154293542?v=4" width="150" height="150"></a></th>
-<th align="center"><a href="https://github.com/iyeeun"><img src="https://avatars.githubusercontent.com/u/82192913?v=4" width="150" height="150"></a></th>
-</tr>
-<tr>
-<th align="center">BE<br/>PM, 인프라</th>
-<th align="center">BE<br/>DB</th>
-<th align="center">FE<br/>UI/UX</th>
-<th align="center">FE<br/>기획</th>
-</tr>
-</tbody>
-</table>
-</div>
 
 ---
 
@@ -199,6 +165,83 @@ VAPID_PUBLIC_KEY=pnpm dlx web-push generate-vapid-keys
 VAPID_PRIVATE_KEY=pnpm dlx web-push generate-vapid-keys
 VAPID_SUBJECT=mailto:admin-example@web24.app
 ```
+---
+## 🏗️ 배포 구조
+
+```mermaid
+flowchart TD
+  User["User (Browser)"]
+
+  subgraph AppServer["App Instance"]
+    Gateway["Central Nginx Gateway
+    (Port 80/443)"]
+    Certbot["Certbot (Auto Renewal)"]
+    
+    subgraph WebNetwork["Docker Shared Network"]
+      subgraph StagingEnv["Staging"]
+        FE_S["Frontend Staging
+        (Port 8080)"]
+        BE_S["Backend Staging
+        (Port 3000)"]
+      end
+
+      subgraph ProductionEnv["Production"]
+        FE_P["Frontend Production
+        (Port 8080)"]
+        BE_P["Backend Production
+        (Port 3000)"]
+      end
+    end
+    
+    Gateway <-->|"Challenge"| Certbot
+    Gateway ---->|"staging.doowell.n-e.kr"| StagingEnv
+    Gateway ---->|"doowell.n-e.kr"| ProductionEnv
+  end
+
+  subgraph DBServer["DB Instance"]
+    DB1["doowell_staging"]
+    DB2["doowell_prod"]
+  end
+
+  User --"HTTPS (443)"--> Gateway
+  BE_S -->|"TCP:5432"| DB1
+  BE_P -->|"TCP:5432"| DB2
+
+```
+
+---
+
+## 👥 팀원
+
+> 프로젝트는 FE/BE 구분 없이 협업하여 진행했으며,  
+> 포지션 표기는 각 팀원이 가장 깊이 고민하고 주도적으로 기여한 영역을 기준으로 표기했습니다.
+
+<div align="center">
+<table role="table">
+<thead>
+<tr>
+<td align="center"><strong>J001_강내원</strong></td>
+<td align="center"><strong>J039_김민우</strong></td>
+<td align="center"><strong>J165_유태근</strong></td>
+<td align="center"><strong>J200_이예은</strong></td>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th align="center"><a href="https://github.com/KangNaewon"><img src="https://avatars.githubusercontent.com/u/81740350?v=4" width="150" height="150"></a></th>
+<th align="center"><a href="https://github.com/philosophy-engineer"><img src="https://avatars.githubusercontent.com/u/137793034?v=4" width="150" height="150"></a></th>
+<th align="center"><a href="https://github.com/tgy1201"><img src="https://avatars.githubusercontent.com/u/154293542?v=4" width="150" height="150"></a></th>
+<th align="center"><a href="https://github.com/iyeeun"><img src="https://avatars.githubusercontent.com/u/82192913?v=4" width="150" height="150"></a></th>
+</tr>
+<tr>
+<th align="center">BE<br/>PM, 인프라</th>
+<th align="center">BE<br/>DB</th>
+<th align="center">FE<br/>UI/UX</th>
+<th align="center">FE<br/>기획</th>
+</tr>
+</tbody>
+</table>
+</div>
 
 ---
 
