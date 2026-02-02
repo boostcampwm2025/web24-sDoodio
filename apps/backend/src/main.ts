@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nestjs';
 import { SwaggerModule } from '@nestjs/swagger';
 import type { OpenAPIObject } from '@nestjs/swagger';
 import { NestFactory } from '@nestjs/core';
@@ -8,6 +9,13 @@ import { LoggingInterceptor } from './common/logger/logging.interceptor';
 import { openApiDocument } from './common/docs/openapi';
 
 async function bootstrap() {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.SENTRY_ENV ?? process.env.NODE_ENV ?? 'development',
+    release: process.env.SENTRY_RELEASE,
+    tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? 0.1),
+  });
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   if (process.env.NODE_ENV !== 'development') {
