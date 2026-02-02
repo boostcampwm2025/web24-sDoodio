@@ -77,7 +77,7 @@ describe('ChatService', () => {
 
     const result = await service.getDodoChat('user-1', '안녕');
 
-    expect(aiService.invokeDodoAgent).toHaveBeenCalledWith('안녕', [
+    expect(aiService.invokeDodoAgent).toHaveBeenCalledWith('user-1', '안녕', [
       { role: DODO_CHAT_ROLE.USER, content: '이전 질문' },
       { role: DODO_CHAT_ROLE.ASSISTANT, content: '이전 답변' },
     ]);

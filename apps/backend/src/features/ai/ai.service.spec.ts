@@ -38,11 +38,12 @@ describe('AIService', () => {
 
       langGraphService.invokeDodoAgent.mockResolvedValue(mockResult);
 
-      const result = await service.invokeDodoAgent(message, history);
+      const result = await service.invokeDodoAgent('user-1', message, history);
 
       expect(result).toBe(mockResult);
       expect(langGraphService.invokeDodoAgent).toHaveBeenCalledWith(
         expect.objectContaining({
+          userId: 'user-1',
           userInput: message,
           messages: expect.any(Array),
           llmCalls: 0,
