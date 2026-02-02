@@ -5,14 +5,8 @@ import { AIMessage, BaseMessage, BaseMessageLike, HumanMessage } from '@langchai
 import { Goal } from '../goal/goal.entity';
 import { DodoChatMessage } from '../chat/dodo-chat-message.entity';
 import { buildBehaviorRecommendationPrompt } from './ai.prompt';
-import { DodoAgentState, LangGraphService } from './lang-graph.service';
-
-type AIBehaviorRecommendation = {
-  마음열기: string;
-  시작하기: string;
-  이어가기: string;
-  몰입하기: string;
-};
+import { LangGraphService } from './lang-graph.service';
+import { AIBehaviorRecommendation, DodoAgentState } from './ai.type';
 
 @Injectable()
 export class AIService {
@@ -56,7 +50,7 @@ export class AIService {
     }
   }
 
-  async invokeDodoAgent(message: string, history: DodoChatMessage[]) {
+  async invokeDodoAgent(userId: string, message: string, history: DodoChatMessage[]) {
     const messages: BaseMessage[] = history
       .slice()
       .reverse()
@@ -65,10 +59,16 @@ export class AIService {
       );
 
     const state: DodoAgentState = {
+      userId,
       messages,
       userInput: message,
       dodoAction: undefined,
       dodoReply: undefined,
+      toolPlan: undefined,
+      toolPlanRaw: undefined,
+      toolPlanValid: undefined,
+      toolResults: undefined,
+      toolValidationFailures: 0,
       final: undefined,
       llmCalls: 0,
     };

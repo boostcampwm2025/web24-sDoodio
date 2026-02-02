@@ -7,36 +7,20 @@ import {
 import { ChatOpenAI } from '@langchain/openai';
 import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import {
-  StateSchema,
-  MessagesValue,
-  ReducedValue,
-  GraphNode,
-  END,
-  START,
-  StateGraph,
-} from '@langchain/langgraph';
-import { z } from 'zod/v4';
+import { InjectRepository } from '@nestjs/typeorm';
+import { GraphNode, END, START, StateGraph } from '@langchain/langgraph';
+import { In, Not, type Repository } from 'typeorm';
 import {
   DODO_ACTIONS,
   DODO_ACTION_VALUES,
   DodoChatResponse,
   DodoChatResponseSchema,
 } from '@web24/shared';
-import { buildDodoActionPrompt, buildDodoChatSystemPrompt } from './ai.prompt';
-
-const DodoAgentStateSchema = new StateSchema({
-  messages: MessagesValue,
-  userInput: z.string(),
-
-  dodoAction: z.enum(DODO_ACTION_VALUES).optional(),
-  dodoReply: z.string().optional(),
-
-  final: DodoChatResponseSchema.optional(),
-
-  llmCalls: new ReducedValue(z.number().default(0), { reducer: (x, y) => x + y }),
-});
-export type DodoAgentState = typeof DodoAgentStateSchema.State;
+import { getKstDayKey } from '../../common/utils/time.utils';
+import { buildDodoActionPrompt, buildDodoChatSystemPrompt, buildToolPlanPrompt } from './ai.prompt';
+import { TodayBehavior } from '../behavior/today-behavior.entity';
+import { Goal } from '../goal/goal.entity';
+import { DodoAgentState, DodoAgentStateSchema, TOOL_NAMES, ToolName } from './ai.type';
 
 @Injectable()
 export class LangGraphService {
@@ -44,15 +28,39 @@ export class LangGraphService {
 
   private readonly graph;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    @InjectRepository(TodayBehavior)
+    private readonly todayBehaviorRepository: Repository<TodayBehavior>,
+    @InjectRepository(Goal)
+    private readonly goalRepository: Repository<Goal>,
+  ) {
     this.graph = new StateGraph(DodoAgentStateSchema)
-      .addNode('dodoActionLlm', this.doDoActionLlmCallNode)
-      .addNode('dodoChatLlm', this.doDoChatLlmCallNode)
+      .addNode('decideToolPlanLlmCallNode', this.decideToolPlanLlmCallNode)
+      .addNode('validateToolPlanNode', this.validateToolPlanNode)
+      .addNode('executeToolsNode', this.executeToolsNode)
+      .addNode('dodoActionLlm', this.dodoActionLlmCallNode)
+      .addNode('dodoChatLlm', this.dodoChatLlmCallNode)
+      .addNode('dodoToolChatLlm', this.dodoToolChatLlmCallNode)
+      .addNode('dodoFailedChatLlm', this.dodoFailedChatLlmCallNode)
       .addNode('finalize', this.finalizeNode)
 
-      .addEdge(START, 'dodoChatLlm')
+      .addEdge(START, 'decideToolPlanLlmCallNode')
+      .addEdge('decideToolPlanLlmCallNode', 'validateToolPlanNode')
+      .addConditionalEdges('validateToolPlanNode', (state) => {
+        if (!state.toolPlanValid && state.toolValidationFailures >= 2) {
+          return 'dodoFailedChatLlm';
+        }
+        if (!state.toolPlanValid) return 'decideToolPlanLlmCallNode';
+        if (!state.toolPlan?.length) return 'dodoChatLlm';
+        return 'executeToolsNode';
+      })
+      .addEdge('executeToolsNode', 'dodoToolChatLlm')
       .addEdge('dodoChatLlm', 'dodoActionLlm')
+
       .addEdge('dodoActionLlm', 'finalize')
+      .addEdge('dodoToolChatLlm', 'finalize')
+      .addEdge('dodoFailedChatLlm', 'finalize')
       .addEdge('finalize', END)
 
       .compile()
@@ -70,7 +78,115 @@ export class LangGraphService {
     return result.final;
   }
 
-  private doDoActionLlmCallNode: GraphNode<typeof DodoAgentStateSchema> = async (state) => {
+  private decideToolPlanLlmCallNode: GraphNode<typeof DodoAgentStateSchema> = async (state) => {
+    const systemPrompt = buildToolPlanPrompt();
+
+    const messages: BaseMessage[] = [
+      new SystemMessage(systemPrompt),
+      new HumanMessage(state.userInput),
+    ];
+
+    const content = await this.callClova(messages);
+    return {
+      llmCalls: 1,
+      toolPlanRaw: content,
+      toolPlanValid: undefined,
+    };
+  };
+
+  private validateToolPlanNode: GraphNode<typeof DodoAgentStateSchema> = async (state) => {
+    if (!state.toolPlanRaw) {
+      return {
+        toolPlanValid: false,
+        toolValidationFailures: 1,
+      };
+    }
+
+    try {
+      const parsed = JSON.parse(state.toolPlanRaw) as { tools?: ToolName[] };
+      const tools = Array.isArray(parsed.tools) ? parsed.tools : [];
+      const normalizedTools = tools.filter((tool) =>
+        (TOOL_NAMES as readonly string[]).includes(tool),
+      ) as ToolName[];
+      const isValid = Array.isArray(parsed.tools);
+
+      return {
+        toolPlan: normalizedTools,
+        toolPlanValid: isValid,
+        toolValidationFailures: isValid ? 0 : 1,
+      };
+    } catch (error) {
+      this.logger.error('Failed to parse tool plan JSON', String(error), state.toolPlanRaw);
+      return {
+        toolPlanValid: false,
+        toolValidationFailures: 1,
+      };
+    }
+  };
+
+  private executeToolsNode: GraphNode<typeof DodoAgentStateSchema> = async (state) => {
+    const tools = state.toolPlan ?? [];
+    if (!tools.length) return {};
+
+    const results = await Promise.all(
+      tools.map((tool) => {
+        if (tool === 'fetchTodayBehaviors') return this.fetchTodayBehaviors(state);
+        if (tool === 'fetchGoals') return this.fetchGoals(state);
+        return Promise.resolve(undefined);
+      }),
+    );
+
+    const toolResults = results.reduce<Record<string, unknown>>((acc, result) => {
+      if (result && typeof result === 'object') {
+        Object.assign(acc, result);
+      }
+      return acc;
+    }, {});
+
+    return {
+      toolResults: {
+        ...(state.toolResults ?? {}),
+        ...toolResults,
+      },
+    };
+  };
+
+  private async fetchTodayBehaviors(state: DodoAgentState): Promise<Record<string, unknown>> {
+    const todayDate = getKstDayKey();
+    const todayBehaviors = await this.todayBehaviorRepository.find({
+      where: {
+        date: todayDate,
+        user: { id: state.userId },
+        status: Not(In(['skipped', 'ignored', 'deleted'])),
+      },
+      relations: { behavior: { goal: true } },
+    });
+
+    return {
+      fetchTodayBehaviors: todayBehaviors.map((tb) => ({
+        id: tb.id,
+        title: tb.behavior.title,
+        goalTitle: tb.behavior.goal.title,
+        difficulty: tb.behavior.difficulty,
+        isChecked: tb.status === 'completed',
+      })),
+    };
+  }
+
+  private async fetchGoals(state: DodoAgentState): Promise<Record<string, unknown>> {
+    const goals = await this.goalRepository.find({
+      where: { user: { id: state.userId } },
+    });
+
+    return {
+      fetchGoals: goals.map((goal) => ({
+        id: goal.id,
+        title: goal.title,
+      })),
+    };
+  }
+
+  private dodoActionLlmCallNode: GraphNode<typeof DodoAgentStateSchema> = async (state) => {
     const systemPrompt = buildDodoActionPrompt();
 
     const messages: BaseMessage[] = [
@@ -85,8 +201,33 @@ export class LangGraphService {
     return { llmCalls: 1, dodoAction };
   };
 
-  private doDoChatLlmCallNode: GraphNode<typeof DodoAgentStateSchema> = async (state) => {
-    const systemPrompt = buildDodoChatSystemPrompt();
+  private dodoChatLlmCallNode: GraphNode<typeof DodoAgentStateSchema> = async (state) => {
+    const systemContent = buildDodoChatSystemPrompt(state);
+
+    const messages: BaseMessage[] = [
+      new SystemMessage(systemContent),
+      ...state.messages,
+      new HumanMessage(state.userInput),
+    ];
+
+    const dodoReply = await this.callClova(messages);
+    return { llmCalls: 1, dodoReply };
+  };
+
+  private dodoToolChatLlmCallNode: GraphNode<typeof DodoAgentStateSchema> = async (state) => {
+    const systemContent = buildDodoChatSystemPrompt(state);
+
+    const messages: BaseMessage[] = [
+      new SystemMessage(systemContent),
+      new HumanMessage(state.userInput),
+    ];
+
+    const dodoReply = await this.callClova(messages);
+    return { llmCalls: 1, dodoReply, dodoAction: DODO_ACTIONS.none };
+  };
+
+  private dodoFailedChatLlmCallNode: GraphNode<typeof DodoAgentStateSchema> = async (state) => {
+    const systemPrompt = buildDodoChatSystemPrompt(state);
 
     const messages: BaseMessage[] = [
       new SystemMessage(systemPrompt),
@@ -99,11 +240,13 @@ export class LangGraphService {
   };
 
   private finalizeNode: GraphNode<typeof DodoAgentStateSchema> = async (state) => {
-    const final = DodoChatResponseSchema.parse({
+    const result = DodoChatResponseSchema.safeParse({
       reply: state.dodoReply,
       action: state.dodoAction,
     });
-    return { final };
+    if (!result.success) return {};
+
+    return { final: result.data };
   };
 
   private extractContent(content: unknown): string {

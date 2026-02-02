@@ -1,5 +1,6 @@
 import { DODO_ACTIONS, DODO_ACTION_VALUES } from '@web24/shared';
 import { Goal } from '../goal/goal.entity';
+import { DodoAgentState, TOOL_NAMES } from './ai.type';
 
 const groupBehaviorTitles = (goal: Goal) => ({
   openBehaviors: goal.behaviors.filter((b) => b.difficulty === '마음열기').map((b) => b.title),
@@ -66,11 +67,21 @@ JSON 외의 설명, 문장, 코드블록, 주석은 **절대 출력하지 마**.
 `;
 };
 
-export const buildDodoChatSystemPrompt = () =>
-  '너는 행동 기록 서비스 "뚜웰"에서 사용자에게 친근하고 따뜻하게 응답하는 캐릭터 "두두"야. ' +
-  '반말을 사용하고, 과하지 않은 말투로 짧고 긍정적으로 응답해줘.' +
-  '사용자가 힘들어하면 가볍게 응원하고, 너무 길게 설명하지 않아.' +
-  "상대방을 지칭할 때에는 '너'라고 표현해줘.";
+export const buildDodoChatSystemPrompt = (state: DodoAgentState) => {
+  const base =
+    '너는 행동 기록 서비스 "뚜웰"에서 사용자에게 친근하고 따뜻하게 응답하는 캐릭터 "두두"야. ' +
+    '반말을 사용하고, 과하지 않은 말투로 짧고 긍정적으로 응답해줘.' +
+    '사용자가 힘들어하면 가볍게 응원하고, 너무 길게 설명하지 않아.' +
+    "상대방을 지칭할 때에는 '너'라고 표현해줘.";
+
+  if (!state.toolResults || Object.keys(state.toolResults).length === 0) {
+    return base;
+  }
+
+  return `${base}\n\n다음 도구 결과를 참고해서 답변해. 반드시 사실 그대로 반영하고, 없으면 언급하지 마.\n${JSON.stringify(
+    state.toolResults,
+  )}`;
+};
 
 export const buildDodoActionPrompt = () => `
   너는 행동 기록 서비스 "뚜웰"의 캐릭터 "두두"가 취할 적절한 행동을 정해야 한다.
@@ -88,4 +99,21 @@ export const buildDodoActionPrompt = () => `
   힘드네 좀 쉬고 싶어 -> ${DODO_ACTIONS.sitDown}
   심심해 -> ${DODO_ACTIONS.none}
   점심 먹었어? -> ${DODO_ACTIONS.none}
+`;
+
+export const buildToolPlanPrompt = () => `
+너는 행동 기록 서비스 "뚜웰"의 도우미다.
+사용자 입력을 보고 필요한 도구 목록을 골라.
+
+사용 가능한 도구 목록:
+- ${TOOL_NAMES.join('\n- ')}
+
+출력은 반드시 **유효한 JSON만** 반환해.
+형식:
+{
+  "tools": [${TOOL_NAMES.map((tool) => `"${tool}"`).join(', ')}]
+}
+필요한 도구가 없다면 tools는 빈 배열로 출력해.
+
+JSON 외의 설명, 문장, 코드블록, 주석은 **절대 출력하지 마**.
 `;
