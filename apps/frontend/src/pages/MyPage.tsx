@@ -1,7 +1,8 @@
 import useAuthStore from '@/stores/useAuthStore';
+import { TodayBehaviorRatioSlider } from '@/features/setting/components/TodayBehaviorRatioSlider';
 
 export function MyPage() {
-  const { user } = useAuthStore();
+  const { user, updateBehaviorRatio } = useAuthStore();
 
   if (!user) return null;
 
@@ -87,7 +88,11 @@ export function MyPage() {
       {/* 설정 섹션 */}
       <section className="flex flex-col gap-3">
         <h3 className="text-heading-3 text-label-normal px-2 font-bold">설정</h3>
-        <div className="bg-bg-light shadow-emphasize flex flex-col overflow-hidden rounded-2xl" />
+        <div className="bg-bg-light shadow-emphasize flex flex-col gap-8 rounded-3xl p-8">
+          <div className="flex flex-col gap-4">
+            <TodayBehaviorRatioSlider user={user} updateBehaviorRatio={updateBehaviorRatio} />
+          </div>
+        </div>
       </section>
     </div>
   );

@@ -14,9 +14,10 @@ type AuthState = {
   fetchMe: () => Promise<UserMeResponse | null>;
   loginGuest: () => Promise<LoginResponse>;
   logout: () => Promise<void>;
+  updateBehaviorRatio: (behaviorRatio: number) => Promise<void>;
 };
 
-const useAuthStore = create<AuthState>((set) => ({
+const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isLoading: false,
   error: null,
@@ -83,6 +84,32 @@ const useAuthStore = create<AuthState>((set) => ({
       }
 
       set({ user: null, isLoading: false });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      set({ error: message, isLoading: false });
+      throw error;
+    }
+  },
+  updateBehaviorRatio: async (behaviorRatio: number) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await fetch('/api/auth/settings/behavior-ratio', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ behaviorRatio }),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Request failed: ${response.status}`);
+      }
+
+      const { user } = get();
+      if (user) {
+        set({ user: { ...user, behaviorRatio }, isLoading: false });
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       set({ error: message, isLoading: false });
