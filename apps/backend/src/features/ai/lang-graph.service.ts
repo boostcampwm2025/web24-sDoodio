@@ -17,7 +17,12 @@ import {
   DodoChatResponseSchema,
 } from '@web24/shared';
 import { getKstDayKey } from '../../common/utils/time.utils';
-import { buildDodoActionPrompt, buildDodoChatSystemPrompt, buildToolPlanPrompt } from './ai.prompt';
+import {
+  buildDodoActionPrompt,
+  buildDodoChatSystemPrompt,
+  buildDodoFailedChatSystemPrompt,
+  buildToolPlanPrompt,
+} from './ai.prompt';
 import { TodayBehavior } from '../behavior/today-behavior.entity';
 import { Goal } from '../goal/goal.entity';
 import { DodoAgentState, DodoAgentStateSchema, TOOL_NAMES, ToolName } from './ai.type';
@@ -227,16 +232,15 @@ export class LangGraphService {
   };
 
   private dodoFailedChatLlmCallNode: GraphNode<typeof DodoAgentStateSchema> = async (state) => {
-    const systemPrompt = buildDodoChatSystemPrompt(state);
+    const systemPrompt = buildDodoFailedChatSystemPrompt();
 
     const messages: BaseMessage[] = [
       new SystemMessage(systemPrompt),
-      ...state.messages,
       new HumanMessage(state.userInput),
     ];
 
     const dodoReply = await this.callClova(messages);
-    return { llmCalls: 1, dodoReply };
+    return { llmCalls: 1, dodoReply, dodoAction: DODO_ACTIONS.none };
   };
 
   private finalizeNode: GraphNode<typeof DodoAgentStateSchema> = async (state) => {
