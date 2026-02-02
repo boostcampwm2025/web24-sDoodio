@@ -1,5 +1,5 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
-import { LogoutResponseSchema, UserMeResponseSchema } from '@web24/shared';
+import { LogoutResponseSchema, UserMeResponseSchema, LoginResponseSchema } from '@web24/shared';
 
 type CommonSchemas = {
   errorResponse: ReturnType<OpenAPIRegistry['register']>;
@@ -7,6 +7,7 @@ type CommonSchemas = {
 
 export function registerAuthApi(registry: OpenAPIRegistry, common: CommonSchemas) {
   const userMeResponse = registry.register('UserMeResponse', UserMeResponseSchema);
+  const loginResponse = registry.register('LoginResponse', LoginResponseSchema);
   const logoutResponse = registry.register('LogoutResponse', LogoutResponseSchema);
   const { errorResponse } = common;
 
@@ -18,7 +19,7 @@ export function registerAuthApi(registry: OpenAPIRegistry, common: CommonSchemas
         description: 'Guest user created and logged in',
         content: {
           'application/json': {
-            schema: userMeResponse,
+            schema: loginResponse,
           },
         },
       },
@@ -76,6 +77,24 @@ export function registerAuthApi(registry: OpenAPIRegistry, common: CommonSchemas
           },
         },
       },
+    },
+  });
+
+  registry.registerPath({
+    method: 'get',
+    path: '/auth/google',
+    description: 'Redirect to google login page',
+    responses: {
+      302: { description: 'Redirect to google login page' },
+    },
+  });
+
+  registry.registerPath({
+    method: 'get',
+    path: '/auth/google/callback',
+    description: 'After google authentication, create a session and redirect to the frontend.',
+    responses: {
+      302: { description: 'Redirect to new user (/onboarding) or existing user (/) ' },
     },
   });
 }
