@@ -9,4 +9,13 @@ export class User extends BaseIdCreatedUpdatedDeletedEntity {
 
   @Column({ type: 'enum', enum: Object.values(USER_KINDS), default: USER_KINDS.guest })
   kind!: UserKind;
+
+  @Column({ type: 'varchar', nullable: true })
+  provider?: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  providerId?: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  email?: string;
 }
