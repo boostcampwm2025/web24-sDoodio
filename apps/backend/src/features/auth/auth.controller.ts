@@ -1,8 +1,10 @@
 import {
   BadRequestException,
+  Body,
   Controller,
   Get,
   HttpCode,
+  Patch,
   Post,
   Req,
   Res,
@@ -73,6 +75,7 @@ export class AuthController {
       nickname: user.nickname,
       kind: user.kind,
       email: user.email,
+      behaviorRatio: user.behaviorRatio,
     };
   }
 
@@ -90,6 +93,17 @@ export class AuthController {
       });
     });
     res.clearCookie('connect.sid');
+    return { success: true };
+  }
+
+  @Patch('settings/behavior-ratio')
+  @HttpCode(200)
+  @UseGuards(SessionAuthGuard)
+  async updateBehaviorRatio(
+    @UserId() userId: string,
+    @Body('behaviorRatio') behaviorRatio: number,
+  ) {
+    await this.authService.updateUserBehaviorRatio(userId, behaviorRatio);
     return { success: true };
   }
 }

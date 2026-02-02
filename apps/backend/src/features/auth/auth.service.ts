@@ -80,6 +80,10 @@ export class AuthService {
     return { user, isNew: false };
   }
 
+  async updateUserBehaviorRatio(userId: string, behaviorRatio: number): Promise<void> {
+    await this.userRepository.update({ id: userId }, { behaviorRatio });
+  }
+
   private generateGuestNickname(): string {
     const random = Math.random().toString(36).slice(2, 8);
     return `G-${random}`;

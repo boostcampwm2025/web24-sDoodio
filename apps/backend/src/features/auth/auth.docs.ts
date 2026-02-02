@@ -97,4 +97,48 @@ export function registerAuthApi(registry: OpenAPIRegistry, common: CommonSchemas
       302: { description: 'Redirect to new user (/onboarding) or existing user (/) ' },
     },
   });
+
+  registry.registerPath({
+    method: 'patch',
+    path: '/auth/settings/behavior-ratio',
+    request: {
+      body: {
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                behaviorRatio: { type: 'number' },
+              },
+              required: ['behaviorRatio'],
+            },
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: 'Behavior ratio updated successfully',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                success: { type: 'boolean' },
+              },
+              required: ['success'],
+            },
+          },
+        },
+      },
+      401: {
+        description: 'Not logged in',
+        content: {
+          'application/json': {
+            schema: errorResponse,
+          },
+        },
+      },
+    },
+  });
 }
