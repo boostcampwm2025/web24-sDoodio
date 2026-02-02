@@ -135,17 +135,19 @@ export class LangGraphService {
     const tools = state.toolPlan ?? [];
     if (!tools.length) return {};
 
-    const results = await Promise.all(
+    const results = await Promise.allSettled(
       tools.map((tool) => {
         if (tool === 'fetchTodayBehaviors') return this.fetchTodayBehaviors(state);
         if (tool === 'fetchGoals') return this.fetchGoals(state);
-        return Promise.resolve(undefined);
+        return Promise.reject(new Error(`Unknown tool: ${tool}`));
       }),
     );
 
     const toolResults = results.reduce<Record<string, unknown>>((acc, result) => {
-      if (result && typeof result === 'object') {
-        Object.assign(acc, result);
+      if (result.status === 'fulfilled' && result.value && typeof result.value === 'object') {
+        Object.assign(acc, result.value);
+      } else if (result.status === 'rejected') {
+        this.logger.error('Tool execution failed', result.reason);
       }
       return acc;
     }, {});
@@ -230,6 +232,7 @@ export class LangGraphService {
 
     const messages: BaseMessage[] = [
       new SystemMessage(systemContent),
+      ...state.messages,
       new HumanMessage(state.userInput),
     ];
 
