@@ -4,6 +4,6 @@ import { LangGraphService } from './lang-graph.service';
 
 @Module({
   providers: [AIService, LangGraphService],
-  exports: [AIService, LangGraphService],
+  exports: [AIService],
 })
 export class AIModule {}
