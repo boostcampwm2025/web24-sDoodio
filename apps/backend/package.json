@@ -36,6 +36,9 @@
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^8.4.0",
+    "@langchain/core": "^1.1.18",
+    "@langchain/langgraph": "^1.1.2",
+    "@langchain/openai": "^1.2.4",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
