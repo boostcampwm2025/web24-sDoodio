@@ -1,33 +1,10 @@
 import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ChatOpenAI } from '@langchain/openai';
+import { BaseMessageLike } from '@langchain/core/messages';
 import { DODO_ACTION_VALUES, DODO_ACTIONS, type DodoAction } from '@web24/shared';
 import { Goal } from '../goal/goal.entity';
 import { DodoChatMessage } from '../chat/dodo-chat-message.entity';
-
-type ClovaChatResponse = {
-  status: {
-    code: string;
-    message: string;
-  };
-  result: {
-    created: number;
-    usage: {
-      completionTokens: number;
-      promptTokens: number;
-      totalTokens: number;
-    };
-    message: {
-      role: 'assistant' | 'user' | 'system';
-      content: string;
-    };
-    seed?: number;
-    aiFilter?: Array<{
-      groupName: string;
-      name: string;
-      score: string; // 응답 예시가 string이므로 string
-    }>;
-  };
-};
 
 type AIBehaviorRecommendation = {
   마음열기: string;
@@ -109,28 +86,12 @@ export class AIService {
 JSON 외의 설명, 문장, 코드블록, 주석은 **절대 출력하지 마**.
 `;
 
-    const modelName = 'HCX-005';
-    const clovaApiUrl = `https://clovastudio.stream.ntruss.com/v3/chat-completions/${modelName}`;
-
-    const messages = [{ role: 'user', content: [{ type: 'text', text: systemPrompt }] }];
-
-    const body = { messages };
+    const messages: BaseMessageLike[] = [
+      { role: 'user', content: [{ type: 'text', text: systemPrompt }] },
+    ];
 
     this.logger.log(`send Clova API with title:${goal.title} id: ${goal.id}`);
-
-    const clovaApiKey = this.configService.getOrThrow<string>('CLOVA_API_KEY');
-    const response = await fetch(clovaApiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${clovaApiKey}`,
-      },
-      body: JSON.stringify(body),
-    });
-
-    const responseJson = (await response.json()) as ClovaChatResponse;
-
-    const { content } = responseJson.result.message;
+    const content = await this.callClova(messages);
     const startIndex = content.indexOf('{');
     const endIndex = content.lastIndexOf('}');
 
@@ -162,7 +123,7 @@ JSON 외의 설명, 문장, 코드블록, 주석은 **절대 출력하지 마**.
       '사용자가 힘들어하면 가볍게 응원하고, 너무 길게 설명하지 않아.' +
       "상대방을 지칭할 때에는 '너'라고 표현해줘.";
 
-    const messages = [
+    const messages: BaseMessageLike[] = [
       {
         role: 'system' as const,
         content: [{ type: 'text', text: systemPrompt }],
@@ -172,7 +133,7 @@ JSON 외의 설명, 문장, 코드블록, 주석은 **절대 출력하지 마**.
         .reverse()
         .map((entry) => ({
           role: entry.role,
-          content: [{ type: 'text', text: entry.content }],
+          content: [{ type: 'text' as const, text: entry.content }],
         })),
       {
         role: 'user' as const,
@@ -180,26 +141,7 @@ JSON 외의 설명, 문장, 코드블록, 주석은 **절대 출력하지 마**.
       },
     ];
 
-    const modelName = 'HCX-005';
-    const clovaApiUrl = `https://clovastudio.stream.ntruss.com/v3/chat-completions/${modelName}`;
-    const clovaApiKey = this.configService.getOrThrow<string>('CLOVA_API_KEY');
-
-    const response = await fetch(clovaApiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${clovaApiKey}`,
-      },
-      body: JSON.stringify({ messages }),
-    });
-
-    if (!response.ok) {
-      this.logger.error(`CLOVA API error: ${response.status}`);
-      throw new ServiceUnavailableException('Failed to fetch CLOVA response');
-    }
-
-    const responseJson = (await response.json()) as ClovaChatResponse;
-    const reply = responseJson.result.message.content;
+    const reply = await this.callClova(messages);
 
     return reply;
   }
@@ -223,7 +165,7 @@ JSON 외의 설명, 문장, 코드블록, 주석은 **절대 출력하지 마**.
       점심 먹었어? -> ${DODO_ACTIONS.none}
     `;
 
-    const messages = [
+    const messages: BaseMessageLike[] = [
       {
         role: 'system' as const,
         content: [{ type: 'text', text: systemPrompt }],
@@ -234,28 +176,52 @@ JSON 외의 설명, 문장, 코드블록, 주석은 **절대 출력하지 마**.
       },
     ];
 
-    const modelName = 'HCX-005';
-    const clovaApiUrl = `https://clovastudio.stream.ntruss.com/v3/chat-completions/${modelName}`;
-    const clovaApiKey = this.configService.getOrThrow<string>('CLOVA_API_KEY');
-
-    const response = await fetch(clovaApiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${clovaApiKey}`,
-      },
-      body: JSON.stringify({ messages }),
-    });
-
-    if (!response.ok) {
-      this.logger.error(`CLOVA API error: ${response.status}`);
-      throw new ServiceUnavailableException('Failed to fetch CLOVA response');
-    }
-
-    const responseJson = (await response.json()) as ClovaChatResponse;
-    const action = responseJson.result.message.content as DodoAction;
+    const action = (await this.callClova(messages)) as DodoAction;
 
     if (DODO_ACTION_VALUES.includes(action)) return action;
     return DODO_ACTIONS.none;
+  }
+
+  private extractContent(content: unknown): string {
+    if (typeof content === 'string') return content;
+    if (Array.isArray(content)) {
+      return content
+        .map((part) => {
+          if (typeof part === 'string') return part;
+          if (part && typeof part === 'object' && 'text' in part) {
+            const textValue = (part as { text?: unknown }).text;
+            return typeof textValue === 'string' ? textValue : '';
+          }
+          return '';
+        })
+        .join('');
+    }
+    return String(content ?? '');
+  }
+
+  private async callClova(messages: BaseMessageLike[]): Promise<string> {
+    const llm = new ChatOpenAI({
+      model: 'HCX-005',
+      apiKey: this.configService.getOrThrow<string>('CLOVA_API_KEY'),
+      configuration: {
+        baseURL: 'https://clovastudio.stream.ntruss.com/v1/openai',
+      },
+    });
+
+    try {
+      const response = await llm.invoke(messages);
+      const content = this.extractContent(response.content);
+      if (!content) {
+        throw new Error('Empty response content');
+      }
+      return content;
+    } catch (error) {
+      if (error instanceof Error) {
+        this.logger.error(`CLOVA API error: ${error.message}`, error.stack);
+      } else {
+        this.logger.error('CLOVA API error: Unknown error', String(error));
+      }
+      throw new ServiceUnavailableException('Failed to fetch CLOVA response');
+    }
   }
 }

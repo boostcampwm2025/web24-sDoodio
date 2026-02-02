@@ -30,38 +30,23 @@ describe('AIService', () => {
       const message = '오늘 날씨 어때?';
       const mockReply = '맑아요!';
 
-      global.fetch = jest.fn().mockResolvedValue({
-        ok: true,
-        json: jest.fn().mockResolvedValue({
-          result: {
-            message: {
-              content: mockReply,
-            },
-          },
-        }),
-      });
+      const callClovaSpy = jest.spyOn(service as any, 'callClova').mockResolvedValue(mockReply);
 
       const result = await service.createDodoMessage(history, message);
 
       expect(result).toBe(mockReply);
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('clovastudio.stream.ntruss.com'),
-        expect.objectContaining({
-          method: 'POST',
-          headers: expect.objectContaining({
-            'Content-Type': 'application/json',
-            Authorization: expect.any(String),
+      expect(callClovaSpy).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            role: 'user',
+            content: [expect.objectContaining({ text: message })],
           }),
-          body: expect.stringContaining(message),
-        }),
+        ]),
       );
     });
 
     it('Clova API 호출 실패 시 에러를 던진다', async () => {
-      global.fetch = jest.fn().mockResolvedValue({
-        ok: false,
-        status: 500,
-      });
+      jest.spyOn(service as any, 'callClova').mockRejectedValue(new Error('fail'));
 
       await expect(service.createDodoMessage([], 'hello')).rejects.toThrow();
     });
@@ -71,44 +56,25 @@ describe('AIService', () => {
     it('Clova API를 호출하고 유효한 행동을 반환한다', async () => {
       const message = '사랑해';
 
-      global.fetch = jest.fn().mockResolvedValue({
-        ok: true,
-        json: jest.fn().mockResolvedValue({
-          result: {
-            message: {
-              content: DODO_ACTIONS.wink,
-            },
-          },
-        }),
-      });
+      const callClovaSpy = jest
+        .spyOn(service as any, 'callClova')
+        .mockResolvedValue(DODO_ACTIONS.wink);
 
       const result = await service.getDodoAction(message);
 
       expect(result).toBe(DODO_ACTIONS.wink);
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('clovastudio.stream.ntruss.com'),
-        expect.objectContaining({
-          method: 'POST',
-          headers: expect.objectContaining({
-            'Content-Type': 'application/json',
-            Authorization: expect.any(String),
+      expect(callClovaSpy).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            role: 'user',
+            content: [expect.objectContaining({ text: message })],
           }),
-          body: expect.stringContaining(message),
-        }),
+        ]),
       );
     });
 
     it('Clova API 응답이 유효하지 않으면 none을 반환한다', async () => {
-      global.fetch = jest.fn().mockResolvedValue({
-        ok: true,
-        json: jest.fn().mockResolvedValue({
-          result: {
-            message: {
-              content: 'INVALID_ACTION',
-            },
-          },
-        }),
-      });
+      jest.spyOn(service as any, 'callClova').mockResolvedValue('INVALID_ACTION');
 
       const result = await service.getDodoAction('아무 말');
 
@@ -116,10 +82,7 @@ describe('AIService', () => {
     });
 
     it('Clova API 호출 실패 시 에러를 던진다', async () => {
-      global.fetch = jest.fn().mockResolvedValue({
-        ok: false,
-        status: 500,
-      });
+      jest.spyOn(service as any, 'callClova').mockRejectedValue(new Error('fail'));
 
       await expect(service.getDodoAction('hello')).rejects.toThrow();
     });
