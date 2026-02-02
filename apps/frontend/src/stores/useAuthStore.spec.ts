@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { DEFAULT_BEHAVIOR_EXTRACTION_RATIO } from '@web24/shared';
 import useAuthStore from './useAuthStore';
 
 const mockFetch = (options: { ok: boolean; status: number; json?: () => Promise<unknown> }) => {
@@ -21,6 +22,7 @@ describe('useAuthStore', () => {
         id: '019bd5d8-72dc-78ca-af5d-c93358058b32',
         nickname: 'G-abcd12',
         kind: 'guest',
+        behaviorRatio: DEFAULT_BEHAVIOR_EXTRACTION_RATIO,
       };
       mockFetch({ ok: true, status: 200, json: async () => user });
 
@@ -46,6 +48,7 @@ describe('useAuthStore', () => {
         id: '019bd5d8-72dc-78ca-af5d-c93358058b32',
         nickname: 'G-abcd12',
         kind: 'guest',
+        behaviorRatio: DEFAULT_BEHAVIOR_EXTRACTION_RATIO,
       };
       mockFetch({ ok: true, status: 200, json: async () => user });
 
@@ -59,7 +62,12 @@ describe('useAuthStore', () => {
   describe('logout', () => {
     it('로그아웃하면 유저 정보를 비운다', async () => {
       useAuthStore.setState({
-        user: { id: '019bd5d8-72dc-78ca-af5d-c93358058b32', nickname: 'G-abcd12', kind: 'guest' },
+        user: {
+          id: '019bd5d8-72dc-78ca-af5d-c93358058b32',
+          nickname: 'G-abcd12',
+          kind: 'guest',
+          behaviorRatio: DEFAULT_BEHAVIOR_EXTRACTION_RATIO,
+        },
         isLoading: false,
         error: null,
       });

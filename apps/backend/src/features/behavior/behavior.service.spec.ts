@@ -2,7 +2,13 @@ import { In, Not } from 'typeorm';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getDataSourceToken, getRepositoryToken } from '@nestjs/typeorm';
-import { type AIBehaviorStatus, BEHAVIOR_DIFFICULTIES, TodayBehaviorStatus } from '@web24/shared';
+import {
+  type AIBehaviorStatus,
+  BEHAVIOR_DIFFICULTIES,
+  BEHAVIOR_LEVEL_SCORES,
+  DEFAULT_BEHAVIOR_EXTRACTION_RATIO,
+  TodayBehaviorStatus,
+} from '@web24/shared';
 import { BehaviorService } from './behavior.service';
 import { Behavior } from './behavior.entity';
 import { TodayBehavior } from './today-behavior.entity';
@@ -158,7 +164,11 @@ describe('BehaviorService', () => {
 
     it('기존 오늘 행동이 있으면 매핑해서 반환한다', async () => {
       const userId = 'user-1';
-      const user = { id: 'user-1', nickname: '테스트유저' };
+      const user = {
+        id: 'user-1',
+        nickname: '테스트유저',
+        behaviorRatio: DEFAULT_BEHAVIOR_EXTRACTION_RATIO,
+      };
       const existing = [
         {
           id: 'tb-1',
@@ -214,7 +224,11 @@ describe('BehaviorService', () => {
 
     it('기존 오늘 행동이 없으면 추출 후 저장하고 반환한다', async () => {
       const userId = 'user-1';
-      const user = { id: 'user-1', nickname: '테스트유저' };
+      const user = {
+        id: 'user-1',
+        nickname: '테스트유저',
+        behaviorRatio: DEFAULT_BEHAVIOR_EXTRACTION_RATIO,
+      };
       const behaviors = [
         {
           id: 'b-1',
@@ -264,7 +278,7 @@ describe('BehaviorService', () => {
         relations: { goal: true },
         where: { goal: { user: { id: userId } } },
       });
-      expect(extractSpy).toHaveBeenCalledWith(behaviors);
+      expect(extractSpy).toHaveBeenCalledWith(behaviors, user.behaviorRatio);
       expect(todayRepository.save).toHaveBeenCalledTimes(1);
       expect(result).toEqual([
         {
@@ -447,12 +461,6 @@ describe('BehaviorService', () => {
   });
 
   describe('extractTodayBehaviors', () => {
-    const scoreMap = {
-      마음열기: 1,
-      시작하기: 2,
-      이어가기: 3,
-      몰입하기: 4,
-    } as const;
     let randomSpy: jest.SpyInstance;
 
     beforeEach(() => {
@@ -472,10 +480,14 @@ describe('BehaviorService', () => {
         { id: 'b5', difficulty: 'AI' },
       ] as Behavior[];
 
-      const result = service.extractTodayBehaviors(behaviors);
+      const result = service.extractTodayBehaviors(behaviors, DEFAULT_BEHAVIOR_EXTRACTION_RATIO);
 
       const ids = result.map((behavior) => behavior.id);
-      const totalScore = result.reduce((sum, behavior) => sum + scoreMap[behavior.difficulty], 0);
+      const totalScore = result.reduce(
+        (sum, behavior) =>
+          sum + BEHAVIOR_LEVEL_SCORES[behavior.difficulty as keyof typeof BEHAVIOR_LEVEL_SCORES],
+        0,
+      );
 
       expect(result).toHaveLength(3);
       expect(new Set(ids).size).toBe(ids.length);
@@ -485,7 +497,10 @@ describe('BehaviorService', () => {
     });
 
     it('빈 배열이면 빈 배열을 반환한다', () => {
-      const result = service.extractTodayBehaviors([] as Behavior[]);
+      const result = service.extractTodayBehaviors(
+        [] as Behavior[],
+        DEFAULT_BEHAVIOR_EXTRACTION_RATIO,
+      );
 
       expect(result).toEqual([]);
     });
@@ -496,7 +511,7 @@ describe('BehaviorService', () => {
         { id: 'a2', difficulty: 'AI' },
       ] as Behavior[];
 
-      const result = service.extractTodayBehaviors(behaviors);
+      const result = service.extractTodayBehaviors(behaviors, DEFAULT_BEHAVIOR_EXTRACTION_RATIO);
 
       expect(result).toEqual([]);
     });
@@ -508,7 +523,7 @@ describe('BehaviorService', () => {
         { id: 'b3', difficulty: '시작하기' },
       ] as Behavior[];
 
-      const result = service.extractTodayBehaviors(behaviors);
+      const result = service.extractTodayBehaviors(behaviors, DEFAULT_BEHAVIOR_EXTRACTION_RATIO);
 
       expect(result.some((b) => b.difficulty === 'AI')).toBe(false);
     });
@@ -522,10 +537,13 @@ describe('BehaviorService', () => {
       ] as Behavior[];
 
       // totalBehaviorScore = 1 + 4 + 4 + 3 = 12
-      // totalTodayBehaviorScore = round(12 * 0.8) = round(9.6) = 10
-      const result = service.extractTodayBehaviors(behaviors);
+      // totalTodayBehaviorScore = round(12 * DEFAULT_BEHAVIOR_EXTRACTION_RATIO) = round(9.6) = 10
+      const result = service.extractTodayBehaviors(behaviors, DEFAULT_BEHAVIOR_EXTRACTION_RATIO);
 
-      const totalScore = result.reduce((sum, b) => sum + scoreMap[b.difficulty], 0);
+      const totalScore = result.reduce(
+        (sum, b) => sum + BEHAVIOR_LEVEL_SCORES[b.difficulty as keyof typeof BEHAVIOR_LEVEL_SCORES],
+        0,
+      );
 
       expect(totalScore).toBeLessThanOrEqual(10);
     });
@@ -539,7 +557,7 @@ describe('BehaviorService', () => {
         { id: 'b4', difficulty: '몰입하기' },
       ] as Behavior[];
 
-      const result = service.extractTodayBehaviors(behaviors);
+      const result = service.extractTodayBehaviors(behaviors, DEFAULT_BEHAVIOR_EXTRACTION_RATIO);
       const ids = result.map((b) => b.id);
 
       // "id 중복이 없어야 한다"가 제품 스펙이면 이 테스트는 실패하도록 바꾸고 구현도 id 기반으로 바꾸는 게 맞음.
@@ -558,16 +576,22 @@ describe('BehaviorService', () => {
         { id: 'b5', difficulty: 'AI' },
       ] as Behavior[];
 
-      const result = service.extractTodayBehaviors(behaviors);
+      const result = service.extractTodayBehaviors(behaviors, DEFAULT_BEHAVIOR_EXTRACTION_RATIO);
 
       const totalBehaviorScore = behaviors
         .filter((b) => b.difficulty !== 'AI')
-        .reduce((sum, b) => sum + scoreMap[b.difficulty as keyof typeof scoreMap], 0);
+        .reduce(
+          (sum, b) =>
+            sum + BEHAVIOR_LEVEL_SCORES[b.difficulty as keyof typeof BEHAVIOR_LEVEL_SCORES],
+          0,
+        );
 
-      const totalTodayBehaviorScore = Math.round(totalBehaviorScore * 0.8);
+      const totalTodayBehaviorScore = Math.round(
+        totalBehaviorScore * DEFAULT_BEHAVIOR_EXTRACTION_RATIO,
+      );
 
       const totalScore = result.reduce(
-        (sum, b) => sum + scoreMap[b.difficulty as keyof typeof scoreMap],
+        (sum, b) => sum + BEHAVIOR_LEVEL_SCORES[b.difficulty as keyof typeof BEHAVIOR_LEVEL_SCORES],
         0,
       );
 
@@ -578,7 +602,11 @@ describe('BehaviorService', () => {
 
   describe('refreshTodayBehaviors', () => {
     it('기존 행동을 재사용하고 skipped를 pending으로 되돌린다', async () => {
-      const user = { id: 'user-1', nickname: '테스트유저' };
+      const user = {
+        id: 'user-1',
+        nickname: '테스트유저',
+        behaviorRatio: DEFAULT_BEHAVIOR_EXTRACTION_RATIO,
+      };
       const goal = { title: '건강한 생활', color: 'mint' };
       const behavior1 = {
         id: 'b-1',
@@ -685,7 +713,11 @@ describe('BehaviorService', () => {
     });
 
     it('추출 결과가 없으면 빈 배열을 반환한다', async () => {
-      const user = { id: 'user-1', nickname: '테스트유저' };
+      const user = {
+        id: 'user-1',
+        nickname: '테스트유저',
+        behaviorRatio: DEFAULT_BEHAVIOR_EXTRACTION_RATIO,
+      };
 
       const userQueryBuilder = {
         setLock: jest.fn().mockReturnThis(),
@@ -731,7 +763,11 @@ describe('BehaviorService', () => {
     });
 
     it('기존 행동이 없으면 새로 저장하고 반환한다', async () => {
-      const user = { id: 'user-1', nickname: '테스트유저' };
+      const user = {
+        id: 'user-1',
+        nickname: '테스트유저',
+        behaviorRatio: DEFAULT_BEHAVIOR_EXTRACTION_RATIO,
+      };
       const behavior = {
         id: 'b-1',
         title: '물 1컵 마시기',

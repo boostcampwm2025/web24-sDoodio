@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import type { Request, Response } from 'express';
+import { DEFAULT_BEHAVIOR_EXTRACTION_RATIO } from '@web24/shared';
+import { ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import type { User } from '../user/user.entity';
@@ -18,8 +20,10 @@ describe('AuthController', () => {
           useValue: {
             createGuestUser: jest.fn(),
             getUserById: jest.fn(),
+            updateUserRatio: jest.fn(),
           },
         },
+        { provide: ConfigService, useValue: {} },
       ],
     }).compile();
 
@@ -42,7 +46,7 @@ describe('AuthController', () => {
       expect(authService.createGuestUser).toHaveBeenCalled();
       expect(req.session.userId).toBe('user-id');
       expect(req.session.isGuest).toBe(true);
-      expect(result).toBe(user);
+      expect(result).toEqual({ ...user, isNewUser: true });
     });
 
     it('이미 로그인 상태면 400을 반환한다', async () => {
@@ -60,7 +64,12 @@ describe('AuthController', () => {
     });
 
     it('세션 기반으로 유저 정보를 반환한다', async () => {
-      const user = { id: 'user-id', nickname: 'G-abcd12', kind: 'guest' } as User;
+      const user = {
+        id: 'user-id',
+        nickname: 'G-abcd12',
+        kind: 'guest',
+        behaviorRatio: DEFAULT_BEHAVIOR_EXTRACTION_RATIO,
+      } as User;
       authService.getUserById.mockResolvedValue(user);
 
       const result = await controller.me('user-id');
@@ -70,6 +79,7 @@ describe('AuthController', () => {
         id: user.id,
         nickname: user.nickname,
         kind: user.kind,
+        behaviorRatio: DEFAULT_BEHAVIOR_EXTRACTION_RATIO,
       });
     });
   });

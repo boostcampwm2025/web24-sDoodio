@@ -43,7 +43,7 @@ describe('LoginPage', () => {
     render(<LoginPage />);
 
     expect(screen.getByText('로그인')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '게스트로 로그인' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '게스트로 시작하기' })).toBeInTheDocument();
   });
 
   it('로그인 상태가 아니면 세션 조회를 시도한다', async () => {
@@ -67,7 +67,7 @@ describe('LoginPage', () => {
   it('게스트 로그인 버튼을 누르면 로그인 요청 후 이동한다', async () => {
     render(<LoginPage />);
 
-    fireEvent.click(screen.getByRole('button', { name: '게스트로 로그인' }));
+    fireEvent.click(screen.getByRole('button', { name: '게스트로 시작하기' }));
 
     await waitFor(() => expect(storeState.loginGuest).toHaveBeenCalled());
     await waitFor(() =>
