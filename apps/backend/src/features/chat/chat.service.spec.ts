@@ -20,11 +20,10 @@ describe('ChatService', () => {
   const configService = {
     getOrThrow: jest.fn().mockReturnValue('test-key'),
   };
-  const aiService = { createDodoMessage: jest.fn(), getDodoAction: jest.fn() };
+  const aiService = { invokeDodoAgent: jest.fn() };
 
   beforeEach(async () => {
-    aiService.createDodoMessage.mockReset();
-    aiService.getDodoAction.mockReset();
+    aiService.invokeDodoAgent.mockReset();
     dodoChatRepository.find.mockReset();
     dodoChatRepository.save.mockReset();
     dodoChatRepository.create.mockReset();
@@ -74,19 +73,14 @@ describe('ChatService', () => {
       { role: DODO_CHAT_ROLE.ASSISTANT, content: '이전 답변' },
     ]);
 
-    aiService.createDodoMessage.mockResolvedValue('반가워요!');
-    aiService.getDodoAction.mockResolvedValue('None');
+    aiService.invokeDodoAgent.mockResolvedValue({ reply: '반가워요!', action: 'None' });
 
     const result = await service.getDodoChat('user-1', '안녕');
 
-    expect(aiService.createDodoMessage).toHaveBeenCalledWith(
-      [
-        { role: DODO_CHAT_ROLE.USER, content: '이전 질문' },
-        { role: DODO_CHAT_ROLE.ASSISTANT, content: '이전 답변' },
-      ],
-      '안녕',
-    );
-    expect(aiService.getDodoAction).toHaveBeenCalledWith('안녕');
+    expect(aiService.invokeDodoAgent).toHaveBeenCalledWith('안녕', [
+      { role: DODO_CHAT_ROLE.USER, content: '이전 질문' },
+      { role: DODO_CHAT_ROLE.ASSISTANT, content: '이전 답변' },
+    ]);
 
     expect(dodoChatRepository.save).toHaveBeenCalledTimes(1);
     expect(dodoChatRepository.save).toHaveBeenCalledWith([
