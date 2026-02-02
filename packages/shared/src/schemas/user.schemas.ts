@@ -1,3 +1,7 @@
+import {
+  BEHAVIOR_EXTRACTION_LEVELS,
+  DEFAULT_BEHAVIOR_EXTRACTION_RATIO,
+} from '../constants/behavior.constants';
 import { USER_NICKNAME_MAX_LENGTH } from '../constants/user.constants';
 import { USER_KINDS } from '../types/user.types';
 import { z } from '../zod';
@@ -9,6 +13,10 @@ export const UserSchema = z.object({
   provider: z.string().optional().nullable(),
   providerId: z.string().optional().nullable(),
   email: z.string().optional().nullable(),
+  behaviorRatio: z
+    .number()
+    .refine((val) => BEHAVIOR_EXTRACTION_LEVELS.some((l) => l.value === val))
+    .default(DEFAULT_BEHAVIOR_EXTRACTION_RATIO),
 });
 
 export type User = z.infer<typeof UserSchema>;
