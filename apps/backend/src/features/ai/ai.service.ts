@@ -90,7 +90,7 @@ export class AIService {
         })
         .join('');
     }
-    return String(content ?? '');
+    return `${content}`;
   }
 
   private async callClova(messages: BaseMessageLike[], model?: string): Promise<string> {

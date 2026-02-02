@@ -83,7 +83,9 @@ export class LangGraphService {
     return result.final;
   }
 
-  private decideToolPlanLlmCallNode: GraphNode<typeof DodoAgentStateSchema> = async (state) => {
+  private readonly decideToolPlanLlmCallNode: GraphNode<typeof DodoAgentStateSchema> = async (
+    state,
+  ) => {
     const systemPrompt = buildToolPlanPrompt();
 
     const messages: BaseMessage[] = [
@@ -99,7 +101,7 @@ export class LangGraphService {
     };
   };
 
-  private validateToolPlanNode: GraphNode<typeof DodoAgentStateSchema> = async (state) => {
+  private readonly validateToolPlanNode: GraphNode<typeof DodoAgentStateSchema> = async (state) => {
     if (!state.toolPlanRaw) {
       return {
         toolPlanValid: false,
@@ -112,7 +114,7 @@ export class LangGraphService {
       const tools = Array.isArray(parsed.tools) ? parsed.tools : [];
       const normalizedTools = tools.filter((tool) =>
         (TOOL_NAMES as readonly string[]).includes(tool),
-      ) as ToolName[];
+      );
       const isValid = Array.isArray(parsed.tools);
 
       return {
@@ -129,7 +131,7 @@ export class LangGraphService {
     }
   };
 
-  private executeToolsNode: GraphNode<typeof DodoAgentStateSchema> = async (state) => {
+  private readonly executeToolsNode: GraphNode<typeof DodoAgentStateSchema> = async (state) => {
     const tools = state.toolPlan ?? [];
     if (!tools.length) return {};
 
@@ -150,7 +152,7 @@ export class LangGraphService {
 
     return {
       toolResults: {
-        ...(state.toolResults ?? {}),
+        ...state.toolResults,
         ...toolResults,
       },
     };
@@ -191,7 +193,9 @@ export class LangGraphService {
     };
   }
 
-  private dodoActionLlmCallNode: GraphNode<typeof DodoAgentStateSchema> = async (state) => {
+  private readonly dodoActionLlmCallNode: GraphNode<typeof DodoAgentStateSchema> = async (
+    state,
+  ) => {
     const systemPrompt = buildDodoActionPrompt();
 
     const messages: BaseMessage[] = [
@@ -206,7 +210,7 @@ export class LangGraphService {
     return { llmCalls: 1, dodoAction };
   };
 
-  private dodoChatLlmCallNode: GraphNode<typeof DodoAgentStateSchema> = async (state) => {
+  private readonly dodoChatLlmCallNode: GraphNode<typeof DodoAgentStateSchema> = async (state) => {
     const systemContent = buildDodoChatSystemPrompt(state);
 
     const messages: BaseMessage[] = [
@@ -219,7 +223,9 @@ export class LangGraphService {
     return { llmCalls: 1, dodoReply };
   };
 
-  private dodoToolChatLlmCallNode: GraphNode<typeof DodoAgentStateSchema> = async (state) => {
+  private readonly dodoToolChatLlmCallNode: GraphNode<typeof DodoAgentStateSchema> = async (
+    state,
+  ) => {
     const systemContent = buildDodoChatSystemPrompt(state);
 
     const messages: BaseMessage[] = [
@@ -231,7 +237,9 @@ export class LangGraphService {
     return { llmCalls: 1, dodoReply, dodoAction: DODO_ACTIONS.none };
   };
 
-  private dodoFailedChatLlmCallNode: GraphNode<typeof DodoAgentStateSchema> = async (state) => {
+  private readonly dodoFailedChatLlmCallNode: GraphNode<typeof DodoAgentStateSchema> = async (
+    state,
+  ) => {
     const systemPrompt = buildDodoFailedChatSystemPrompt();
 
     const messages: BaseMessage[] = [
@@ -243,7 +251,7 @@ export class LangGraphService {
     return { llmCalls: 1, dodoReply, dodoAction: DODO_ACTIONS.none };
   };
 
-  private finalizeNode: GraphNode<typeof DodoAgentStateSchema> = async (state) => {
+  private readonly finalizeNode: GraphNode<typeof DodoAgentStateSchema> = async (state) => {
     const result = DodoChatResponseSchema.safeParse({
       reply: state.dodoReply,
       action: state.dodoAction,
@@ -267,7 +275,7 @@ export class LangGraphService {
         })
         .join('');
     }
-    return String(content ?? '');
+    return `${content}`;
   }
 
   private async callClova(messages: BaseMessageLike[], model?: string): Promise<string> {
