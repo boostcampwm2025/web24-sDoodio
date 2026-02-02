@@ -1,7 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { USER_KINDS, type UserKind } from '@web24/shared';
 import { User } from '../user/user.entity';
+
+export type SocialProfile = {
+  provider: UserKind;
+  id: string;
+  email?: string;
+  nickname?: string;
+};
 
 @Injectable()
 export class AuthService {
@@ -17,9 +25,30 @@ export class AuthService {
   async createGuestUser(): Promise<User> {
     const user = this.userRepository.create({
       nickname: this.generateGuestNickname(),
-      kind: 'guest',
+      kind: USER_KINDS.guest,
     });
     return this.userRepository.save(user);
+  }
+
+  async findOrCreateSocialUser(profile: SocialProfile): Promise<{ user: User; isNew: boolean }> {
+    let user = await this.userRepository.findOne({
+      where: { provider: profile.provider, providerId: profile.id },
+    });
+
+    let isNew = false;
+    if (!user) {
+      isNew = true;
+      user = this.userRepository.create({
+        provider: profile.provider,
+        providerId: profile.id,
+        email: profile.email,
+        nickname: profile.nickname || this.generateGuestNickname(),
+        kind: profile.provider,
+      });
+      user = await this.userRepository.save(user);
+    }
+
+    return { user, isNew };
   }
 
   private generateGuestNickname(): string {

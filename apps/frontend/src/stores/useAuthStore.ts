@@ -1,5 +1,10 @@
 import { create } from 'zustand';
-import { UserMeResponseSchema, type UserMeResponse } from '@web24/shared';
+import {
+  UserMeResponseSchema,
+  LoginResponseSchema,
+  type UserMeResponse,
+  type LoginResponse,
+} from '@web24/shared';
 
 type AuthState = {
   user: UserMeResponse | null;
@@ -7,7 +12,7 @@ type AuthState = {
   error: string | null;
   setUser: (user: UserMeResponse | null) => void;
   fetchMe: () => Promise<UserMeResponse | null>;
-  loginGuest: () => Promise<UserMeResponse>;
+  loginGuest: () => Promise<LoginResponse>;
   logout: () => Promise<void>;
 };
 
@@ -56,9 +61,9 @@ const useAuthStore = create<AuthState>((set) => ({
       }
 
       const json = await response.json();
-      const user = UserMeResponseSchema.parse(json);
-      set({ user, isLoading: false });
-      return user;
+      const loginResponse = LoginResponseSchema.parse(json);
+      set({ user: loginResponse, isLoading: false });
+      return loginResponse;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       set({ error: message, isLoading: false });
