@@ -1,6 +1,4 @@
-import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { ChatOpenAI } from '@langchain/openai';
+import { Injectable, Logger } from '@nestjs/common';
 import { AIMessage, BaseMessage, BaseMessageLike, HumanMessage } from '@langchain/core/messages';
 import { Goal } from '../goal/goal.entity';
 import { DodoChatMessage } from '../chat/dodo-chat-message.entity';
@@ -12,10 +10,7 @@ import { AIBehaviorRecommendation, DodoAgentState } from './ai.type';
 export class AIService {
   private readonly logger = new Logger(AIService.name);
 
-  constructor(
-    private readonly configService: ConfigService,
-    private readonly langGraphService: LangGraphService,
-  ) {}
+  constructor(private readonly langGraphService: LangGraphService) {}
 
   async getAIBehaviorTitles(goal: Goal): Promise<string[]> {
     const systemPrompt = buildBehaviorRecommendationPrompt(goal);
@@ -25,7 +20,7 @@ export class AIService {
     ];
 
     this.logger.log(`send Clova API with title:${goal.title} id: ${goal.id}`);
-    const content = await this.callClova(messages);
+    const content = await this.langGraphService.callClova(messages);
     const startIndex = content.indexOf('{');
     const endIndex = content.lastIndexOf('}');
 
@@ -76,47 +71,5 @@ export class AIService {
     return this.langGraphService.invokeDodoAgent(state);
   }
 
-  private extractContent(content: unknown): string {
-    if (typeof content === 'string') return content;
-    if (Array.isArray(content)) {
-      return content
-        .map((part) => {
-          if (typeof part === 'string') return part;
-          if (part && typeof part === 'object' && 'text' in part) {
-            const textValue = (part as { text?: unknown }).text;
-            return typeof textValue === 'string' ? textValue : '';
-          }
-          return '';
-        })
-        .join('');
-    }
-    return `${content}`;
-  }
-
-  private async callClova(messages: BaseMessageLike[], model?: string): Promise<string> {
-    const DEFAULT_MODEL = 'HCX-005';
-    const llm = new ChatOpenAI({
-      model: model ?? DEFAULT_MODEL,
-      apiKey: this.configService.getOrThrow<string>('CLOVA_API_KEY'),
-      configuration: {
-        baseURL: 'https://clovastudio.stream.ntruss.com/v1/openai',
-      },
-    });
-
-    try {
-      const response = await llm.invoke(messages);
-      const content = this.extractContent(response.content);
-      if (!content) {
-        throw new Error('Empty response content');
-      }
-      return content;
-    } catch (error) {
-      if (error instanceof Error) {
-        this.logger.error(`CLOVA API error: ${error.message}`, error.stack);
-      } else {
-        this.logger.error('CLOVA API error: Unknown error', String(error));
-      }
-      throw new ServiceUnavailableException('Failed to fetch CLOVA response');
-    }
-  }
+  // callClova/extractContent moved to LangGraphService for shared use.
 }

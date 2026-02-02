@@ -278,7 +278,7 @@ export class LangGraphService {
     return `${content}`;
   }
 
-  private async callClova(messages: BaseMessageLike[], model?: string): Promise<string> {
+  public async callClova(messages: BaseMessageLike[], model?: string): Promise<string> {
     const DEFAULT_MODEL = 'HCX-005';
     const llm = new ChatOpenAI({
       model: model ?? DEFAULT_MODEL,
