@@ -43,6 +43,7 @@
     "@nestjs/schedule": "^6.1.0",
     "@nestjs/swagger": "^11.2.3",
     "@nestjs/typeorm": "^11.0.0",
+    "@sentry/nestjs": "^10.38.0",
     "@web24/shared": "workspace:*",
     "connect-pg-simple": "^10.0.0",
     "dotenv": "^17.2.3",
