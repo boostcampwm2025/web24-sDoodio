@@ -116,6 +116,7 @@ jobs:
             GOOGLE_CLIENT_SECRET=${{ secrets.STAGING_GOOGLE_CLIENT_SECRET }}
             GOOGLE_CALLBACK_URL=${{ secrets.STAGING_GOOGLE_CALLBACK_URL }}
             FRONTEND_URL=${{ secrets.STAGING_FRONTEND_URL }}
+            SLACK_WEBHOOK_URL=${{ secrets.STAGING_SLACK_WEBHOOK_URL }}
             EOF
             chmod 600 infra/staging/.env
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
@@ -165,6 +166,7 @@ jobs:
             GOOGLE_CLIENT_SECRET=${{ secrets.PROD_GOOGLE_CLIENT_SECRET }}
             GOOGLE_CALLBACK_URL=${{ secrets.PROD_GOOGLE_CALLBACK_URL }}
             FRONTEND_URL=${{ secrets.PROD_FRONTEND_URL }}
+            SLACK_WEBHOOK_URL=${{ secrets.PROD_SLACK_WEBHOOK_URL }}
             EOF
             chmod 600 infra/prod/.env
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
