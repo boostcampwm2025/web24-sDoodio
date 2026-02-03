@@ -46,6 +46,7 @@ export function InputItemRow({
       <button
         type="button"
         onClick={onAdd}
+        aria-label={placeholder}
         className="text-primary-strong hover:bg-bg-alternative bg-bg-normal flex w-full shrink-0 items-center justify-center rounded-2xl px-6 py-4 transition-colors"
       >
         <Plus className="h-6 w-6 stroke-[3px]" />
