@@ -1009,7 +1009,10 @@ describe('BehaviorService', () => {
       const todayRepository = { find: jest.fn().mockResolvedValue(weekTodayBehaviors) };
       const goalRepository = { findOne: jest.fn().mockResolvedValue(bestGoal) };
       const aiBehaviorRepo = {
-        find: jest.fn().mockResolvedValue([]),
+        find: jest
+          .fn()
+          .mockResolvedValueOnce([])
+          .mockResolvedValueOnce([{ title: '기존 AI 행동' }]),
         create: jest.fn((value) => value),
         save: jest.fn().mockResolvedValue([
           { id: 'ai-1', title: 'AI 행동1', goal: bestGoal },
@@ -1042,7 +1045,15 @@ describe('BehaviorService', () => {
         where: { id: 'goal-1' },
         relations: { behaviors: true },
       });
-      expect(aiService.getAIBehaviorTitles).toHaveBeenCalledWith(bestGoal);
+      expect(aiBehaviorRepo.find).toHaveBeenNthCalledWith(1, {
+        where: expect.objectContaining({ date: expect.any(String), user: { id: user.id } }),
+        relations: { goal: true },
+      });
+      expect(aiBehaviorRepo.find).toHaveBeenNthCalledWith(2, {
+        where: { goal: { id: bestGoal.id }, user: { id: user.id } },
+        select: { title: true },
+      });
+      expect(aiService.getAIBehaviorTitles).toHaveBeenCalledWith(bestGoal, ['기존 AI 행동']);
       expect(aiBehaviorRepo.create).toHaveBeenCalledTimes(2);
       expect(aiBehaviorRepo.save).toHaveBeenCalledWith(
         expect.arrayContaining([
