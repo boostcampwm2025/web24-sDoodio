@@ -112,9 +112,21 @@ export class LangGraphService {
     try {
       const parsed = JSON.parse(state.toolPlanRaw) as { tools?: ToolName[] };
       const tools = Array.isArray(parsed.tools) ? parsed.tools : [];
-      const normalizedTools = tools.filter((tool) =>
-        (TOOL_NAMES as readonly string[]).includes(tool),
-      );
+      const actionTools = new Set<ToolName>(['dodoSitdown', 'dodoWink', 'dodoHurray']);
+      const seen = new Set<ToolName>();
+      let actionToolSelected = false;
+      // 허용된 tool만 유지하고, 중복 제거 + 액션 도구는 하나만 남긴다.
+      const normalizedTools = tools.reduce<ToolName[]>((acc, tool) => {
+        if (!(TOOL_NAMES as readonly string[]).includes(tool)) return acc;
+        if (seen.has(tool)) return acc;
+        if (actionTools.has(tool)) {
+          if (actionToolSelected) return acc;
+          actionToolSelected = true;
+        }
+        seen.add(tool);
+        acc.push(tool);
+        return acc;
+      }, []);
       const isValid = Array.isArray(parsed.tools);
 
       return {
@@ -139,13 +151,28 @@ export class LangGraphService {
       tools.map((tool) => {
         if (tool === 'fetchTodayBehaviors') return this.fetchTodayBehaviors(state);
         if (tool === 'fetchGoals') return this.fetchGoals(state);
+        if (tool === 'dodoSitdown') return this.setDodoSitdown();
+        if (tool === 'dodoWink') return this.setDodoWink();
+        if (tool === 'dodoHurray') return this.setDodoHurray();
         return Promise.reject(new Error(`Unknown tool: ${tool}`));
       }),
     );
 
+    let { dodoAction } = state;
+    // 성공한 tool 결과를 toolResults에 합치고, 유효한 dodoAction은 한 번만 담으며, 실패는 로그로 남긴다.
     const toolResults = results.reduce<Record<string, unknown>>((acc, result) => {
       if (result.status === 'fulfilled' && result.value && typeof result.value === 'object') {
-        Object.assign(acc, result.value);
+        const { dodoAction: toolAction, ...rest } = result.value as Record<string, unknown>;
+        if (
+          !dodoAction &&
+          typeof toolAction === 'string' &&
+          DODO_ACTION_VALUES.includes(toolAction as (typeof DODO_ACTION_VALUES)[number])
+        ) {
+          dodoAction = toolAction as (typeof DODO_ACTION_VALUES)[number];
+        }
+        if (Object.keys(rest).length) {
+          Object.assign(acc, rest);
+        }
       } else if (result.status === 'rejected') {
         this.logger.error('Tool execution failed', result.reason);
       }
@@ -153,6 +180,7 @@ export class LangGraphService {
     }, {});
 
     return {
+      ...(dodoAction ? { dodoAction } : {}),
       toolResults: {
         ...state.toolResults,
         ...toolResults,
@@ -195,9 +223,22 @@ export class LangGraphService {
     };
   }
 
+  private async setDodoSitdown(): Promise<Record<string, unknown>> {
+    return { dodoAction: DODO_ACTIONS.sitDown };
+  }
+
+  private async setDodoWink(): Promise<Record<string, unknown>> {
+    return { dodoAction: DODO_ACTIONS.wink };
+  }
+
+  private async setDodoHurray(): Promise<Record<string, unknown>> {
+    return { dodoAction: DODO_ACTIONS.hurray };
+  }
+
   private readonly dodoActionLlmCallNode: GraphNode<typeof DodoAgentStateSchema> = async (
     state,
   ) => {
+    if (state.dodoAction) return {};
     const systemPrompt = buildDodoActionPrompt();
 
     const messages: BaseMessage[] = [
@@ -237,7 +278,9 @@ export class LangGraphService {
     ];
 
     const dodoReply = await this.callClova(messages);
-    return { llmCalls: 1, dodoReply, dodoAction: DODO_ACTIONS.none };
+    return state.dodoAction
+      ? { llmCalls: 1, dodoReply }
+      : { llmCalls: 1, dodoReply, dodoAction: DODO_ACTIONS.none };
   };
 
   private readonly dodoFailedChatLlmCallNode: GraphNode<typeof DodoAgentStateSchema> = async (

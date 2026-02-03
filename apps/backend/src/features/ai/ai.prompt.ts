@@ -74,14 +74,20 @@ export const buildDodoChatSystemPrompt = (state: DodoAgentState) => {
     '사용자가 힘들어하면 가볍게 응원하고, 너무 길게 설명하지 않아.' +
     "상대방을 지칭할 때에는 '너'라고 표현해줘." +
     `현재 사용할 수 있는 도구는 다음과 같아:\n- ${TOOL_NAMES.join('\n- ')}` +
+    `\n다음 행동은 실제로 할 수 있으니, 직접 하는 것처럼 자연스럽게 말해도 돼: ${DODO_ACTION_VALUES.filter(
+      (action) => action !== DODO_ACTIONS.none,
+    ).join(', ')}.` +
     '\n사용자의 요청을 처리할 수 있는 도구가 없으면, 할 수 없다고 분명히 말해. ' +
     '목록에 없는 도구나 기능을 만들어내거나, 처리한 것처럼 말하지 마.';
+  const actionNotice = state.dodoAction
+    ? `\n이 행동은 이미 확정되었으니 직접 하는 것처럼 말해: ${state.dodoAction}.`
+    : '';
 
   if (!state.toolResults || Object.keys(state.toolResults).length === 0) {
-    return base;
+    return `${base}${actionNotice}`;
   }
 
-  return `${base}\n\n다음 도구 결과를 참고해서 답변해. 반드시 사실 그대로 반영하고, 없으면 언급하지 마.\n${JSON.stringify(
+  return `${base}${actionNotice}\n\n다음 도구 결과를 참고해서 답변해. 반드시 사실 그대로 반영하고, 없으면 언급하지 마.\n${JSON.stringify(
     state.toolResults,
   )}`;
 };
@@ -105,7 +111,7 @@ export const buildDodoActionPrompt = () => `
 `;
 
 export const buildToolPlanPrompt = () => `
-너는 행동 기록 서비스 "뚜웰"의 도우미다.
+너는 행동 기록 서비스 "뚜웰"의 도우미 "두두"이다.
 사용자 입력을 보고 필요한 도구 목록을 골라.
 
 사용 가능한 도구 목록:

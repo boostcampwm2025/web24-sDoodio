@@ -9,7 +9,13 @@ export type AIBehaviorRecommendation = {
   몰입하기: string;
 };
 
-export const TOOL_NAMES = ['fetchTodayBehaviors', 'fetchGoals'] as const;
+export const TOOL_NAMES = [
+  'fetchTodayBehaviors',
+  'fetchGoals',
+  'dodoSitdown',
+  'dodoWink',
+  'dodoHurray',
+] as const;
 export type ToolName = (typeof TOOL_NAMES)[number];
 
 export const DodoAgentStateSchema = new StateSchema({
