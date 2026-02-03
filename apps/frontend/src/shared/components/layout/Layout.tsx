@@ -44,7 +44,7 @@ function Layout() {
       <SideMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
 
       {/* 메인 컨텐츠 */}
-      <main className="mx-auto w-full flex-1 px-4 pt-20 pb-24 transition-all duration-300 md:px-8 md:pt-28 md:pb-10">
+      <main className="mx-auto mb-16 w-full flex-1 px-4 pt-14 transition-all duration-300 md:px-8 md:pt-24 md:pb-10">
         <Outlet />
       </main>
 
