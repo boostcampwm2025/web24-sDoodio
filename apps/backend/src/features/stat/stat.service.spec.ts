@@ -15,6 +15,7 @@ import { StatEventLog } from './stat-event-log.entity';
 import { Goal } from '../goal/goal.entity';
 import { Behavior } from '../behavior/behavior.entity';
 import { addDays, getKstDayKey, toKstBoundary } from '../../common/utils/time.utils';
+import { SlackService } from '../../common/slack/slack.service';
 
 describe('StatService', () => {
   process.env.TZ = 'UTC';
@@ -60,6 +61,7 @@ describe('StatService', () => {
     };
     const goalRepository = { count: jest.fn(), ...goalRepositoryOverride };
     const behaviorRepository = { count: jest.fn(), ...behaviorRepositoryOverride };
+    const slackService = { send: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -70,6 +72,7 @@ describe('StatService', () => {
         { provide: getRepositoryToken(StatEventLog), useValue: statEventLogRepository },
         { provide: getRepositoryToken(Goal), useValue: goalRepository },
         { provide: getRepositoryToken(Behavior), useValue: behaviorRepository },
+        { provide: SlackService, useValue: slackService },
       ],
     }).compile();
 
@@ -81,6 +84,7 @@ describe('StatService', () => {
       statEventLogRepository,
       goalRepository,
       behaviorRepository,
+      slackService,
     };
   };
 
