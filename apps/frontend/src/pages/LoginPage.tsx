@@ -21,7 +21,9 @@ export function LoginPage() {
 
   useEffect(() => {
     if (user) {
-      const target = user.kind === 'guest' ? '/onboarding' : from;
+      // isNewUser가 true면 방금 게스트로 가입한 것 -> 온보딩으로
+      // isNewUser가 없거나 false면 기존 유저 or 새로고침 -> 원래 가려던 곳으로
+      const target = user.isNewUser ? '/onboarding' : from;
       navigate(target, { replace: true });
     }
   }, [from, navigate, user]);
@@ -29,7 +31,6 @@ export function LoginPage() {
   const handleGuestLogin = async () => {
     await loginGuest();
     await ensureWebPushSubscribed({ mode: 'interactive' }).catch(() => null);
-    navigate('/onboarding', { replace: true });
   };
 
   return (

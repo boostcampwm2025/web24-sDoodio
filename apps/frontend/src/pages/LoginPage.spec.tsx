@@ -47,23 +47,33 @@ describe('LoginPage', () => {
     window.location = originalLocation as any;
   });
 
-  it('게스트 로그인 버튼을 클릭하면 loginGuest가 호출되고 온보딩으로 이동한다', async () => {
+  it('게스트 로그인 버튼을 클릭하면 loginGuest와 ensureWebPushSubscribed가 호출된다', async () => {
     render(<LoginPage />);
 
     const guestBtn = screen.getByText('게스트로 시작하기');
     fireEvent.click(guestBtn);
 
     expect(mockLoginGuest).toHaveBeenCalled();
-    // Wait for async operations in handleGuestLogin
     await vi.waitFor(() => {
       expect(ensureWebPushSubscribed).toHaveBeenCalled();
-      expect(mockNavigate).toHaveBeenCalledWith('/onboarding', { replace: true });
     });
   });
 
-  it('이미 로그인된 유저라면 자동으로 리다이렉트한다', () => {
+  it('신규 유저(isNewUser: true)인 경우 온보딩 페이지로 이동한다', () => {
     (useAuthStore as unknown as Mock).mockReturnValue({
-      user: { kind: 'google' },
+      user: { kind: 'guest', isNewUser: true },
+      fetchMe: vi.fn(),
+      isLoading: false,
+    });
+
+    render(<LoginPage />);
+
+    expect(mockNavigate).toHaveBeenCalledWith('/onboarding', { replace: true });
+  });
+
+  it('기존 유저(isNewUser가 없는 경우)는 원래 페이지(기본값: /)로 이동한다', () => {
+    (useAuthStore as unknown as Mock).mockReturnValue({
+      user: { kind: 'google' }, // isNewUser undefined
       fetchMe: vi.fn(),
       isLoading: false,
     });

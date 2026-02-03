@@ -7,7 +7,7 @@ import {
 } from '@web24/shared';
 
 type AuthState = {
-  user: UserMeResponse | null;
+  user: (UserMeResponse & { isNewUser?: boolean }) | null;
   isLoading: boolean;
   error: string | null;
   setUser: (user: UserMeResponse | null) => void;

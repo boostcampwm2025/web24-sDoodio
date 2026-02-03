@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
+import { Profile } from 'passport-google-oauth20';
 import { GoogleStrategy } from './google.strategy';
 import { AuthService } from '../auth.service';
 
@@ -51,7 +52,7 @@ describe('GoogleStrategy', () => {
       id: 'google-id',
       name: { givenName: 'GoogleUser' },
       emails: [{ value: 'test@google.com' }],
-    };
+    } as Profile;
 
     const expectedSocialProfile = {
       provider: 'google',
