@@ -31,7 +31,8 @@ export function NewGoalFrame({
   const [direction, setDirection] = useState<'next' | 'prev'>('next');
   const [dialogueIdx, setDialogueIdx] = useState(0);
   const [isDialogueVisible, setIsDialogueVisible] = useState(true);
-  const [resetTimer, setResetTimer] = useState(0);
+  const [isAutoMode, setIsAutoMode] = useState(true);
+
   const changeDialogueTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentStep = steps[currStepIdx];
@@ -48,41 +49,42 @@ export function NewGoalFrame({
   useEffect(() => {
     setDialogueIdx(0);
     setIsDialogueVisible(true);
-    setResetTimer((prev) => prev + 1);
+    setIsAutoMode(true);
   }, [currStepIdx]);
 
-  useEffect(() => {
-    let timer: NodeJS.Timeout | undefined;
+  // 대사 변경 함수
+  const changeDialogue = (targetIdx: number, isAutoTrigger = false) => {
+    if (!isAutoTrigger) {
+      setIsAutoMode(false);
+    }
 
-    const transitionToNextDialogue = () => {
-      setDialogueIdx((prev) => prev + 1);
+    setIsDialogueVisible(false);
+    if (changeDialogueTimerRef.current) {
+      clearTimeout(changeDialogueTimerRef.current);
+    }
+
+    changeDialogueTimerRef.current = setTimeout(() => {
+      setDialogueIdx(targetIdx);
       setIsDialogueVisible(true);
-    };
+    }, 300);
+  };
 
-    const startTransition = () => {
-      setIsDialogueVisible(false);
-      setTimeout(transitionToNextDialogue, 300);
-    };
+  // 자동 대사 전환 로직
+  useEffect(() => {
+    let autoTimer: ReturnType<typeof setTimeout> | undefined;
 
-    if (!isLastDialogue) {
-      timer = setTimeout(startTransition, 3000);
+    if (isAutoMode && !isLastDialogue) {
+      autoTimer = setTimeout(() => {
+        changeDialogue(dialogueIdx + 1, true);
+      }, 3000);
     }
 
     return () => {
-      if (timer) {
-        clearTimeout(timer);
+      if (autoTimer) {
+        clearTimeout(autoTimer);
       }
     };
-  }, [dialogueIdx, isLastDialogue, resetTimer]);
-
-  useEffect(
-    () => () => {
-      if (changeDialogueTimerRef.current) {
-        clearTimeout(changeDialogueTimerRef.current);
-      }
-    },
-    [],
-  );
+  }, [dialogueIdx, isAutoMode, isLastDialogue]);
 
   const animationStyles = {
     next: '-translate-x-full opacity-0',
@@ -130,18 +132,6 @@ export function NewGoalFrame({
   const handleSkip = () => {
     if (currentStep.validate && !currentStep.validate()) return;
     onSkip?.();
-  };
-
-  const changeDialogue = (targetIdx: number) => {
-    setIsDialogueVisible(false);
-    if (changeDialogueTimerRef.current) {
-      clearTimeout(changeDialogueTimerRef.current);
-    }
-    changeDialogueTimerRef.current = setTimeout(() => {
-      setDialogueIdx(targetIdx);
-      setIsDialogueVisible(true);
-      setResetTimer((prev) => prev + 1);
-    }, 300);
   };
 
   const handlePrevDialogue = () => {
