@@ -20,6 +20,9 @@ export function TodayBehaviorCardGrid({
     BEHAVIOR_DIFFICULTIES.map((difficulty, index) => [difficulty, index]),
   );
   const sortedBehaviors = [...behaviors].sort((a, b) => {
+    if (a.isChecked !== b.isChecked) {
+      return a.isChecked ? 1 : -1;
+    }
     const difficultyDelta =
       (difficultyRank.get(a.difficulty) ?? Number.POSITIVE_INFINITY) -
       (difficultyRank.get(b.difficulty) ?? Number.POSITIVE_INFINITY);

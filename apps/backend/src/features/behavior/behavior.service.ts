@@ -151,8 +151,15 @@ export class BehaviorService {
         deletedTodayBehaviors.map((todayBehavior) => todayBehavior.behavior.id),
       );
 
+      const completedBehaviorIds = new Set(
+        existingTodayBehaviors
+          .filter((tb) => tb.status === 'completed')
+          .map((tb) => tb.behavior.id),
+      );
+
       const candidateBehaviors = behaviors.filter(
-        (behavior) => !deletedBehaviorIds.has(behavior.id),
+        (behavior) =>
+          !deletedBehaviorIds.has(behavior.id) && !completedBehaviorIds.has(behavior.id),
       );
 
       const extractedTodayBehavior = this.extractTodayBehaviors(
@@ -206,6 +213,10 @@ export class BehaviorService {
       const newTodayBehaviors =
         toInsert.length > 0 ? await todayBehaviorRepository.save(toInsert) : [];
 
+      const completedTodayBehaviors = existingTodayBehaviors.filter(
+        (tb) => tb.status === 'completed',
+      );
+
       // TodayBehavior를 응답 형태로 매핑한다(관계 누락 시 fallback 사용).
       const mapToResponse = (todayBehavior: TodayBehavior, fallbackBehavior?: Behavior) => {
         const behavior = todayBehavior.behavior ?? fallbackBehavior;
@@ -225,6 +236,7 @@ export class BehaviorService {
       };
 
       return [
+        ...completedTodayBehaviors.map((behavior) => mapToResponse(behavior)),
         ...selectedExisting.map((behavior) => mapToResponse(behavior)),
         ...newTodayBehaviors.map((behavior, index) =>
           mapToResponse(behavior, toInsert[index]?.behavior),
