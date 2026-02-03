@@ -9,9 +9,16 @@ const groupBehaviorTitles = (goal: Goal) => ({
   deepBehaviors: goal.behaviors.filter((b) => b.difficulty === '몰입하기').map((b) => b.title),
 });
 
-export const buildBehaviorRecommendationPrompt = (goal: Goal) => {
+export const buildBehaviorRecommendationPrompt = (
+  goal: Goal,
+  previousBehaviorTitles: string[] = [],
+) => {
   const { openBehaviors, startBehaviors, continueBehaviors, deepBehaviors } =
     groupBehaviorTitles(goal);
+  const previousTitleLine =
+    previousBehaviorTitles.length > 0
+      ? `\n이전에 추천한 AI 행동 목록은 다음과 같다.\n- ${previousBehaviorTitles.join(', ')}\n`
+      : '';
 
   return `
 최근 사용자가 관심을 가지고 있는 목표는 ${goal.title}이다.
@@ -45,9 +52,11 @@ export const buildBehaviorRecommendationPrompt = (goal: Goal) => {
 - 이어가기: ${continueBehaviors.join(', ')}
 - 몰입하기: ${deepBehaviors.join(', ')}
 
+${previousTitleLine}
 
 행동 생성 가이드라인
 - 위에 제시된 행동과 **의미적으로 중복되지 않아야 함**  
+- 이전에 추천한 AI 행동과 **의미적으로 중복되지 않아야 함**
 - 각 단계별로 **정확히 1개씩이어야 함**
 - 목표를 이루기 위해 도움이 되는 행동이어야 함
 - 사용자가 쉽게 생각할 수 있거나 유사한 행동보다는 방향성은 같지만 뜬금 없는 행동이 더 좋음

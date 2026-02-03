@@ -12,8 +12,8 @@ export class AIService {
 
   constructor(private readonly langGraphService: LangGraphService) {}
 
-  async getAIBehaviorTitles(goal: Goal): Promise<string[]> {
-    const systemPrompt = buildBehaviorRecommendationPrompt(goal);
+  async getAIBehaviorTitles(goal: Goal, previousBehaviorTitles: string[] = []): Promise<string[]> {
+    const systemPrompt = buildBehaviorRecommendationPrompt(goal, previousBehaviorTitles);
 
     const messages: BaseMessageLike[] = [
       { role: 'user', content: [{ type: 'text', text: systemPrompt }] },
