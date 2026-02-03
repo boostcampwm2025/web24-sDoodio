@@ -127,6 +127,19 @@ describe('LangGraphService', () => {
 
       expect(result.toolPlan).toEqual(['fetchGoals']);
     });
+
+    it('액션 도구는 하나만 유지하고 중복을 제거한다', async () => {
+      const node = (service as any).validateToolPlanNode;
+      const state = baseState({
+        toolPlanRaw: JSON.stringify({
+          tools: ['dodoHurray', 'fetchGoals', 'dodoWink', 'dodoHurray', 'fetchGoals'],
+        }),
+      });
+
+      const result = await node(state, {} as any);
+
+      expect(result.toolPlan).toEqual(['dodoHurray', 'fetchGoals']);
+    });
   });
 
   describe('executeToolsNode', () => {
@@ -148,6 +161,15 @@ describe('LangGraphService', () => {
       expect(result.toolResults.fetchTodayBehaviors).toHaveLength(1);
       expect(result.toolResults.fetchGoals).toHaveLength(1);
     });
+
+    it('액션 도구 결과를 dodoAction으로 반영한다', async () => {
+      const node = (service as any).executeToolsNode;
+      const state = baseState({ toolPlan: ['dodoHurray'] });
+
+      const result = await node(state, {} as any);
+
+      expect(result.dodoAction).toBe(DODO_ACTIONS.hurray);
+    });
   });
 
   describe('dodoChatLlmCallNode', () => {
@@ -164,6 +186,46 @@ describe('LangGraphService', () => {
       const [[messages]] = callClovaSpy.mock.calls as [[Array<{ content: string }>]];
       const systemMessage = messages[0];
       expect(systemMessage.content).toContain('fetchGoals');
+    });
+
+    it('dodoAction이 있으면 프롬프트에 행동 확정 문구를 포함한다', async () => {
+      const callClovaSpy = jest.spyOn(service as any, 'callClova').mockResolvedValue('ok');
+      const node = (service as any).dodoChatLlmCallNode;
+      const state = baseState({
+        dodoAction: DODO_ACTIONS.hurray,
+      });
+
+      await node(state, {} as any);
+
+      const [[messages]] = callClovaSpy.mock.calls as [[Array<{ content: string }>]];
+      const systemMessage = messages[0];
+      expect(systemMessage.content).toContain(DODO_ACTIONS.hurray);
+      expect(systemMessage.content).toContain('이미 확정');
+    });
+  });
+
+  describe('dodoToolChatLlmCallNode', () => {
+    it('dodoAction이 이미 있으면 dodoAction을 덮어쓰지 않는다', async () => {
+      jest.spyOn(service as any, 'callClova').mockResolvedValue('ok');
+      const node = (service as any).dodoToolChatLlmCallNode;
+      const state = baseState({ dodoAction: DODO_ACTIONS.hurray });
+
+      const result = await node(state, {} as any);
+
+      expect(result.dodoAction).toBeUndefined();
+    });
+  });
+
+  describe('dodoActionLlmCallNode', () => {
+    it('dodoAction이 있으면 LLM을 호출하지 않는다', async () => {
+      const callClovaSpy = jest.spyOn(service as any, 'callClova');
+      const node = (service as any).dodoActionLlmCallNode;
+      const state = baseState({ dodoAction: DODO_ACTIONS.wink });
+
+      const result = await node(state, {} as any);
+
+      expect(result).toEqual({});
+      expect(callClovaSpy).not.toHaveBeenCalled();
     });
   });
 });
