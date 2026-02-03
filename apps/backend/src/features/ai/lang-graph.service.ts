@@ -162,7 +162,7 @@ export class LangGraphService {
     // 성공한 tool 결과를 toolResults에 합치고, 유효한 dodoAction은 한 번만 담으며, 실패는 로그로 남긴다.
     const toolResults = results.reduce<Record<string, unknown>>((acc, result) => {
       if (result.status === 'fulfilled' && result.value && typeof result.value === 'object') {
-        const { dodoAction: toolAction, ...rest } = result.value as Record<string, unknown>;
+        const { dodoAction: toolAction, ...rest } = result.value;
         if (
           !dodoAction &&
           typeof toolAction === 'string' &&
