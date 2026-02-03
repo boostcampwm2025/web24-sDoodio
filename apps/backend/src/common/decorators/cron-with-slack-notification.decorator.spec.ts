@@ -1,3 +1,4 @@
+/* eslint-disable global-require */
 import 'reflect-metadata';
 import { CronWithSlackNotification } from './cron-with-slack-notification.decorator';
 import { SlackService } from '../slack/slack.service';
@@ -31,5 +32,37 @@ describe('CronWithSlackNotification', () => {
 
     expect(keys.length).toBeGreaterThan(0);
     expect(values.every((value) => value !== undefined)).toBe(true);
+  });
+
+  it('Cron 데코레이터를 올바른 인자로 호출한다', () => {
+    jest.isolateModules(() => {
+      jest.doMock('@nestjs/schedule', () => {
+        const actual = jest.requireActual('@nestjs/schedule');
+        return { ...actual, Cron: jest.fn(() => () => undefined) };
+      });
+
+      const { Cron } = require('@nestjs/schedule') as typeof import('@nestjs/schedule');
+      const { CronWithSlackNotification: CronWithSlackNotificationMocked } =
+        require('./cron-with-slack-notification.decorator') as typeof import('./cron-with-slack-notification.decorator');
+
+      const cronTime = '0 * * * * *';
+      const options = { name: 'test_cron' };
+
+      const target = {
+        async run() {
+          return 'ok';
+        },
+      };
+      const descriptor = Object.getOwnPropertyDescriptor(target, 'run');
+      CronWithSlackNotificationMocked(cronTime, options)(
+        target,
+        'run',
+        descriptor as PropertyDescriptor,
+      );
+
+      const CronMock = Cron as unknown as jest.Mock;
+      expect(CronMock).toHaveBeenCalledWith(cronTime, options);
+      expect(CronMock).toHaveBeenCalledTimes(1);
+    });
   });
 });
