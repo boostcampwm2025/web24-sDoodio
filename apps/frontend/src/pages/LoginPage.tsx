@@ -41,7 +41,7 @@ export function LoginPage() {
           <button
             type="button"
             onClick={() => {
-              window.location.href = '/api/auth/google';
+              globalThis.location.href = '/api/auth/google';
             }}
             disabled={isLoading}
             className="text-headline-1 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#4285F4] py-3 text-white disabled:opacity-50"

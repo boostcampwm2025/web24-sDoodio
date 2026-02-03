@@ -26,7 +26,7 @@ export function TodayBehaviorRatioSlider({
   );
 
   const handleRatioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newVal = parseFloat(e.target.value);
+    const newVal = Number.parseFloat(e.target.value);
     setLocalRatio(newVal);
     debouncedUpdate(newVal);
   };
@@ -58,7 +58,7 @@ export function TodayBehaviorRatioSlider({
               type="range"
               aria-labelledby="behavior-ratio-label"
               min={BEHAVIOR_EXTRACTION_LEVELS[0].value}
-              max={BEHAVIOR_EXTRACTION_LEVELS[BEHAVIOR_EXTRACTION_LEVELS.length - 1].value}
+              max={BEHAVIOR_EXTRACTION_LEVELS.at(-1)!.value}
               step={0.2}
               value={localRatio}
               onChange={handleRatioChange}

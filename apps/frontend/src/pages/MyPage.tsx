@@ -52,7 +52,7 @@ export function MyPage() {
             <button
               type="button"
               onClick={() => {
-                window.location.href = '/api/auth/google';
+                globalThis.location.href = '/api/auth/google';
               }}
               className="text-headline-1 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#4285F4] py-3 text-white transition-opacity hover:opacity-90"
             >
