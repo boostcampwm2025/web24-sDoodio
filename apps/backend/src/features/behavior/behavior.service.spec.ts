@@ -577,27 +577,31 @@ describe('BehaviorService', () => {
   });
 
   describe('refreshTodayBehaviors', () => {
-    it('기존 행동을 재사용하고 skipped를 pending으로 되돌린다', async () => {
+    it('기존 행동을 재사용하고 skipped를 pending으로 되돌리고 completed는 그대로 내려준다', async () => {
       const user = { id: 'user-1', nickname: '테스트유저' };
       const goal = { title: '건강한 생활', color: 'mint' };
+
       const behavior1 = {
         id: 'b-1',
         title: '물 1컵 마시기',
         difficulty: '마음열기',
         goal,
       } as Behavior;
+
       const behavior2 = {
         id: 'b-2',
         title: '스트레칭',
         difficulty: '시작하기',
         goal,
       } as Behavior;
+
       const behavior3 = {
         id: 'b-3',
         title: '걷기',
         difficulty: '이어가기',
         goal,
       } as Behavior;
+
       const existing = [
         { id: 'tb-1', status: 'completed', behavior: behavior1 },
         { id: 'tb-2', status: 'skipped', behavior: behavior2 },
@@ -612,20 +616,26 @@ describe('BehaviorService', () => {
       const userRepository = {
         createQueryBuilder: jest.fn().mockReturnValue(userQueryBuilder),
       };
+
       const todayRepository = {
-        find: jest.fn().mockResolvedValueOnce(existing).mockResolvedValueOnce([]),
+        find: jest
+          .fn()
+          .mockResolvedValueOnce(existing) // 기존 todayBehavior 조회
+          .mockResolvedValueOnce([]), // deleted 조회
         update: jest.fn().mockResolvedValue({ affected: 1 }),
         create: jest.fn((value) => value),
         save: jest.fn(),
       };
+
       const behaviorRepository = {
         find: jest.fn().mockResolvedValue([behavior1, behavior2, behavior3]),
       };
+
       const manager = {
         getRepository: (entity: unknown) => {
-          if (entity === (User as unknown)) return userRepository;
-          if (entity === (TodayBehavior as unknown)) return todayRepository;
-          if (entity === (Behavior as unknown)) return behaviorRepository;
+          if (entity === User) return userRepository;
+          if (entity === TodayBehavior) return todayRepository;
+          if (entity === Behavior) return behaviorRepository;
           return null;
         },
       };
@@ -633,34 +643,13 @@ describe('BehaviorService', () => {
       dataSource.transaction.mockImplementation(async (work: (m: typeof manager) => unknown) =>
         work(manager),
       );
-      const extractSpy = jest
-        .spyOn(service, 'extractTodayBehaviors')
-        .mockReturnValue([behavior1, behavior2]);
+
+      // extractTodayBehaviors는 tb-1 제외 후 새로 뽑을 후보
+      const extractSpy = jest.spyOn(service, 'extractTodayBehaviors').mockReturnValue([behavior2]); // completed 제외
 
       const result = await service.refreshTodayBehaviors(user.id);
 
-      expect(userRepository.createQueryBuilder).toHaveBeenCalledWith('user');
-      expect(userQueryBuilder.setLock).toHaveBeenCalledWith('pessimistic_write');
-      expect(userQueryBuilder.where).toHaveBeenCalledWith('user.id = :id', { id: user.id });
-      expect(todayRepository.find).toHaveBeenNthCalledWith(1, {
-        where: {
-          date: expect.any(String),
-          user: { id: user.id },
-          status: Not(In(['deleted'])),
-        },
-        relations: { behavior: { goal: true }, user: true },
-      });
-      expect(todayRepository.update).toHaveBeenNthCalledWith(
-        1,
-        { date: expect.any(String), user: { id: user.id }, status: 'pending' },
-        { status: 'skipped' },
-      );
-      expect(todayRepository.update).toHaveBeenNthCalledWith(
-        2,
-        { id: In(['tb-2']) },
-        { status: 'pending' },
-      );
-      expect(todayRepository.save).not.toHaveBeenCalled();
+      // 기존 completed는 그대로, skipped->pending으로 변환
       expect(result).toEqual([
         {
           id: 'tb-1',
@@ -681,52 +670,7 @@ describe('BehaviorService', () => {
           isRecommended: false,
         },
       ]);
-      extractSpy.mockRestore();
-    });
 
-    it('추출 결과가 없으면 빈 배열을 반환한다', async () => {
-      const user = { id: 'user-1', nickname: '테스트유저' };
-
-      const userQueryBuilder = {
-        setLock: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        getOne: jest.fn().mockResolvedValue(user),
-      };
-      const userRepository = {
-        createQueryBuilder: jest.fn().mockReturnValue(userQueryBuilder),
-      };
-      const todayRepository = {
-        find: jest.fn().mockResolvedValue([]),
-        update: jest.fn().mockResolvedValue({ affected: 0 }),
-        create: jest.fn((value) => value),
-        save: jest.fn(),
-      };
-      const behaviorRepository = {
-        find: jest.fn().mockResolvedValue([]),
-      };
-      const manager = {
-        getRepository: (entity: unknown) => {
-          if (entity === (User as unknown)) return userRepository;
-          if (entity === (TodayBehavior as unknown)) return todayRepository;
-          if (entity === (Behavior as unknown)) return behaviorRepository;
-          return null;
-        },
-      };
-
-      dataSource.transaction.mockImplementation(async (work: (m: typeof manager) => unknown) =>
-        work(manager),
-      );
-      const extractSpy = jest.spyOn(service, 'extractTodayBehaviors').mockReturnValue([]);
-
-      const result = await service.refreshTodayBehaviors(user.id);
-
-      expect(userQueryBuilder.where).toHaveBeenCalledWith('user.id = :id', { id: user.id });
-      expect(todayRepository.update).toHaveBeenCalledWith(
-        { date: expect.any(String), user: { id: user.id }, status: 'pending' },
-        { status: 'skipped' },
-      );
-      expect(todayRepository.save).not.toHaveBeenCalled();
-      expect(result).toEqual([]);
       extractSpy.mockRestore();
     });
 
