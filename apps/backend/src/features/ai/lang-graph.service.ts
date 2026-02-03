@@ -297,6 +297,7 @@ export class LangGraphService {
       if (!content) {
         throw new Error('Empty response content');
       }
+      this.logger.debug(`CLOVA API result: ${content}`);
       return content;
     } catch (error) {
       if (error instanceof Error) {
