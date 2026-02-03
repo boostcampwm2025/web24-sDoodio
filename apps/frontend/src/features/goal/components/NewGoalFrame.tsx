@@ -86,6 +86,15 @@ export function NewGoalFrame({
     };
   }, [dialogueIdx, isAutoMode, isLastDialogue]);
 
+  useEffect(
+    () => () => {
+      if (changeDialogueTimerRef.current) {
+        clearTimeout(changeDialogueTimerRef.current);
+      }
+    },
+    [],
+  );
+
   const animationStyles = {
     next: '-translate-x-full opacity-0',
     prev: 'translate-x-full opacity-0',

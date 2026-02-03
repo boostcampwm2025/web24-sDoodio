@@ -166,9 +166,6 @@ export class BehaviorService {
         candidateBehaviors,
         user.behaviorRatio,
       );
-      if (extractedTodayBehavior.length === 0) {
-        return [];
-      }
 
       // behaviorId 기준으로 중복을 제거하고, 기존 row를 재사용한다.
       const existingByBehaviorId = new Map(

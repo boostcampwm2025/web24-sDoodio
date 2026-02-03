@@ -32,7 +32,7 @@ export function BehaviorCard({ behavior, onToggle, onDelete }: BehaviorProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isActionVisible]);
 
-  const handleCardPointerDown = (e: React.MouseEvent) => {
+  const handleCardPointerDown = (e: React.PointerEvent) => {
     // 버튼이나 인터랙티브 요소 클릭 시 무시
     if ((e.target as HTMLElement).closest('button')) return;
 
