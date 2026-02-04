@@ -28,12 +28,28 @@ describe('ChatController', () => {
   });
 
   it('getDodoChat은 서비스 결과를 반환한다', async () => {
-    service.getDodoChat.mockResolvedValue({ reply: '반가워요!', action: 'None' });
+    service.getDodoChat.mockResolvedValue({ reply: '반가워요!', action: 'None', limited: false });
+    const res = { status: jest.fn() };
 
-    const result = await controller.getDodoChat('user-1', { message: '안녕' });
+    const result = await controller.getDodoChat('user-1', { message: '안녕' }, res as any);
 
     expect(service.getDodoChat).toHaveBeenCalledWith('user-1', '안녕');
+    expect(res.status).not.toHaveBeenCalled();
     expect(result).toEqual({ reply: '반가워요!', action: 'None' });
+  });
+
+  it('getDodoChat은 제한일 때 429 상태를 설정한다', async () => {
+    service.getDodoChat.mockResolvedValue({
+      reply: '잠시 쉬어갈게요',
+      action: 'None',
+      limited: true,
+    });
+    const res = { status: jest.fn() };
+
+    const result = await controller.getDodoChat('user-1', { message: '안녕' }, res as any);
+
+    expect(res.status).toHaveBeenCalledWith(429);
+    expect(result).toEqual({ reply: '잠시 쉬어갈게요', action: 'None' });
   });
 
   it('getDodoChatHistory는 서비스 결과를 반환한다', async () => {
