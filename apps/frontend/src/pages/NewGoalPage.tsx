@@ -108,8 +108,10 @@ export function NewGoalPage() {
               ),
             );
           }}
-          onAdd={(title?: string) => {
-            setOpenBehaviors([...openBehaviors, { id: v7(), title: title ?? '' }]);
+          onAdd={(title?: string | string[]) => {
+            const titles = Array.isArray(title) ? title : [title ?? ''];
+            const newBehaviors = titles.map((t) => ({ id: v7(), title: t }));
+            setOpenBehaviors((prev) => [...prev, ...newBehaviors]);
           }}
           onDelete={(targetId) => {
             setOpenBehaviors(openBehaviors.filter((item) => item.id !== targetId));
@@ -143,8 +145,10 @@ export function NewGoalPage() {
               ),
             );
           }}
-          onAdd={(title?: string) => {
-            setStartBehaviors([...startBehaviors, { id: v7(), title: title ?? '' }]);
+          onAdd={(title?: string | string[]) => {
+            const titles = Array.isArray(title) ? title : [title ?? ''];
+            const newBehaviors = titles.map((t) => ({ id: v7(), title: t }));
+            setStartBehaviors((prev) => [...prev, ...newBehaviors]);
           }}
           onDelete={(targetId) => {
             setStartBehaviors(startBehaviors.filter((item) => item.id !== targetId));
@@ -178,8 +182,10 @@ export function NewGoalPage() {
               ),
             );
           }}
-          onAdd={(title?: string) => {
-            setContinueBehaviors([...continueBehaviors, { id: v7(), title: title ?? '' }]);
+          onAdd={(title?: string | string[]) => {
+            const titles = Array.isArray(title) ? title : [title ?? ''];
+            const newBehaviors = titles.map((t) => ({ id: v7(), title: t }));
+            setContinueBehaviors((prev) => [...prev, ...newBehaviors]);
           }}
           onDelete={(targetId) => {
             setContinueBehaviors(continueBehaviors.filter((item) => item.id !== targetId));
@@ -213,8 +219,10 @@ export function NewGoalPage() {
               ),
             );
           }}
-          onAdd={(title?: string) => {
-            setDeepBehaviors([...deepBehaviors, { id: v7(), title: title ?? '' }]);
+          onAdd={(title?: string | string[]) => {
+            const titles = Array.isArray(title) ? title : [title ?? ''];
+            const newBehaviors = titles.map((t) => ({ id: v7(), title: t }));
+            setDeepBehaviors((prev) => [...prev, ...newBehaviors]);
           }}
           onDelete={(targetId) => {
             setDeepBehaviors(deepBehaviors.filter((item) => item.id !== targetId));
@@ -246,6 +254,16 @@ export function NewGoalPage() {
           onEditStep={(stepIdx) => setCurrentStepIndex(stepIdx)}
         />
       ),
+      validate: () => {
+        const isAnyLevelEmpty = Object.values(behaviorsMap).some((list) => list.length === 0);
+
+        if (isAnyLevelEmpty) {
+          showToast('각 난이도에 최소 하나 이상의 행동이 필요해!', { position: 'top' });
+          return false;
+        }
+
+        return true;
+      },
     },
   ];
 

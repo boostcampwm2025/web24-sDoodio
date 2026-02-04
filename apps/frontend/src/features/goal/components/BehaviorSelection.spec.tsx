@@ -47,6 +47,24 @@ describe('BehaviorSelection', () => {
     expect(onAdd).toHaveBeenCalledWith('독서 10분');
   });
 
+  it('모두 추가 버튼을 클릭하면 아직 추가되지 않은 모든 추천 항목을 배열로 전달하며 onAdd가 호출되어야 한다', () => {
+    const onAdd = vi.fn();
+    render(
+      <BehaviorSelection
+        behaviors={mockBehaviors}
+        recommendations={mockRecommendations}
+        onChangeBehaviorTitle={vi.fn()}
+        onDelete={vi.fn()}
+        onAdd={onAdd}
+      />,
+    );
+
+    const addAllButton = screen.getByRole('button', { name: /모두 추가/ });
+    fireEvent.click(addAllButton);
+
+    expect(onAdd).toHaveBeenCalledWith(['독서 10분', '일기 쓰기']);
+  });
+
   it('이미 추가된 추천 항목(명상하기) 클릭 시 onAdd가 호출되지 않아야 한다', () => {
     const onAdd = vi.fn();
     render(
