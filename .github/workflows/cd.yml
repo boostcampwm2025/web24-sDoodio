@@ -104,6 +104,8 @@ jobs:
             CLOVA_API_KEY=${{ secrets.STAGING_CLOVA_API_KEY }}
             SESSION_SECRET=${{ secrets.STAGING_SESSION_SECRET }}
             SESSION_MAX_AGE_MS=${{ secrets.STAGING_SESSION_MAX_AGE_MS }}
+            NODE_OPTIONS=${{ secrets.STAGING_NODE_OPTIONS }}
+            UV_THREADPOOL_SIZE=${{ secrets.STAGING_UV_THREADPOOL_SIZE }}
             SENTRY_DSN=${{ secrets.STAGING_SENTRY_DSN }}
             SENTRY_ENV=staging
             SENTRY_RELEASE=${{ github.sha }}
@@ -154,6 +156,8 @@ jobs:
             CLOVA_API_KEY=${{ secrets.PROD_CLOVA_API_KEY }}
             SESSION_SECRET=${{ secrets.PROD_SESSION_SECRET }}
             SESSION_MAX_AGE_MS=${{ secrets.PROD_SESSION_MAX_AGE_MS }}
+            NODE_OPTIONS=${{ secrets.PROD_NODE_OPTIONS }}
+            UV_THREADPOOL_SIZE=${{ secrets.PROD_UV_THREADPOOL_SIZE }}
             SENTRY_DSN=${{ secrets.PROD_SENTRY_DSN }}
             SENTRY_ENV=production
             SENTRY_RELEASE=${{ github.sha }}
