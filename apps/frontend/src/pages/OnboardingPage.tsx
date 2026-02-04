@@ -9,19 +9,19 @@ const SLIDES = [
     id: 'dodo',
     title: '안녕! 나는 두두야',
     description: '뚜웰에서는 오늘 한 행동을 차곡차곡 쌓아갈 수 있어',
-    image: '/DodoStand.png',
+    image: '/DodoStand.webp',
   },
   {
     id: 'goal',
     title: '목표와 행동',
     description: '이루고 싶은 목표를 정해봐\n그 목표를 작은 행동으로 나눠서 해보자',
-    image: '/OnBoardingGoalAndBehavior.png',
+    image: '/OnBoardingGoalAndBehavior.webp',
   },
   {
     id: 'today',
     title: '오늘의 행동',
     description: '여러 목표 중에서\n오늘 하면 좋을 행동을 골라줄게\n\n이제 천천히 같이 해보자!',
-    image: '/OnBoardingTodayBehavior.png',
+    image: '/OnBoardingTodayBehavior.webp',
   },
 ];
 

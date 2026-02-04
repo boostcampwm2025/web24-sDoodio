@@ -28,14 +28,18 @@ export function DodoRoomPage() {
   return (
     <div className="mx-auto flex max-w-6xl flex-col px-4 py-4">
       <div className="flex h-100 flex-col gap-4 md:h-[55vh] md:flex-row">
-        <section
-          className="relative flex max-h-[55vh] flex-1 items-center justify-center overflow-hidden rounded-3xl border border-transparent bg-cover bg-center p-4 md:min-w-92"
-          style={{ backgroundImage: "url('/BlueAndWhiteRoom.png')" }}
-        >
-          <div className="absolute inset-0" />
+        <section className="bg-bg-light/80 relative flex max-h-[55vh] flex-1 items-center justify-center overflow-hidden rounded-3xl border border-transparent p-4 md:min-w-92">
+          <img
+            src="/BlueAndWhiteRoom.webp"
+            alt="두두의 방 파란색 배경"
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full object-cover"
+            fetchPriority="high"
+          />
+          <div className="absolute inset-0 bg-black/5" />
           <div className="relative z-10 flex h-full w-full items-end justify-center rounded-2xl pb-10">
             <DodoSpeechBubble text={latestDodoMessage?.text} />
-            <DodoCharacter action={dodoAction} />
+            <DodoCharacter action={dodoAction} priority="high" />
           </div>
           <div className="absolute bottom-4 left-4 z-20 flex flex-col gap-2">
             {DODO_ACTION_VALUES.filter((v) => v !== 'None').map((action) => (
