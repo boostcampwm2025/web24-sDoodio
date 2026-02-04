@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
 import { GOAL_COLOR_STYLES } from '@/shared/constants/goalColor';
 import { Trash2 } from 'lucide-react';
@@ -16,19 +16,34 @@ export function BehaviorCard({ behavior, onToggle, onDelete }: BehaviorProps) {
   const bgColor = GOAL_COLOR_STYLES[behavior.goalColor].bg;
   const [isActionVisible, setIsActionVisible] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
   const canDelete = Boolean(onDelete) && !behavior.isChecked;
 
-  const handleCardPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (!canDelete) return;
-    if (event.pointerType !== 'touch') return;
-    if ((event.target as HTMLElement).closest('button')) return;
-    setIsActionVisible(true);
-  };
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (cardRef.current && !cardRef.current.contains(event.target as Node)) {
+        setIsActionVisible(false);
+      }
+    };
 
-  const actionTriggerClasses =
-    isActionVisible || isDeleteModalOpen
-      ? 'pointer-events-auto opacity-100'
-      : 'pointer-events-none opacity-0';
+    if (isActionVisible) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isActionVisible]);
+
+  const handleCardPointerDown = (e: React.PointerEvent) => {
+    // 버튼이나 인터랙티브 요소 클릭 시 무시
+    if ((e.target as HTMLElement).closest('button')) return;
+
+    if (canDelete) {
+      // 터치 환경인지 확인
+      const isTouch = globalThis.matchMedia('(pointer: coarse)').matches;
+      if (isTouch) {
+        setIsActionVisible(!isActionVisible);
+      }
+    }
+  };
 
   const closeDeleteModal = () => {
     setIsDeleteModalOpen(false);
@@ -37,6 +52,7 @@ export function BehaviorCard({ behavior, onToggle, onDelete }: BehaviorProps) {
 
   return (
     <div
+      ref={cardRef}
       onPointerDown={handleCardPointerDown}
       className={`group bg-bg-light relative flex items-center gap-4 rounded-2xl px-7 py-5 transition-all duration-500 ${
         behavior.isChecked
@@ -56,11 +72,15 @@ export function BehaviorCard({ behavior, onToggle, onDelete }: BehaviorProps) {
               <button
                 type="button"
                 aria-label="행동 삭제"
-                onClick={() => {
-                  setIsActionVisible(true);
+                onPointerDown={(e) => {
+                  e.stopPropagation();
                   setIsDeleteModalOpen(true);
                 }}
-                className={`text-label-alternative hover:text-difficulty-4 transition ${actionTriggerClasses} pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100`}
+                className={`hover:text-accent-red text-label-alternative/40 transition-all duration-300 ${
+                  isActionVisible || isDeleteModalOpen
+                    ? 'pointer-events-auto translate-x-0 opacity-100'
+                    : 'pointer-events-none -translate-x-2 opacity-0 group-hover:pointer-events-auto group-hover:translate-x-0 group-hover:opacity-100'
+                } `}
               >
                 <Trash2 size={16} />
               </button>
@@ -79,14 +99,16 @@ export function BehaviorCard({ behavior, onToggle, onDelete }: BehaviorProps) {
         </div>
       </div>
       {/* 토글 버튼 */}
-      <StickerCell
-        isFilled={behavior.isChecked}
-        isClickable
-        onClick={onToggle}
-        ariaLabel={`${behavior.title} 완료 토글`}
-        ariaPressed={behavior.isChecked}
-        stickerColor={behavior.goalColor}
-      />{' '}
+      <div onPointerDown={(e) => e.stopPropagation()}>
+        <StickerCell
+          isFilled={behavior.isChecked}
+          isClickable
+          onClick={onToggle}
+          ariaLabel={`${behavior.title} 완료 토글`}
+          ariaPressed={behavior.isChecked}
+          stickerColor={behavior.goalColor}
+        />{' '}
+      </div>
       <Modal
         isOpen={isDeleteModalOpen}
         onRequestClose={closeDeleteModal}

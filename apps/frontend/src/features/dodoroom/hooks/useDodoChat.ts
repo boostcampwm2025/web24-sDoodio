@@ -31,13 +31,22 @@ export const useDodoChat = () => {
   const [input, setInput] = useState('');
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
+
   const typingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isInitialLoadRef = useRef(true);
   const actionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const canSend = input.trim().length > 0;
+  const isDodoResponding = useMemo(
+    () => isSendingMessage || isTyping,
+    [isSendingMessage, isTyping],
+  );
+  const canSend = useMemo(
+    () => input.trim().length > 0 && !isDodoResponding,
+    [input, isDodoResponding],
+  );
   const latestDodoMessage = useMemo(
     () => [...messages].reverse().find((message) => message.role === 'dodo'),
     [messages],
@@ -93,6 +102,7 @@ export const useDodoChat = () => {
       globalThis.clearInterval(typingTimerRef.current);
     }
 
+    setIsTyping(true);
     let index = 0;
     typingTimerRef.current = globalThis.setInterval(() => {
       index += 1;
@@ -103,6 +113,7 @@ export const useDodoChat = () => {
       if (index >= fullText.length && typingTimerRef.current) {
         globalThis.clearInterval(typingTimerRef.current);
         typingTimerRef.current = null;
+        setIsTyping(false);
       }
     }, TYPING_ANIMATION_INTERVAL);
   }, []);
@@ -124,7 +135,7 @@ export const useDodoChat = () => {
 
   const send = useCallback(
     (value: string) => {
-      if (!value) return;
+      if (!value || isDodoResponding) return;
 
       const userMessageId = createMessageId();
       setMessages((prev) => [...prev, { id: userMessageId, role: 'user', text: value }]);
@@ -149,23 +160,25 @@ export const useDodoChat = () => {
         })
         .finally(() => setIsSendingMessage(false));
     },
-    [animateDodoReply, animateDodoAction],
+    [animateDodoReply, animateDodoAction, isDodoResponding],
   );
 
   const handleSend = useCallback(() => {
+    if (isDodoResponding) return;
     const value = input.trim();
     if (value) {
       send(value);
       setInput('');
     }
-  }, [input, send]);
+  }, [input, send, isDodoResponding]);
 
   const handleActionButton = useCallback(
     (action: Exclude<DodoAction, 'None'>) => {
+      if (isDodoResponding) return;
       const command = DODO_ACTION_COMMAND_MAP[action];
       send(command);
     },
-    [send],
+    [send, isDodoResponding],
   );
 
   return {
@@ -177,6 +190,7 @@ export const useDodoChat = () => {
     latestDodoMessage,
     handleSend,
     isSendingMessage,
+    isDodoResponding,
     loadMoreMessages,
     isLoadingHistory,
     hasMore,

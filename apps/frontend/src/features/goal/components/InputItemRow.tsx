@@ -46,7 +46,8 @@ export function InputItemRow({
       <button
         type="button"
         onClick={onAdd}
-        className="text-primary-strong hover:bg-bg-alternative bg-bg-normal flex h-16 w-full shrink-0 items-center justify-center rounded-2xl transition-colors"
+        aria-label={placeholder}
+        className="text-primary-strong hover:bg-bg-alternative bg-bg-normal flex w-full shrink-0 items-center justify-center rounded-2xl px-6 py-4 transition-colors"
       >
         <Plus className="h-6 w-6 stroke-[3px]" />
       </button>
@@ -56,7 +57,7 @@ export function InputItemRow({
   const isMaxLengthReached = maxLength && value.length >= maxLength;
 
   return (
-    <div className="bg-bg-normal group focus-within:ring-primary-weak flex h-16 w-full shrink-0 items-center gap-2 rounded-2xl px-6 transition-all focus-within:ring-2">
+    <div className="bg-bg-normal group focus-within:ring-primary-weak flex w-full shrink-0 items-center gap-2 rounded-2xl px-6 py-4 transition-all focus-within:ring-2">
       <div className="relative flex h-full min-w-0 flex-1 items-center">
         <div
           ref={containerRef}
@@ -73,7 +74,7 @@ export function InputItemRow({
               onFocus={updateBlurs}
               placeholder={placeholder}
               maxLength={maxLength}
-              className="text-label-normal placeholder:text-primary-weak md:text-headline-1 text-body-1 absolute inset-0 h-full w-full bg-transparent font-semibold outline-none placeholder:font-normal"
+              className="placeholder:text-primary-weak text-label-normal absolute inset-0 h-full w-full bg-transparent text-sm font-semibold outline-none placeholder:font-normal md:text-base lg:text-lg"
             />
             <span
               className={`text-body-1 md:text-headline-1 invisible whitespace-pre ${

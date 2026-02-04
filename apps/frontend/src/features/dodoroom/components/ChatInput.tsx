@@ -22,7 +22,7 @@ export function ChatInput({ value, canSend, onChange, onSend }: ChatInputProps) 
         onChange={(event) => onChange(event.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="두두에게 말해보세요"
-        className="text-label-normal placeholder:text-label-alternative flex-1 bg-transparent text-sm outline-none"
+        className="text-label-normal placeholder:text-label-alternative text-body-1 flex-1 bg-transparent outline-none"
         type="text"
       />
       <button

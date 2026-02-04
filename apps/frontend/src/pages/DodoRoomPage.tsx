@@ -20,6 +20,7 @@ export function DodoRoomPage() {
     loadMoreMessages,
     isLoadingHistory,
     isSendingMessage,
+    isDodoResponding,
     hasMore,
     handleActionButton,
   } = useDodoChat();
@@ -38,7 +39,12 @@ export function DodoRoomPage() {
           </div>
           <div className="absolute bottom-4 left-4 z-20 flex flex-col gap-2">
             {DODO_ACTION_VALUES.filter((v) => v !== 'None').map((action) => (
-              <DodoActionButton key={action} action={action} onClick={handleActionButton} />
+              <DodoActionButton
+                key={action}
+                action={action}
+                onClick={handleActionButton}
+                disabled={isDodoResponding}
+              />
             ))}
           </div>
         </section>

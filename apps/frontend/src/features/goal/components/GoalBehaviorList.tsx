@@ -170,36 +170,6 @@ export function GoalBehaviorList({
             />
           ))}
         </div>
-
-        {/* 오른쪽: 편집 버튼 */}
-        <div className="ml-auto shrink-0">
-          {isEditing ? (
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={toggleEditMode}
-                className="border-secondary-weak text-primary-strong cursor-pointer rounded-full border px-3 py-1 text-[12px] font-bold"
-              >
-                취소
-              </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                className="bg-secondary-strong text-bg-light cursor-pointer rounded-full px-3 py-1 text-[12px] font-bold"
-              >
-                저장
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={toggleEditMode}
-              className="bg-secondary-strong text-bg-light cursor-pointer rounded-full px-3 py-1 text-[12px] font-bold"
-            >
-              행동 수정
-            </button>
-          )}
-        </div>
       </div>
 
       {isLoading && <p className="text-label-disable text-sm">행동을 불러오는 중...</p>}
@@ -208,6 +178,34 @@ export function GoalBehaviorList({
         {!isLoading && filteredBehaviors.length === 0 && (
           <p className="text-label-disable text-sm">등록된 행동이 없습니다.</p>
         )}
+        <div className="mb-3 flex justify-end">
+          {isEditing ? (
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={toggleEditMode}
+                className="border-secondary-weak bg-bg-light text-primary-strong cursor-pointer rounded-lg border px-3 py-1 text-[12px] font-bold"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={handleSave}
+                className="bg-secondary-strong text-bg-light cursor-pointer rounded-lg px-3 py-1 text-[12px] font-bold"
+              >
+                저장
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={toggleEditMode}
+              className="bg-secondary-strong text-bg-light cursor-pointer rounded-lg px-3 py-1 text-[12px] font-bold"
+            >
+              행동 수정
+            </button>
+          )}
+        </div>
 
         <div className="flex flex-col gap-3">
           {filteredBehaviors.map((behavior: Behavior) => (

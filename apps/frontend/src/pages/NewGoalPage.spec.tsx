@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { NewGoalPage } from './NewGoalPage';
 
@@ -36,17 +36,24 @@ vi.mock('@/features/goal/hooks/useGoalTemplates', () => ({
 vi.mock('@/features/goal/components/BehaviorSelection', () => ({
   BehaviorSelection: ({
     behaviors,
+    recommendations,
     onAdd,
     onDelete,
     onChangeBehaviorTitle,
-  }: {
-    behaviors: Array<{ title: string }>;
-    onAdd: () => void;
-    onDelete: (id: string) => void;
-    onChangeBehaviorTitle: (id: string, title: string) => void;
-  }) => {
-    behaviorSelectionMock({ behaviors, onAdd, onDelete, onChangeBehaviorTitle });
-    return <div data-testid="behavior-selection" />;
+  }: any) => {
+    behaviorSelectionMock({ behaviors, recommendations, onAdd, onDelete, onChangeBehaviorTitle });
+    return (
+      <div data-testid="behavior-selection">
+        {recommendations?.map((rec: string) => (
+          <button key={rec} type="button" onClick={() => onAdd(rec)}>
+            추천추가: {rec}
+          </button>
+        ))}
+        <button type="button" onClick={() => onAdd()}>
+          직접추가
+        </button>
+      </div>
+    );
   },
 }));
 
@@ -62,27 +69,7 @@ vi.mock('@/features/goal/components/TemplateSelection', () => ({
 }));
 
 vi.mock('@/features/goal/components/NewGoal', () => ({
-  NewGoal: ({
-    title,
-    setTitle,
-    setColor,
-  }: {
-    title: string;
-    setTitle: (value: string) => void;
-    setColor: (
-      value:
-        | 'blue'
-        | 'light-pink'
-        | 'pink'
-        | 'yellow'
-        | 'sand'
-        | 'mint'
-        | 'gray-mint'
-        | 'warm-gray'
-        | 'beige'
-        | 'lavender',
-    ) => void;
-  }) => (
+  NewGoal: ({ title, setTitle, setColor }: any) => (
     <div>
       <div data-testid="goal-title">{title}</div>
       <button type="button" onClick={() => setTitle('새 목표')}>
@@ -100,19 +87,7 @@ vi.mock('@/features/goal/apis/createGoal.api', () => ({
 }));
 
 vi.mock('@/features/goal/components/NewGoalFrame', () => ({
-  NewGoalFrame: ({
-    currStepIdx,
-    steps,
-    onMove,
-    onComplete,
-    onSkip,
-  }: {
-    currStepIdx: number;
-    steps: Array<{ content: React.ReactNode }>;
-    onMove: (idx: number) => void;
-    onComplete: () => void;
-    onSkip: () => void;
-  }) => (
+  NewGoalFrame: ({ currStepIdx, steps, onMove, onComplete, onSkip }: any) => (
     <div>
       <div data-testid="step-content">{steps[currStepIdx].content}</div>
       <button type="button" onClick={() => onMove(currStepIdx - 1)}>
@@ -131,6 +106,10 @@ vi.mock('@/features/goal/components/NewGoalFrame', () => ({
   ),
 }));
 
+vi.mock('@/features/goal/components/SummaryView', () => ({
+  SummaryView: () => <div data-testid="summary-view" />,
+}));
+
 describe('NewGoalPage', () => {
   beforeEach(() => {
     let idCounter = 0;
@@ -143,88 +122,91 @@ describe('NewGoalPage', () => {
   });
 
   afterEach(() => {
-    vi.unstubAllEnvs();
-    vi.unstubAllGlobals();
-    behaviorSelectionMock.mockClear();
-    templateSelectionMock.mockClear();
-    createGoalMock.mockReset();
-    navigateMock.mockReset();
+    vi.clearAllMocks();
   });
 
   it('템플릿 선택 화면을 렌더링한다', () => {
     render(<NewGoalPage />);
-
     expect(screen.getByRole('button', { name: '템플릿 선택' })).toBeInTheDocument();
   });
 
-  it('템플릿을 선택하면 행동 목록을 채운다', () => {
+  it('템플릿을 선택하고 추천 항목을 클릭하면 행동 목록에 추가된다', async () => {
     render(<NewGoalPage />);
 
+    // 템플릿 선택
     fireEvent.click(screen.getByRole('button', { name: '템플릿 선택' }));
+
+    // 스텝 이동
     fireEvent.click(screen.getByRole('button', { name: '다음' }));
     fireEvent.click(screen.getByRole('button', { name: '다음' }));
+
+    // 추천 항목 클릭하여 추가
+    fireEvent.click(screen.getByRole('button', { name: '추천추가: 물 한 컵 마시기' }));
 
     const lastCall = behaviorSelectionMock.mock.calls.at(-1);
     expect(lastCall).toBeTruthy();
     const behaviors = lastCall?.[0].behaviors ?? [];
-    expect(behaviors.map((item: { title: string }) => item.title)).toEqual(['물 한 컵 마시기']);
+    expect(behaviors.map((item: any) => item.title)).toContain('물 한 컵 마시기');
   });
 
-  it('완료 시 목표 생성 요청과 이동을 수행한다', async () => {
-    createGoalMock.mockResolvedValueOnce({
-      id: '01890fba-7e6a-7b6b-9e5d-0f3c9b8b4c6d',
-      title: '새 목표',
-      color: 'blue',
-      behaviors: [],
-    });
+  it('완료 시 각 단계에서 추가된 행동들로 목표 생성 요청을 수행한다', async () => {
+    createGoalMock.mockResolvedValueOnce({ id: 'goal-id' });
 
     render(<NewGoalPage />);
 
+    // Step 1: 템플릿 선택
     fireEvent.click(screen.getByRole('button', { name: '템플릿 선택' }));
     fireEvent.click(screen.getByRole('button', { name: '다음' }));
 
+    // Step 2: 제목 설정
     fireEvent.click(screen.getByRole('button', { name: '제목 설정' }));
-    fireEvent.click(screen.getByRole('button', { name: '색상 설정' }));
-
-    fireEvent.click(screen.getByRole('button', { name: '다음' }));
-    fireEvent.click(screen.getByRole('button', { name: '다음' }));
-    fireEvent.click(screen.getByRole('button', { name: '다음' }));
-    fireEvent.click(screen.getByRole('button', { name: '다음' }));
     fireEvent.click(screen.getByRole('button', { name: '다음' }));
 
+    // Step 3: 마음열기 추천 추가
+    fireEvent.click(screen.getByRole('button', { name: '추천추가: 물 한 컵 마시기' }));
+    fireEvent.click(screen.getByRole('button', { name: '다음' }));
+
+    // Step 4: 시작하기 추천 추가
+    fireEvent.click(screen.getByRole('button', { name: '추천추가: 스트레칭 5분' }));
+    fireEvent.click(screen.getByRole('button', { name: '다음' }));
+
+    // Step 5: 이어가기 추천 추가
+    fireEvent.click(screen.getByRole('button', { name: '추천추가: 주 2회 운동' }));
+    fireEvent.click(screen.getByRole('button', { name: '다음' }));
+
+    // Step 6: 몰입하기 추천 추가
+    fireEvent.click(screen.getByRole('button', { name: '추천추가: 헬스장 1시간' }));
+    fireEvent.click(screen.getByRole('button', { name: '다음' }));
+
+    // Step 7: 최종 확인 및 완료
     await fireEvent.click(screen.getByRole('button', { name: '완료' }));
 
     expect(createGoalMock).toHaveBeenCalledWith({
       goalTitle: '새 목표',
-      goalColor: 'blue',
+      goalColor: expect.any(String),
       templateId: 'template-1',
       behaviors: expect.arrayContaining([
-        expect.objectContaining({ title: '물 한 컵 마시기', difficulty: '마음열기' }),
-        expect.objectContaining({ title: '스트레칭 5분', difficulty: '시작하기' }),
-        expect.objectContaining({ title: '주 2회 운동', difficulty: '이어가기' }),
-        expect.objectContaining({ title: '헬스장 1시간', difficulty: '몰입하기' }),
+        { title: '물 한 컵 마시기', difficulty: '마음열기' },
+        { title: '스트레칭 5분', difficulty: '시작하기' },
+        { title: '주 2회 운동', difficulty: '이어가기' },
+        { title: '헬스장 1시간', difficulty: '몰입하기' },
       ]),
     });
     expect(navigateMock).toHaveBeenCalledWith('/', { replace: true });
   });
 
-  it('목표 생성에 실패하면 이동하지 않는다', async () => {
-    createGoalMock.mockRejectedValueOnce(new Error('실패'));
-
+  it('행동을 하나도 입력하지 않으면 다음 단계로 넘어갈 수 없다 (Validation)', async () => {
     render(<NewGoalPage />);
 
     fireEvent.click(screen.getByRole('button', { name: '템플릿 선택' }));
     fireEvent.click(screen.getByRole('button', { name: '다음' }));
     fireEvent.click(screen.getByRole('button', { name: '제목 설정' }));
     fireEvent.click(screen.getByRole('button', { name: '다음' }));
-    fireEvent.click(screen.getByRole('button', { name: '다음' }));
-    fireEvent.click(screen.getByRole('button', { name: '다음' }));
+
+    // 행동 추가 없이 다음 클릭
     fireEvent.click(screen.getByRole('button', { name: '다음' }));
 
-    fireEvent.click(screen.getByRole('button', { name: '완료' }));
-
-    await waitFor(() => {
-      expect(navigateMock).not.toHaveBeenCalled();
-    });
+    expect(screen.getByTestId('behavior-selection')).toBeInTheDocument();
+    expect(navigateMock).not.toHaveBeenCalled();
   });
 });

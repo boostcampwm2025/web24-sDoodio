@@ -2,6 +2,7 @@ import { BehaviorCard } from '@/shared/components/behavior/BehaviorCard';
 import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
 import { BEHAVIOR_DIFFICULTIES } from '@web24/shared';
 import { Plus } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface TodayBehaviorCardGridProps {
   behaviors: Behavior[];
@@ -10,27 +11,72 @@ interface TodayBehaviorCardGridProps {
   openAddModal: () => void;
 }
 
+const findItemById = (list: Behavior[], id: string) => list.find((item) => item.id === id);
+
 export function TodayBehaviorCardGrid({
   behaviors,
   onToggle,
   onDelete,
   openAddModal,
 }: TodayBehaviorCardGridProps) {
-  const difficultyRank = new Map(
-    BEHAVIOR_DIFFICULTIES.map((difficulty, index) => [difficulty, index]),
-  );
-  const sortedBehaviors = [...behaviors].sort((a, b) => {
-    const difficultyDelta =
-      (difficultyRank.get(a.difficulty) ?? Number.POSITIVE_INFINITY) -
-      (difficultyRank.get(b.difficulty) ?? Number.POSITIVE_INFINITY);
-    if (difficultyDelta !== 0) return difficultyDelta;
+  const [displayBehaviors, setDisplayBehaviors] = useState<Behavior[]>([]);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const prevBehaviorsRef = useRef<Behavior[]>(behaviors);
+  const CHECK_SORT_DELAY_MS = 800;
 
-    return 0;
-  });
+  const getSortedBehaviors = useCallback((list: Behavior[]) => {
+    const difficultyRank = new Map(
+      BEHAVIOR_DIFFICULTIES.map((difficulty, index) => [difficulty, index]),
+    );
+    return [...list].sort((a, b) => {
+      if (a.isChecked !== b.isChecked) {
+        return a.isChecked ? 1 : -1;
+      }
+      const difficultyDelta =
+        (difficultyRank.get(a.difficulty) ?? Number.POSITIVE_INFINITY) -
+        (difficultyRank.get(b.difficulty) ?? Number.POSITIVE_INFINITY);
+      return difficultyDelta === 0 ? 0 : difficultyDelta;
+    });
+  }, []);
+
+  const syncDisplayWithNewData = useCallback(
+    (currentDisplay: Behavior[]) => currentDisplay.map((d) => findItemById(behaviors, d.id) || d),
+    [behaviors],
+  );
+
+  useEffect(() => {
+    const prevBehaviors = prevBehaviorsRef.current;
+
+    // 토글 동작인지 확인
+    const isToggleAction =
+      prevBehaviors.length === behaviors.length &&
+      behaviors.some((newItem) => {
+        const prevItem = findItemById(prevBehaviors, newItem.id);
+        return prevItem?.isChecked !== newItem.isChecked;
+      });
+
+    if (isToggleAction) {
+      setDisplayBehaviors(syncDisplayWithNewData);
+
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => {
+        setDisplayBehaviors(getSortedBehaviors(behaviors));
+      }, CHECK_SORT_DELAY_MS);
+    } else {
+      setDisplayBehaviors(getSortedBehaviors(behaviors));
+    }
+
+    // 다음 비교를 위해 저장
+    prevBehaviorsRef.current = behaviors;
+
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, [behaviors, getSortedBehaviors, syncDisplayWithNewData]);
 
   return (
     <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-      {sortedBehaviors.map((behavior: Behavior) => (
+      {displayBehaviors.map((behavior: Behavior) => (
         <BehaviorCard
           key={behavior.id}
           behavior={behavior}
