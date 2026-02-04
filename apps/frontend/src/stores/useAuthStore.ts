@@ -91,7 +91,7 @@ const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
   updateBehaviorRatio: async (behaviorRatio: number) => {
-    set({ isLoading: true, error: null });
+    set({ error: null });
     try {
       const response = await fetch('/api/auth/settings/behavior-ratio', {
         method: 'PATCH',
@@ -108,11 +108,11 @@ const useAuthStore = create<AuthState>((set, get) => ({
 
       const { user } = get();
       if (user) {
-        set({ user: { ...user, behaviorRatio }, isLoading: false });
+        set({ user: { ...user, behaviorRatio } });
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
-      set({ error: message, isLoading: false });
+      set({ error: message });
       throw error;
     }
   },
