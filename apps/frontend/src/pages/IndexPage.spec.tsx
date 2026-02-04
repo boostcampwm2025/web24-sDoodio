@@ -1,7 +1,17 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { IndexPage } from './IndexPage';
+
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
 
 vi.mock('@/stores/useDodoChatStore', () => ({
   default: () => ({
@@ -70,10 +80,14 @@ describe('IndexPage', () => {
       showToast: showToastMock,
     });
 
+    const queryClient = createTestQueryClient();
+
     render(
-      <MemoryRouter>
-        <IndexPage />
-      </MemoryRouter>,
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <IndexPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
 
     expect(await screen.findByText('물 2L 마시기')).toBeInTheDocument();
