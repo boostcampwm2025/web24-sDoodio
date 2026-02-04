@@ -1,4 +1,5 @@
-import { Body, Controller, Post, Get, UseGuards, Query } from '@nestjs/common';
+import { Body, Controller, Post, Get, UseGuards, Query, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { SessionAuthGuard } from 'src/common/guards/session-auth.guard';
 import { UserId } from 'src/common/decorators/user-id.decorator';
 import { ZodValidationPipe } from 'src/common/pipes/zod-validation.pipe';
@@ -21,8 +22,13 @@ export class ChatController {
   async getDodoChat(
     @UserId() userId: string,
     @Body(new ZodValidationPipe(DodoChatRequestSchema)) body: DodoChatRequest,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<DodoChatResponse> {
-    return this.chatService.getDodoChat(userId, body.message);
+    const result = await this.chatService.getDodoChat(userId, body.message);
+    if (result.limited) {
+      res.status(429);
+    }
+    return { reply: result.reply, action: result.action };
   }
 
   @Get('history')

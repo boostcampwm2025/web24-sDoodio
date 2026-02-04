@@ -9,7 +9,7 @@ export async function sendDodoChat(message: string) {
     body: JSON.stringify({ message }),
   });
 
-  if (!res.ok) {
+  if (!res.ok && res.status !== 429) {
     throw new Error('Failed to fetch dodo reply');
   }
 
