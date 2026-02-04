@@ -8,6 +8,7 @@ import { StatsPage } from '@/pages/StatsPage';
 import { DodoRoomPage } from '@/pages/DodoRoomPage';
 import { LoginPage } from '@/pages/LoginPage';
 import { OnboardingPage } from '@/pages/OnboardingPage';
+import { MyPage } from '@/pages/MyPage';
 import useAuthStore from '@/stores/useAuthStore';
 import Layout from '@/shared/components/layout/Layout';
 
@@ -52,6 +53,7 @@ export function AppRoutes() {
           <Route element={<GoalDetailPage />} path="/goals/:goalId" />
           <Route element={<StatsPage />} path="/stats" />
           <Route element={<DodoRoomPage />} path="/dodo-room" />
+          <Route element={<MyPage />} path="/mypage" />
         </Route>
         <Route
           element={<div className="text-label-disable text-center">구현 예정입니다</div>}

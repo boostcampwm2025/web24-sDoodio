@@ -1,7 +1,13 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Between, DataSource, In, Not, Repository } from 'typeorm';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { AIBehaviorStatus, BEHAVIOR_DIFFICULTIES, TodayBehaviorStatus } from '@web24/shared';
+import {
+  AIBehaviorStatus,
+  BEHAVIOR_DIFFICULTIES,
+  BEHAVIOR_LEVEL_SCORES,
+  DEFAULT_BEHAVIOR_WEIGHT,
+  TodayBehaviorStatus,
+} from '@web24/shared';
 import { getKstDayKey } from '../../common/utils/time.utils';
 import { Behavior } from './behavior.entity';
 import { TodayBehavior } from './today-behavior.entity';
@@ -60,7 +66,7 @@ export class BehaviorService {
         where: { goal: { user: { id: userId } } },
       });
 
-      const extractedTodayBehavior = this.extractTodayBehaviors(behaviors);
+      const extractedTodayBehavior = this.extractTodayBehaviors(behaviors, user.behaviorRatio);
 
       const toSave = extractedTodayBehavior.map((behavior) =>
         manager.getRepository(TodayBehavior).create({
@@ -149,7 +155,10 @@ export class BehaviorService {
         (behavior) => !deletedBehaviorIds.has(behavior.id),
       );
 
-      const extractedTodayBehavior = this.extractTodayBehaviors(candidateBehaviors);
+      const extractedTodayBehavior = this.extractTodayBehaviors(
+        candidateBehaviors,
+        user.behaviorRatio,
+      );
       if (extractedTodayBehavior.length === 0) {
         return [];
       }
@@ -307,30 +316,18 @@ export class BehaviorService {
     });
   }
 
-  extractTodayBehaviors(behaviors: Behavior[]): Behavior[] {
-    const LEVEL_SCORE = {
-      마음열기: 1,
-      시작하기: 2,
-      이어가기: 3,
-      몰입하기: 4,
-    } as const;
-    const DEFAULT_TODAY_BEHAVIOR_RATIO = 0.8;
-    const DEFAULT_WEIGHT = 5;
-
+  extractTodayBehaviors(behaviors: Behavior[], ratio: number): Behavior[] {
     const nonAiBehaviors = behaviors.filter((behavior) => behavior.difficulty !== 'AI');
 
     const totalBehaviorScore = nonAiBehaviors.reduce(
-      (sum, behavior) => sum + LEVEL_SCORE[behavior.difficulty],
+      (sum, behavior) =>
+        sum + BEHAVIOR_LEVEL_SCORES[behavior.difficulty as keyof typeof BEHAVIOR_LEVEL_SCORES],
       0,
     );
-    // MEMO:
-    // let todayBehaviorRatio = null;
-    // todayBehaviorRatio을 구하는 로직을 추가
-    // todayBehaviorRatio가 null 이 아니라면 아래 줄에서 DEFAULT_TODAY_BEHAVIOR_RATIO 가 아니라 todayBehaviorRatio 사용
-    const totalTodayBehaviorScore = Math.round(totalBehaviorScore * DEFAULT_TODAY_BEHAVIOR_RATIO);
+    const totalTodayBehaviorScore = Math.round(totalBehaviorScore * ratio);
 
     const weightsMap = nonAiBehaviors.reduce(
-      (acc, behavior) => acc.set(behavior, DEFAULT_WEIGHT),
+      (acc, behavior) => acc.set(behavior, DEFAULT_BEHAVIOR_WEIGHT),
       new Map<Behavior, number>(),
     );
     // MEMO:
@@ -355,7 +352,8 @@ export class BehaviorService {
 
       const [pickedBehavior] = pickedEntry;
       const nextTodayBehaviorScore: number =
-        currTodayBehaviorScore + LEVEL_SCORE[pickedBehavior.difficulty];
+        currTodayBehaviorScore +
+        BEHAVIOR_LEVEL_SCORES[pickedBehavior.difficulty as keyof typeof BEHAVIOR_LEVEL_SCORES];
       if (nextTodayBehaviorScore <= totalTodayBehaviorScore) {
         selected.push(pickedBehavior);
         currTodayBehaviorScore = nextTodayBehaviorScore;

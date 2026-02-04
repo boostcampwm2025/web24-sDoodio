@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { DEFAULT_BEHAVIOR_EXTRACTION_RATIO } from '@web24/shared';
 import useAuthStore from './useAuthStore';
 
 const mockFetch = (options: { ok: boolean; status: number; json?: () => Promise<unknown> }) => {
@@ -21,6 +22,7 @@ describe('useAuthStore', () => {
         id: '019bd5d8-72dc-78ca-af5d-c93358058b32',
         nickname: 'G-abcd12',
         kind: 'guest',
+        behaviorRatio: DEFAULT_BEHAVIOR_EXTRACTION_RATIO,
       };
       mockFetch({ ok: true, status: 200, json: async () => user });
 
@@ -46,6 +48,7 @@ describe('useAuthStore', () => {
         id: '019bd5d8-72dc-78ca-af5d-c93358058b32',
         nickname: 'G-abcd12',
         kind: 'guest',
+        behaviorRatio: DEFAULT_BEHAVIOR_EXTRACTION_RATIO,
       };
       mockFetch({ ok: true, status: 200, json: async () => user });
 
@@ -59,7 +62,12 @@ describe('useAuthStore', () => {
   describe('logout', () => {
     it('로그아웃하면 유저 정보를 비운다', async () => {
       useAuthStore.setState({
-        user: { id: '019bd5d8-72dc-78ca-af5d-c93358058b32', nickname: 'G-abcd12', kind: 'guest' },
+        user: {
+          id: '019bd5d8-72dc-78ca-af5d-c93358058b32',
+          nickname: 'G-abcd12',
+          kind: 'guest',
+          behaviorRatio: DEFAULT_BEHAVIOR_EXTRACTION_RATIO,
+        },
         isLoading: false,
         error: null,
       });
@@ -68,6 +76,25 @@ describe('useAuthStore', () => {
       await useAuthStore.getState().logout();
 
       expect(useAuthStore.getState().user).toBeNull();
+    });
+  });
+
+  describe('updateBehaviorRatio', () => {
+    it('행동 비율 업데이트에 성공하면 상태를 갱신한다', async () => {
+      // 초기 상태 설정
+      const initialUser = {
+        id: 'user-id',
+        nickname: 'Test',
+        kind: 'guest',
+        behaviorRatio: 0.5,
+      };
+      useAuthStore.setState({ user: initialUser as any, isLoading: false, error: null });
+
+      mockFetch({ ok: true, status: 200 });
+
+      await useAuthStore.getState().updateBehaviorRatio(0.8);
+
+      expect(useAuthStore.getState().user?.behaviorRatio).toBe(0.8);
     });
   });
 });

@@ -1,17 +1,23 @@
 import { create } from 'zustand';
-import { UserMeResponseSchema, type UserMeResponse } from '@web24/shared';
+import {
+  UserMeResponseSchema,
+  LoginResponseSchema,
+  type UserMeResponse,
+  type LoginResponse,
+} from '@web24/shared';
 
 type AuthState = {
-  user: UserMeResponse | null;
+  user: (UserMeResponse & { isNewUser?: boolean }) | null;
   isLoading: boolean;
   error: string | null;
   setUser: (user: UserMeResponse | null) => void;
   fetchMe: () => Promise<UserMeResponse | null>;
-  loginGuest: () => Promise<UserMeResponse>;
+  loginGuest: () => Promise<LoginResponse>;
   logout: () => Promise<void>;
+  updateBehaviorRatio: (behaviorRatio: number) => Promise<void>;
 };
 
-const useAuthStore = create<AuthState>((set) => ({
+const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isLoading: false,
   error: null,
@@ -56,9 +62,9 @@ const useAuthStore = create<AuthState>((set) => ({
       }
 
       const json = await response.json();
-      const user = UserMeResponseSchema.parse(json);
-      set({ user, isLoading: false });
-      return user;
+      const loginResponse = LoginResponseSchema.parse(json);
+      set({ user: loginResponse, isLoading: false });
+      return loginResponse;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       set({ error: message, isLoading: false });
@@ -81,6 +87,32 @@ const useAuthStore = create<AuthState>((set) => ({
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       set({ error: message, isLoading: false });
+      throw error;
+    }
+  },
+  updateBehaviorRatio: async (behaviorRatio: number) => {
+    set({ error: null });
+    try {
+      const response = await fetch('/api/auth/settings/behavior-ratio', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ behaviorRatio }),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Request failed: ${response.status}`);
+      }
+
+      const { user } = get();
+      if (user) {
+        set({ user: { ...user, behaviorRatio } });
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      set({ error: message });
       throw error;
     }
   },

@@ -1,4 +1,9 @@
-import { USER_KINDS, USER_NICKNAME_MAX_LENGTH, type UserKind } from '@web24/shared';
+import {
+  DEFAULT_BEHAVIOR_EXTRACTION_RATIO,
+  USER_KINDS,
+  USER_NICKNAME_MAX_LENGTH,
+  type UserKind,
+} from '@web24/shared';
 import { Column, Entity } from 'typeorm';
 import { BaseIdCreatedUpdatedDeletedEntity } from '../../common/entities/base.entity';
 
@@ -9,4 +14,16 @@ export class User extends BaseIdCreatedUpdatedDeletedEntity {
 
   @Column({ type: 'enum', enum: Object.values(USER_KINDS), default: USER_KINDS.guest })
   kind!: UserKind;
+
+  @Column({ type: 'varchar', nullable: true })
+  provider?: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  providerId?: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  email?: string;
+
+  @Column({ type: 'float', default: DEFAULT_BEHAVIOR_EXTRACTION_RATIO })
+  behaviorRatio!: number;
 }

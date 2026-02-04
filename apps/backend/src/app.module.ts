@@ -34,6 +34,10 @@ import { ChatModule } from './features/chat/chat.module';
         VAPID_PUBLIC_KEY: Joi.string().required(),
         VAPID_PRIVATE_KEY: Joi.string().required(),
         VAPID_SUBJECT: Joi.string().required(),
+        GOOGLE_CLIENT_ID: Joi.string().required(),
+        GOOGLE_CLIENT_SECRET: Joi.string().required(),
+        GOOGLE_CALLBACK_URL: Joi.string().required(),
+        FRONTEND_URL: Joi.string().required(),
       }),
     }),
     TypeOrmModule.forRootAsync({
