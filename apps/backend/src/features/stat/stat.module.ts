@@ -9,11 +9,13 @@ import { TodayBehavior } from '../behavior/today-behavior.entity';
 import { Goal } from '../goal/goal.entity';
 import { Behavior } from '../behavior/behavior.entity';
 import { StatController } from './stat.controller';
+import { SlackModule } from '../../common/slack/slack.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, TodayBehavior, DailyUserStat, StatEventLog, Goal, Behavior]),
     ScheduleModule.forRoot(),
+    SlackModule,
   ],
   controllers: [StatController],
   providers: [StatService],

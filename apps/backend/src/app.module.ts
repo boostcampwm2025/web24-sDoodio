@@ -38,6 +38,7 @@ import { ChatModule } from './features/chat/chat.module';
         GOOGLE_CLIENT_SECRET: Joi.string().required(),
         GOOGLE_CALLBACK_URL: Joi.string().required(),
         FRONTEND_URL: Joi.string().required(),
+        SLACK_WEBHOOK_URL: Joi.string().uri().optional(),
       }),
     }),
     TypeOrmModule.forRootAsync({

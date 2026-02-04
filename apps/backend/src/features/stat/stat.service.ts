@@ -8,8 +8,9 @@ import {
   TODAY_BEHAVIOR_ORIGIN,
   TodayBehaviorOrigin,
 } from '@web24/shared';
-import { Cron } from '@nestjs/schedule';
 import pLimit from 'p-limit';
+import { CronWithSlackNotification } from '../../common/decorators/cron-with-slack-notification.decorator';
+import { SlackService } from '../../common/slack/slack.service';
 import { addDays, getKstDayKey, toKstBoundary } from '../../common/utils/time.utils';
 import {
   BEHAVIOR_COUNT_THRESHOLD,
@@ -47,7 +48,12 @@ export class StatService {
     private readonly goalRepository: Repository<Goal>,
     @InjectRepository(Behavior)
     private readonly behaviorRepository: Repository<Behavior>,
+    private readonly slackNotifyService: SlackService,
   ) {}
+
+  getSlackNotifyService() {
+    return this.slackNotifyService;
+  }
 
   async getDifficultyStats(userId: string) {
     const todayKey = getKstDayKey(new Date());
@@ -154,7 +160,10 @@ export class StatService {
     };
   }
 
-  @Cron('0 0 4 * * *', { name: 'daily_user_stat_batch', timeZone: 'Asia/Seoul' })
+  @CronWithSlackNotification('0 0 4 * * *', {
+    name: 'daily_user_stat_batch',
+    timeZone: 'Asia/Seoul',
+  })
   async calculateDailyUserStats() {
     const users = await this.userRepository.find();
 
