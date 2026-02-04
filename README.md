@@ -1,8 +1,7 @@
 # 🐣 뚜웰 (DooWell)
+
 > 전부 채우지 않아도 괜찮아, 쌓이는 것만 기억해.
-<img width="700" alt="배너" src="https://github.com/user-attachments/assets/365cae8f-35a8-4b00-8942-cb12a3c22a1a" />
-
-
+> <img width="700" alt="배너" src="https://github.com/user-attachments/assets/365cae8f-35a8-4b00-8942-cb12a3c22a1a" />
 
 ---
 
@@ -164,8 +163,23 @@ CLOVA_API_KEY=clova api
 VAPID_PUBLIC_KEY=pnpm dlx web-push generate-vapid-keys
 VAPID_PRIVATE_KEY=pnpm dlx web-push generate-vapid-keys
 VAPID_SUBJECT=mailto:admin-example@web24.app
+
+SENTRY_DSN=sentry dsn
+SENTRY_ENV=environment (local, staging, production)
+SENTRY_RELEASE=release identifier (e.g. git sha)
+SENTRY_TRACES_SAMPLE_RATE=trace sampling rate (e.g. 0.1)
+SENTRY_PROFILES_SAMPLE_RATE=profile sampling rate (e.g. 0.01)
+
+GOOGLE_CLIENT_ID=google_client_id
+GOOGLE_CLIENT_SECRET=google_client_secret
+GOOGLE_CALLBACK_URL=http://localhost:3000/api/auth/google/callback
+FRONTEND_URL=http://localhost:5173
+
+SLACK_WEBHOOK_URL=슬랙 채널 웹 훅 URL, Optional
 ```
+
 ---
+
 ## 🏗️ 배포 구조
 
 ```mermaid
@@ -176,7 +190,7 @@ flowchart TD
     Gateway["Central Nginx Gateway
     (Port 80/443)"]
     Certbot["Certbot (Auto Renewal)"]
-    
+
     subgraph WebNetwork["Docker Shared Network"]
       subgraph StagingEnv["Staging"]
         FE_S["Frontend Staging
@@ -192,7 +206,7 @@ flowchart TD
         (Port 3000)"]
       end
     end
-    
+
     Gateway <-->|"Challenge"| Certbot
     Gateway ---->|"staging.doowell.n-e.kr"| StagingEnv
     Gateway ---->|"doowell.n-e.kr"| ProductionEnv
@@ -213,31 +227,26 @@ flowchart TD
 
 ## 👥 팀원
 
-> 프로젝트는 FE/BE 구분 없이 협업하여 진행했으며,  
-> 포지션 표기는 각 팀원이 가장 깊이 고민하고 주도적으로 기여한 영역을 기준으로 표기했습니다.
+> 프로젝트는 FE/BE 구분 없이 풀스택으로 협업하여 진행했습니다.
 
 <div align="center">
 <table role="table">
 <thead>
 <tr>
-<td align="center"><strong>J001_강내원</strong></td>
-<td align="center"><strong>J039_김민우</strong></td>
-<td align="center"><strong>J165_유태근</strong></td>
-<td align="center"><strong>J200_이예은</strong></td>
+<th align="center"><strong>J001_강내원</strong></th>
+<th align="center"><strong>J039_김민우</strong></th>
+<th align="center"><strong>J165_유태근</strong></th>
+<th align="center"><strong>J200_이예은</strong></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<th align="center"><a href="https://github.com/KangNaewon"><img src="https://avatars.githubusercontent.com/u/81740350?v=4" width="150" height="150"></a></th>
-<th align="center"><a href="https://github.com/philosophy-engineer"><img src="https://avatars.githubusercontent.com/u/137793034?v=4" width="150" height="150"></a></th>
-<th align="center"><a href="https://github.com/tgy1201"><img src="https://avatars.githubusercontent.com/u/154293542?v=4" width="150" height="150"></a></th>
-<th align="center"><a href="https://github.com/iyeeun"><img src="https://avatars.githubusercontent.com/u/82192913?v=4" width="150" height="150"></a></th>
+<td align="center"><a href="https://github.com/KangNaewon"><img src="https://avatars.githubusercontent.com/u/81740350?v=4" width="150" height="150"></a></td>
+<td align="center"><a href="https://github.com/philosophy-engineer"><img src="https://avatars.githubusercontent.com/u/137793034?v=4" width="150" height="150"></a></td>
+<td align="center"><a href="https://github.com/tgy1201"><img src="https://avatars.githubusercontent.com/u/154293542?v=4" width="150" height="150"></a></td>
+<td align="center"><a href="https://github.com/iyeeun"><img src="https://avatars.githubusercontent.com/u/82192913?v=4" width="150" height="150"></a></td>
 </tr>
 <tr>
-<th align="center">BE<br/>PM, 인프라</th>
-<th align="center">BE<br/>DB</th>
-<th align="center">FE<br/>UI/UX</th>
-<th align="center">FE<br/>기획</th>
 </tr>
 </tbody>
 </table>
