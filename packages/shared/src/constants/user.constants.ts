@@ -1,1 +1,1 @@
-export const USER_NICKNAME_MAX_LENGTH = 10;
+export const USER_NICKNAME_MAX_LENGTH = 30;
