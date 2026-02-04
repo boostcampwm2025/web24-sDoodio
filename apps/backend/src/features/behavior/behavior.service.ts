@@ -485,7 +485,21 @@ export class BehaviorService {
 
       if (!bestGoal) return [];
 
-      const aiBehaviorTitles = await this.aiService.getAIBehaviorTitles(bestGoal);
+      const previousAIBehaviors = await manager.getRepository(AIBehavior).find({
+        where: {
+          goal: { id: bestGoal.id },
+          user: { id: user.id },
+        },
+        select: { title: true },
+      });
+      const previousBehaviorTitles = Array.from(
+        new Set(previousAIBehaviors.map((behavior) => behavior.title)),
+      );
+
+      const aiBehaviorTitles = await this.aiService.getAIBehaviorTitles(
+        bestGoal,
+        previousBehaviorTitles,
+      );
 
       const toSave = aiBehaviorTitles.map((title) =>
         manager.getRepository(AIBehavior).create({

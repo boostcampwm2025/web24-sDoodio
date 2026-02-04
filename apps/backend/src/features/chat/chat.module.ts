@@ -4,12 +4,12 @@ import { ChatController } from './chat.controller';
 import { ChatService } from './chat.service';
 import { DodoChatMessage } from './dodo-chat-message.entity';
 import { User } from '../user/user.entity';
-import { AIService } from '../ai/ai.service';
+import { AIModule } from '../ai/ai.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([DodoChatMessage, User])],
+  imports: [TypeOrmModule.forFeature([DodoChatMessage, User]), AIModule],
   controllers: [ChatController],
-  providers: [ChatService, AIService],
+  providers: [ChatService],
   exports: [ChatService],
 })
 export class ChatModule {}
