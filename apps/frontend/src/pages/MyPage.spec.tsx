@@ -29,7 +29,8 @@ describe('MyPage', () => {
   it('유저 정보를 올바르게 표시한다', () => {
     const user = {
       nickname: 'TestUser',
-      kind: 'google',
+      kind: 'user',
+      provider: 'google',
       email: 'test@example.com',
       behaviorRatio: 0.5,
     };
@@ -67,7 +68,8 @@ describe('MyPage', () => {
   it('일반 유저일 경우 계정 연동 섹션을 표시하지 않는다', () => {
     const user = {
       nickname: 'NormalUser',
-      kind: 'google',
+      kind: 'user',
+      provider: 'google',
       email: 'test@example.com',
       behaviorRatio: 0.5,
     };

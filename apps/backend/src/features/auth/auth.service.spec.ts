@@ -158,7 +158,7 @@ describe('AuthService', () => {
       expect(guestUser.provider).toBe(profile.provider);
       expect(guestUser.providerId).toBe(profile.id);
       expect(guestUser.email).toBe(profile.email);
-      expect(guestUser.kind).toBe(profile.provider);
+      expect(guestUser.provider).toBe(profile.provider);
       expect(userRepository.save).toHaveBeenCalledWith(guestUser);
       expect(result).toEqual({ user: guestUser, isNew: false });
     });

@@ -19,7 +19,9 @@ export function MyPage() {
           </div>
           <div className="flex flex-col">
             <h2 className="text-heading-2 text-label-normal font-bold">{user.nickname}</h2>
-            <p className="text-label-2 text-label-disable capitalize">{user.kind} 계정</p>
+            <p className="text-label-2 text-label-disable capitalize">
+              {user.provider || user.kind} 계정
+            </p>
           </div>
         </div>
 

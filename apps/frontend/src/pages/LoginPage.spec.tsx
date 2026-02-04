@@ -73,7 +73,7 @@ describe('LoginPage', () => {
 
   it('기존 유저(isNewUser가 없는 경우)는 원래 페이지(기본값: /)로 이동한다', () => {
     (useAuthStore as unknown as Mock).mockReturnValue({
-      user: { kind: 'google' }, // isNewUser undefined
+      user: { kind: 'user' }, // isNewUser undefined
       fetchMe: vi.fn(),
       isLoading: false,
     });

@@ -65,7 +65,7 @@ describe('GoogleStrategy', () => {
 
     it('세션에 userId가 있으면 게스트 계정 연동을 시도한다', async () => {
       const req = { session: { userId: 'guest-id' } } as any;
-      const user = { id: 'guest-id', kind: 'google' };
+      const user = { id: 'guest-id', kind: 'user' };
       authService.linkGuestToSocial.mockResolvedValue({ user: user as any, isNew: false });
 
       await strategy.validate(req, 'token', 'refresh', profile, done);
@@ -76,7 +76,7 @@ describe('GoogleStrategy', () => {
 
     it('세션에 userId가 없으면 소셜 유저 찾기/생성을 시도한다', async () => {
       const req = { session: {} } as any;
-      const user = { id: 'new-user', kind: 'google' };
+      const user = { id: 'new-user', kind: 'user' };
       authService.findOrCreateSocialUser.mockResolvedValue({ user: user as any, isNew: true });
 
       await strategy.validate(req, 'token', 'refresh', profile, done);

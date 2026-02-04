@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { USER_KINDS, type UserKind } from '@web24/shared';
+import { USER_KINDS } from '@web24/shared';
 import { User } from '../user/user.entity';
 
 export type SocialProfile = {
-  provider: UserKind;
+  provider: string;
   id: string;
   email?: string;
   nickname?: string;
@@ -43,7 +43,7 @@ export class AuthService {
         providerId: profile.id,
         email: profile.email,
         nickname: profile.nickname || this.generateGuestNickname(),
-        kind: profile.provider,
+        kind: USER_KINDS.user,
       });
       user = await this.userRepository.save(user);
     }
@@ -73,7 +73,7 @@ export class AuthService {
     user.provider = profile.provider;
     user.providerId = profile.id;
     user.email = profile.email;
-    user.kind = profile.provider;
+    user.kind = USER_KINDS.user;
 
     await this.userRepository.save(user);
 
