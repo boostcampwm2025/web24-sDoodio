@@ -17,7 +17,7 @@ export class ChatService {
   private static readonly USER_CHAT_LIMIT = 30;
 
   private static readonly CHAT_LIMIT_MESSAGE =
-    '조금 과부하가 와서 잠깐 쉬어갈게요. 3시간 후에 다시 이야기해요!';
+    '최근 3시간 채팅 제한에 도달했어. 잠시 후 다시 이야기하자!';
 
   constructor(
     private readonly aiService: AIService,
