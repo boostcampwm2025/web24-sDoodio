@@ -9,7 +9,7 @@ import { z } from '../zod';
 export const UserSchema = z.object({
   id: z.uuid({ version: 'v7' }),
   nickname: z.string().min(1).max(USER_NICKNAME_MAX_LENGTH),
-  kind: z.enum([USER_KINDS.guest, USER_KINDS.user, USER_KINDS.google]),
+  kind: z.enum([USER_KINDS.guest, USER_KINDS.user]),
   provider: z.string().optional().nullable(),
   providerId: z.string().optional().nullable(),
   email: z.string().optional().nullable(),
