@@ -17,7 +17,6 @@ interface BehaviorListProps {
   onToggle: (id: string) => void;
   onRefresh?: () => void;
   onDelete?: (id: string) => void;
-  onAddBehavior: (behaviorId: string) => Promise<void>;
 }
 
 export function TodayBehaviorList({
@@ -26,7 +25,6 @@ export function TodayBehaviorList({
   onToggle,
   onRefresh,
   onDelete,
-  onAddBehavior,
 }: BehaviorListProps) {
   const navigate = useNavigate();
   const { setActiveGoal, goalTabs, filteredBehaviors } = useFilteredTodayBehaviors(
@@ -43,7 +41,7 @@ export function TodayBehaviorList({
     handleGoalSelect,
     handleBehaviorSelect,
     resetGoalSelection,
-  } = useTodayBehaviorAdd({ goals, onAddBehavior });
+  } = useTodayBehaviorAdd({ goals });
   const [showTooltip, setShowTooltip] = useState(false);
 
   return (
