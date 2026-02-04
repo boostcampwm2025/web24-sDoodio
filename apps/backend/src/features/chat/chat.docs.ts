@@ -60,6 +60,14 @@ export function registerChatApi(registry: OpenAPIRegistry, common: CommonSchemas
           },
         },
       },
+      429: {
+        description: '채팅 제한에 걸린 경우 (두두 메시지 반환)',
+        content: {
+          'application/json': {
+            schema: dodoChatResponse,
+          },
+        },
+      },
       503: {
         description: 'Service unavailable',
         content: {
