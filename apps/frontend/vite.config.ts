@@ -16,6 +16,15 @@ export default defineConfig({
     }),
     VitePWA({
       injectRegister: 'auto',
+      includeAssets: [
+        'icons/icon-180.png',
+        'icons/icon-192.png',
+        'BlueAndWhiteRoom.webp',
+        'DodoStand.webp',
+        'DodoWink.webp',
+        'DodoSitdown.webp',
+        'DodoHurray.webp',
+      ],
       manifest: {
         name: '뚜웰',
         short_name: '뚜웰',
@@ -53,6 +62,17 @@ export default defineConfig({
           {
             urlPattern: ({ url }) => url.pathname.startsWith('/api'),
             handler: 'NetworkOnly',
+          },
+          {
+            urlPattern: /\.(?:png|jpg|jpeg|svg|webp|avif)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'images-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 30 * 24 * 60 * 60, // 30일
+              },
+            },
           },
         ],
       },
