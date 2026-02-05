@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class Auto1770270383316 implements MigrationInterface {
-  name = 'Auto1770270383316';
+export class Auto1770271968821 implements MigrationInterface {
+  name = 'Auto1770271968821';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
@@ -17,7 +17,6 @@ export class Auto1770270383316 implements MigrationInterface {
       `CREATE INDEX "idx_today_behaviors_behavior_id" ON "today_behaviors" ("behaviorId") `,
     );
     await queryRunner.query(`CREATE INDEX "idx_behaviors_goal_id" ON "behaviors" ("goalId") `);
-    await queryRunner.query(`CREATE INDEX "idx_goals_user_id" ON "goals" ("userId") `);
     await queryRunner.query(
       `CREATE INDEX "idx_dodo_chat_messages_user_id" ON "dodo_chat_messages" ("userId") `,
     );
@@ -33,7 +32,6 @@ export class Auto1770270383316 implements MigrationInterface {
     await queryRunner.query(`DROP INDEX "public"."idx_ai_behaviors_goal_id"`);
     await queryRunner.query(`DROP INDEX "public"."idx_ai_behaviors_user_id"`);
     await queryRunner.query(`DROP INDEX "public"."idx_dodo_chat_messages_user_id"`);
-    await queryRunner.query(`DROP INDEX "public"."idx_goals_user_id"`);
     await queryRunner.query(`DROP INDEX "public"."idx_behaviors_goal_id"`);
     await queryRunner.query(`DROP INDEX "public"."idx_today_behaviors_behavior_id"`);
     await queryRunner.query(`DROP INDEX "public"."idx_today_behaviors_user_id"`);

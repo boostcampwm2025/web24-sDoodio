@@ -1,10 +1,9 @@
 import { GOAL_COLORS, GOAL_TITLE_MAX_LENGTH, type GoalColor } from '@web24/shared';
-import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany, Unique } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, Unique } from 'typeorm';
 import { Behavior } from '../behavior/behavior.entity';
 import { BaseIdCreatedUpdatedDeletedEntity } from '../../common/entities/base.entity';
 import { User } from '../user/user.entity';
 
-@Index('idx_goals_user_id', ['user'])
 @Entity({ name: 'goals' })
 @Unique('uq_goals_userId_title', ['user', 'title'])
 export class Goal extends BaseIdCreatedUpdatedDeletedEntity {
