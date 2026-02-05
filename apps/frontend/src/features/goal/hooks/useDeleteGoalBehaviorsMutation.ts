@@ -13,6 +13,7 @@ export function useDeleteGoalBehaviors() {
     onSuccess: (_, { goalId }) => {
       queryClient.invalidateQueries({ queryKey: ['goalBehaviors', goalId] });
       queryClient.invalidateQueries({ queryKey: ['todayBehaviors'] });
+      queryClient.invalidateQueries({ queryKey: ['goals'] });
     },
 
     onError: () => {
