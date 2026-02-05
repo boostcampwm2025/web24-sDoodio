@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { useGoalBehaviors } from '@/features/goal/hooks/useGoalBehaviors';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AllGoalsPage } from './AllGoalsPage';
 
@@ -14,18 +13,9 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-vi.mock('@/features/goal/hooks/useGoals');
-vi.mock('@/features/goal/hooks/useGoalBehaviors', () => ({
-  useGoalBehaviors: vi.fn(),
-}));
-
 describe('AllGoalsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (useGoalBehaviors as unknown as ReturnType<typeof vi.fn>).mockReturnValue({
-      behaviors: [],
-      isLoading: false,
-    });
   });
 
   it('목표 로딩 중일 때 로딩 문구를 보여준다', () => {

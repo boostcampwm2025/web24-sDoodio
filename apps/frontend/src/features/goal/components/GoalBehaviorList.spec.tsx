@@ -1,16 +1,16 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Behavior } from '@web24/shared';
-import { useGoalBehaviors } from '../hooks/useGoalBehaviors';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GoalBehaviorList } from './GoalBehaviorList';
 
-vi.mock('../hooks/useGoalBehaviors', () => ({
-  useGoalBehaviors: vi.fn(),
-}));
-
 describe('GoalBehaviorList', () => {
+  let queryClient: any;
+
   beforeEach(() => {
     vi.clearAllMocks();
+
+    queryClient = new QueryClient();
   });
 
   it('전체 필터에서 모든 행동과 건수를 표시한다', () => {
@@ -20,20 +20,10 @@ describe('GoalBehaviorList', () => {
       { id: 'b3', title: 'AI 추천', difficulty: 'AI' },
     ];
 
-    vi.mocked(useGoalBehaviors).mockReturnValue({
-      behaviors: mockBehaviors,
-      isLoading: false,
-      error: null,
-      refetch: async () => {},
-    });
-
     render(
-      <GoalBehaviorList
-        goalId="goal-1"
-        behaviors={mockBehaviors}
-        isLoading={false}
-        onRefetch={() => {}}
-      />,
+      <QueryClientProvider client={queryClient}>
+        <GoalBehaviorList goalId="goal-1" behaviors={mockBehaviors} isLoading={false} />
+      </QueryClientProvider>,
     );
 
     expect(screen.getByRole('button', { name: /전체 3/ })).toBeInTheDocument();
@@ -48,20 +38,10 @@ describe('GoalBehaviorList', () => {
       { id: 'b2', title: '스트레칭 5분', difficulty: '시작하기' },
     ];
 
-    vi.mocked(useGoalBehaviors).mockReturnValue({
-      behaviors: mockBehaviors,
-      isLoading: false,
-      error: null,
-      refetch: async () => {},
-    });
-
     render(
-      <GoalBehaviorList
-        goalId="goal-1"
-        behaviors={mockBehaviors}
-        isLoading={false}
-        onRefetch={() => {}}
-      />,
+      <QueryClientProvider client={queryClient}>
+        <GoalBehaviorList goalId="goal-1" behaviors={mockBehaviors} isLoading={false} />
+      </QueryClientProvider>,
     );
 
     fireEvent.click(screen.getByRole('button', { name: /시작하기/ }));

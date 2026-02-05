@@ -5,10 +5,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { GoalCard } from './GoalCard';
 
-vi.mock('../hooks/useGoalBehaviors', () => ({
-  useGoalBehaviors: vi.fn(),
-}));
-
 describe('GoalCard', () => {
   const mockGoal: GoalSummary = {
     id: 'goal-1',
