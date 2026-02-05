@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import {
   BEHAVIOR_DIFFICULTIES,
   BEHAVIOR_TITLE_MAX_LENGTH,
@@ -8,6 +8,7 @@ import { BaseIdCreatedUpdatedDeletedEntity } from '../../common/entities/base.en
 import { Goal } from '../goal/goal.entity';
 import { TodayBehavior } from './today-behavior.entity';
 
+@Index('idx_behaviors_goal_id', ['goal'])
 @Entity({ name: 'behaviors' })
 export class Behavior extends BaseIdCreatedUpdatedDeletedEntity {
   @ManyToOne(() => Goal, (goal) => goal.behaviors, {
