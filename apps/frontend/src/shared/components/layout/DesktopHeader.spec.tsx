@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import useAuthStore from '@/stores/useAuthStore';
+import { MENU_ITEMS } from '@/shared/constants/menu';
 import DesktopHeader from './DesktopHeader';
 
 // Mock dependencies
@@ -27,8 +28,10 @@ describe('DesktopHeader', () => {
 
   it('렌더링 시 로고와 메뉴가 표시된다', () => {
     render(<DesktopHeader />);
-    expect(screen.getByText('뚜웰')).toBeInTheDocument();
-    // Assuming MENU_ITEMS has items like '홈', etc. (based on typical app structure, actually checked file content but don't know MENU_ITEMS values exactly without looking at constants. But we saw code iterating MENU_ITEMS. Let's assume basic rendering works)
+    expect(screen.getByText('Doowell')).toBeInTheDocument();
+    MENU_ITEMS.forEach((item) => {
+      expect(screen.getByText(item.label)).toBeInTheDocument();
+    });
   });
 
   it('프로필 아이콘 클릭 시 드롭다운 메뉴가 열린다', () => {
