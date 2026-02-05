@@ -16,6 +16,7 @@ import { useDeleteTodayBehaviorMutation } from '@/features/behavior/hooks/useDel
 import { useRefreshTodayBehaviorsMutation } from '@/features/behavior/hooks/useRefreshTodayBehaviorsMutation';
 import { useGoalsQuery } from '@/features/goal/hooks/useGoalsQuery';
 import { useTodayBehaviorsQuery } from '@/features/behavior/hooks/useTodayBehaviorsQuery';
+import { useTodayBehaviorsDisplay } from '@/features/behavior/hooks/useTodayBehaviorsDisplay';
 
 export function IndexPage() {
   const { data: behaviors = [] } = useTodayBehaviorsQuery();
@@ -79,26 +80,15 @@ export function IndexPage() {
     }
   };
 
+  const { displayBehaviors, handleBehaviorToggle } = useTodayBehaviorsDisplay({
+    behaviors,
+    toggleMutation,
+    handleRewardInteraction,
+  });
+
   const toggleAIBehaviorIsChecked = (behaviorId: string) => {
     setAIBehaviors((bs) =>
       bs.map((b) => (b.id === behaviorId ? { ...b, isChecked: !b.isChecked } : b)),
-    );
-  };
-
-  const handleBehaviorToggle = (id: string) => {
-    const target = behaviors.find((b) => b.id === id);
-    if (!target) return;
-
-    const nextStatus = target.isChecked ? 'pending' : 'completed';
-    toggleMutation.mutate(
-      { id, nextStatus },
-      {
-        onSuccess: () => {
-          if (nextStatus === 'completed') {
-            handleRewardInteraction(target.goalTemplateId);
-          }
-        },
-      },
     );
   };
 
@@ -155,7 +145,7 @@ export function IndexPage() {
       {/* 오늘의 행동 */}
       <TodayBehaviorList
         goals={goals}
-        behaviors={behaviors}
+        behaviors={displayBehaviors}
         onToggle={handleBehaviorToggle}
         onRefresh={handleRefreshTodayBehaviors}
         onDelete={handleBehaviorDelete}
