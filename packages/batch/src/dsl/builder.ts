@@ -1,4 +1,5 @@
 /* eslint-disable max-classes-per-file */
+import { Injectable } from '@nestjs/common';
 import type { Job } from '../core/job-registry';
 import type { Step, ItemReader, ItemProcessor, ItemWriter } from '../step/step.interface';
 import { ChunkStep, type ChunkStepOptions } from '../step/chunk-step';
@@ -20,6 +21,7 @@ export class JobBuilder {
   }
 }
 
+@Injectable()
 export class StepFactory {
   constructor(
     private readonly repo: JobRepository,

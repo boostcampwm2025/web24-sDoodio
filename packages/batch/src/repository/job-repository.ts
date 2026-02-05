@@ -193,7 +193,7 @@ export class JobRepository {
       .insert()
       .into(ExecutionContextEntity)
       .values({ scope, scopeId, context })
-      .orUpdate(['context', 'updatedAt'], ['scope', 'scopeId'])
+      .orUpdate(['context', 'updated_at'], ['scope', 'scope_id'])
       .execute();
   }
 }
