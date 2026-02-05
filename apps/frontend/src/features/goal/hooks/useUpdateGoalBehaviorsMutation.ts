@@ -13,6 +13,7 @@ export function useUpdateGoalBehaviors() {
 
     onSuccess: (_, { goalId }) => {
       queryClient.invalidateQueries({ queryKey: ['goalBehaviors', goalId] });
+      queryClient.invalidateQueries({ queryKey: ['todayBehaviors'] });
     },
 
     onError: () => {

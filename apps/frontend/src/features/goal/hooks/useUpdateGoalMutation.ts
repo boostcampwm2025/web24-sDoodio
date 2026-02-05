@@ -9,6 +9,7 @@ export function useUpdateGoalMutation(goalId: string) {
     mutationFn: (payload: UpdateGoalRequest) => updateGoal(goalId, payload),
     onSuccess: (updatedGoal) => {
       queryClient.setQueryData(['goal', goalId], updatedGoal);
+      queryClient.invalidateQueries({ queryKey: ['goals'] });
     },
   });
 }
