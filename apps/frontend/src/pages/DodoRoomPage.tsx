@@ -31,7 +31,7 @@ export function DodoRoomPage() {
         <section className="bg-bg-light/80 relative flex max-h-[55vh] flex-1 items-center justify-center overflow-hidden rounded-3xl border border-transparent p-4 md:min-w-92">
           <img
             src="/BlueAndWhiteRoom.webp"
-            alt="두두의 방 파란색 배경"
+            alt=""
             aria-hidden="true"
             className="absolute inset-0 h-full w-full object-cover"
             fetchPriority="high"

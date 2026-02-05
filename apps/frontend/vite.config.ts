@@ -25,6 +25,8 @@ export default defineConfig({
         'DodoWink.webp',
         'DodoSitdown.webp',
         'DodoHurray.webp',
+        'OnBoardingGoalAndBehavior.webp',
+        'OnBoardingTodayBehavior.webp',
       ],
       manifest: {
         name: '뚜웰',
@@ -83,7 +85,7 @@ export default defineConfig({
       filename: 'stats.html',
       gzipSize: true,
       brotliSize: true,
-    }) as any,
+    }) as any, // HACK: rollup-plugin-visualizer는 Rollup의 Plugin 타입을 반환하여 Vite의 Plugin 타입과 호환되지 않을 수 있어 any로
   ],
   build: {
     commonjsOptions: {
