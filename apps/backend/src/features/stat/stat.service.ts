@@ -8,7 +8,7 @@ import {
   TODAY_BEHAVIOR_ORIGIN,
   TodayBehaviorOrigin,
 } from '@web24/shared';
-import pLimit from 'p-limit';
+import { BatchRunnerService } from '@web24/batch';
 import { CronWithSlackNotification } from '../../common/decorators/cron-with-slack-notification.decorator';
 import { SlackService } from '../../common/slack/slack.service';
 import { addDays, getKstDayKey, toKstBoundary } from '../../common/utils/time.utils';
@@ -24,7 +24,6 @@ import {
   GoalCompletedTopNCount,
 } from './daily-user-stat.entity';
 import { EVENT_TYPES, StatEventLog, StatEventType } from './stat-event-log.entity';
-import { User } from '../user/user.entity';
 import { TodayBehavior } from '../behavior/today-behavior.entity';
 import { Goal } from '../goal/goal.entity';
 import { Behavior } from '../behavior/behavior.entity';
@@ -36,8 +35,6 @@ export class StatService {
   private readonly WEEK_DAYS = 7;
 
   constructor(
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
     @InjectRepository(TodayBehavior)
     private readonly todayBehaviorRepository: Repository<TodayBehavior>,
     @InjectRepository(DailyUserStat)
@@ -48,6 +45,7 @@ export class StatService {
     private readonly goalRepository: Repository<Goal>,
     @InjectRepository(Behavior)
     private readonly behaviorRepository: Repository<Behavior>,
+    private readonly batchRunnerService: BatchRunnerService,
     private readonly slackNotifyService: SlackService,
   ) {}
 
@@ -165,103 +163,98 @@ export class StatService {
     timeZone: 'Asia/Seoul',
   })
   async calculateDailyUserStats() {
-    const users = await this.userRepository.find();
-
-    const yesterDayKey = getKstDayKey(addDays(new Date(), -1));
     const todayKey = getKstDayKey(new Date());
+    const yesterDayKey = getKstDayKey(addDays(new Date(), -1));
     const weekStartKey = getKstDayKey(addDays(new Date(), -this.WEEK_DAYS));
 
-    const limit = pLimit(5);
-
-    await Promise.all(
-      users.map((user) =>
-        limit(async () => {
-          const [
-            totalCompletedCounts,
-            behaviorCompletedTopNCounts,
-            goalCompletedTopNCounts,
-            dailyDifficultyCompletedCounts,
-            weeklyDifficultyCompletedCounts,
-            totalDifficultyCompletedCounts,
-            weeklyDailyDifficultyCompletedCounts,
-            goalCompletedCounts,
-            originCompletedCounts,
-            notDoneCounts,
-            completionTimeBuckets,
-            checkInTotal,
-            duduCatchTotal,
-            refreshTotal,
-            completedInWeek,
-            goalCount,
-            behaviorCount,
-          ] = await Promise.all([
-            this.calcTotalCompletedCounts(user, yesterDayKey),
-            this.calcBehaviorCompletedTopNCounts(user, yesterDayKey),
-            this.calcGoalCompletedTopNCounts(user, yesterDayKey),
-
-            this.countByDifficulty(user.id, yesterDayKey, yesterDayKey),
-            this.countByDifficulty(user.id, weekStartKey, yesterDayKey),
-            this.countByDifficulty(user.id, undefined, yesterDayKey),
-
-            this.calcweeklyDailyDifficultyCompletedCounts(user.id, weekStartKey, yesterDayKey),
-            this.calcGoalCompletedCounts(user.id, yesterDayKey),
-
-            this.calcOriginCompletedCounts(user.id, weekStartKey, yesterDayKey),
-            this.calcNotDoneCounts(user.id, weekStartKey, yesterDayKey),
-            this.calcCompletionTimeBuckets(user.id, weekStartKey, yesterDayKey),
-
-            this.countEvent(user.id, EVENT_TYPES.CHECK_IN, weekStartKey, yesterDayKey),
-            this.countEvent(user.id, EVENT_TYPES.DUDU_CATCH, weekStartKey, yesterDayKey),
-            this.countEvent(
-              user.id,
-              EVENT_TYPES.REFRESH_TODAY_BEHAVIORS,
-              weekStartKey,
-              yesterDayKey,
-            ),
-
-            this.countCompletedInRange(user.id, weekStartKey, yesterDayKey),
-
-            this.goalRepository.count({ where: { user: { id: user.id } } }),
-            this.behaviorRepository.count({ where: { goal: { user: { id: user.id } } } }),
-          ]);
-
-          const avgRefreshPerDay = Number((refreshTotal / this.WEEK_DAYS).toFixed(2));
-          const avgCompletedPerDay = Number((completedInWeek / this.WEEK_DAYS).toFixed(2));
-
-          const goalCountDegree = this.calcGoalDegree(goalCount);
-          const behaviorCountDegree = this.calcBehaviorDegree(behaviorCount);
-
-          await this.dailyUserStatRepository.upsert(
-            {
-              user: { id: user.id },
-              statDate: todayKey,
-              totalCompletedCounts,
-              behaviorCompletedTopNCounts,
-              goalCompletedTopNCounts,
-              goalCompletedCounts,
-              weeklyDailyDifficultyCompletedCounts,
-              dailyDifficultyCompletedCounts,
-              weeklyDifficultyCompletedCounts,
-              totalDifficultyCompletedCounts,
-              originCompletedCounts,
-              notDoneCounts,
-              completionTimeBuckets,
-              checkInTotal,
-              duduCatchTotal,
-              goalCountDegree,
-              behaviorCountDegree,
-              avgRefreshPerDay,
-              avgCompletedPerDay,
-            },
-            ['user', 'statDate'],
-          );
-        }),
-      ),
-    );
+    await this.batchRunnerService.run('daily_user_stat', {
+      todayKey,
+      yesterDayKey,
+      weekStartKey,
+    });
   }
 
-  private async calcTotalCompletedCounts(user: User, end?: string) {
-    const where = { user: { id: user.id }, status: 'completed' } as FindOptionsWhere<TodayBehavior>;
+  async buildDailyUserStatInput(
+    userId: string,
+    keys: { yesterDayKey: string; todayKey: string; weekStartKey: string },
+  ) {
+    const { yesterDayKey, todayKey, weekStartKey } = keys;
+
+    const [
+      totalCompletedCounts,
+      behaviorCompletedTopNCounts,
+      goalCompletedTopNCounts,
+      dailyDifficultyCompletedCounts,
+      weeklyDifficultyCompletedCounts,
+      totalDifficultyCompletedCounts,
+      weeklyDailyDifficultyCompletedCounts,
+      goalCompletedCounts,
+      originCompletedCounts,
+      notDoneCounts,
+      completionTimeBuckets,
+      checkInTotal,
+      duduCatchTotal,
+      refreshTotal,
+      completedInWeek,
+      goalCount,
+      behaviorCount,
+    ] = await Promise.all([
+      this.calcTotalCompletedCounts(userId, yesterDayKey),
+      this.calcBehaviorCompletedTopNCounts(userId, yesterDayKey),
+      this.calcGoalCompletedTopNCounts(userId, yesterDayKey),
+
+      this.countByDifficulty(userId, yesterDayKey, yesterDayKey),
+      this.countByDifficulty(userId, weekStartKey, yesterDayKey),
+      this.countByDifficulty(userId, undefined, yesterDayKey),
+
+      this.calcweeklyDailyDifficultyCompletedCounts(userId, weekStartKey, yesterDayKey),
+      this.calcGoalCompletedCounts(userId, yesterDayKey),
+
+      this.calcOriginCompletedCounts(userId, weekStartKey, yesterDayKey),
+      this.calcNotDoneCounts(userId, weekStartKey, yesterDayKey),
+      this.calcCompletionTimeBuckets(userId, weekStartKey, yesterDayKey),
+
+      this.countEvent(userId, EVENT_TYPES.CHECK_IN, weekStartKey, yesterDayKey),
+      this.countEvent(userId, EVENT_TYPES.DUDU_CATCH, weekStartKey, yesterDayKey),
+      this.countEvent(userId, EVENT_TYPES.REFRESH_TODAY_BEHAVIORS, weekStartKey, yesterDayKey),
+
+      this.countCompletedInRange(userId, weekStartKey, yesterDayKey),
+
+      this.goalRepository.count({ where: { user: { id: userId } } }),
+      this.behaviorRepository.count({ where: { goal: { user: { id: userId } } } }),
+    ]);
+
+    const avgRefreshPerDay = Number((refreshTotal / this.WEEK_DAYS).toFixed(2));
+    const avgCompletedPerDay = Number((completedInWeek / this.WEEK_DAYS).toFixed(2));
+
+    const goalCountDegree = this.calcGoalDegree(goalCount);
+    const behaviorCountDegree = this.calcBehaviorDegree(behaviorCount);
+
+    return {
+      user: { id: userId },
+      statDate: todayKey,
+      totalCompletedCounts,
+      behaviorCompletedTopNCounts,
+      goalCompletedTopNCounts,
+      goalCompletedCounts,
+      weeklyDailyDifficultyCompletedCounts,
+      dailyDifficultyCompletedCounts,
+      weeklyDifficultyCompletedCounts,
+      totalDifficultyCompletedCounts,
+      originCompletedCounts,
+      notDoneCounts,
+      completionTimeBuckets,
+      checkInTotal,
+      duduCatchTotal,
+      goalCountDegree,
+      behaviorCountDegree,
+      avgRefreshPerDay,
+      avgCompletedPerDay,
+    };
+  }
+
+  private async calcTotalCompletedCounts(userId: string, end?: string) {
+    const where = { user: { id: userId }, status: 'completed' } as FindOptionsWhere<TodayBehavior>;
     if (end) {
       where.date = LessThanOrEqual(end);
     }
@@ -269,14 +262,14 @@ export class StatService {
     return totalCompletedCounts;
   }
 
-  private async calcBehaviorCompletedTopNCounts(user: User, end?: string) {
+  private async calcBehaviorCompletedTopNCounts(userId: string, end?: string) {
     const topRowsQuery = this.todayBehaviorRepository
       .createQueryBuilder('tb')
       .innerJoin('tb.behavior', 'behavior')
       .select('behavior.id', 'behaviorId')
       .addSelect('behavior.title', 'behaviorTitle')
       .addSelect('COUNT(*)', 'count')
-      .where('tb.userId = :userId', { userId: user.id })
+      .where('tb.userId = :userId', { userId })
       .andWhere('tb.status = :status', { status: 'completed' })
       .groupBy('behavior.id')
       .addGroupBy('behavior.title')
@@ -296,7 +289,7 @@ export class StatService {
     return behaviorCompletedTopN;
   }
 
-  private async calcGoalCompletedTopNCounts(user: User, end?: string) {
+  private async calcGoalCompletedTopNCounts(userId: string, end?: string) {
     const rowsQuery = this.todayBehaviorRepository
       .createQueryBuilder('tb')
       .innerJoin('tb.behavior', 'behavior')
@@ -306,7 +299,7 @@ export class StatService {
       .addSelect('behavior.id', 'behaviorId')
       .addSelect('behavior.title', 'behaviorTitle')
       .addSelect('COUNT(*)', 'count')
-      .where('tb.userId = :userId', { userId: user.id })
+      .where('tb.userId = :userId', { userId })
       .andWhere('tb.status = :status', { status: 'completed' })
       .groupBy('goal.id')
       .addGroupBy('goal.title')
