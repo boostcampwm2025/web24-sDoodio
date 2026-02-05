@@ -1,0 +1,59 @@
+{
+  "name": "@web24/batch",
+  "version": "0.0.0",
+  "private": true,
+  "type": "commonjs",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "default": "./dist/cjs/index.js"
+    },
+    "./migrations/*": {
+      "default": "./migrations/*"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
+  "files": [
+    "dist",
+    "migrations",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "pnpm run build:types && pnpm run build:cjs && pnpm run build:esm",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:esm": "tsc -p tsconfig.esm.json && node ./scripts/write-esm-package-json.cjs",
+    "build:types": "tsc -p tsconfig.types.json",
+    "dev": "pnpm -w exec concurrently \"pnpm --filter @web24/batch run dev:types\" \"pnpm --filter @web24/batch run dev:cjs\" \"pnpm --filter @web24/batch run dev:esm\"",
+    "dev:cjs": "tsc -p tsconfig.cjs.json --watch",
+    "dev:esm": "node ./scripts/write-esm-package-json.cjs && tsc -p tsconfig.esm.json --watch",
+    "dev:types": "tsc -p tsconfig.types.json --watch",
+    "clean": "rimraf dist",
+    "typecheck": "tsc -p tsconfig.types.json --noEmit"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/typeorm": "^11.0.0",
+    "reflect-metadata": "^0.2.0",
+    "rxjs": "^7.8.0",
+    "typeorm": "^0.3.0"
+  },
+  "devDependencies": {
+    "@nestjs/common": "^11.0.1",
+    "@nestjs/core": "^11.0.1",
+    "@nestjs/typeorm": "^11.0.0",
+    "@types/node": "^22.19.8",
+    "concurrently": "^9.1.0",
+    "reflect-metadata": "^0.2.2",
+    "rimraf": "^6.0.1",
+    "rxjs": "^7.8.1",
+    "typeorm": "^0.3.28",
+    "typescript": "^5.7.3"
+  }
+}

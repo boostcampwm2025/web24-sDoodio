@@ -16,6 +16,7 @@ const tsconfigProjects = [
   './apps/frontend/tsconfig.eslint.json',
   './apps/backend/tsconfig.eslint.json',
   './packages/shared/tsconfig.json',
+  './packages/batch/tsconfig.json',
 ];
 
 export default [
