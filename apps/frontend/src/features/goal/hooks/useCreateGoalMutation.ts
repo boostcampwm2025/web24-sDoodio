@@ -11,6 +11,7 @@ export function useCreateGoal() {
     mutationFn: createGoal,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['goals'] });
+      queryClient.invalidateQueries({ queryKey: ['todayBehaviors'] });
     },
 
     onError: (error: unknown) => {

@@ -14,6 +14,7 @@ export function useCreateGoalBehaviors() {
     onSuccess: (_, { goalId }) => {
       queryClient.invalidateQueries({ queryKey: ['goalBehaviors', goalId] });
       queryClient.invalidateQueries({ queryKey: ['goals'] });
+      queryClient.invalidateQueries({ queryKey: ['todayBehaviors'] });
     },
 
     onError: () => {

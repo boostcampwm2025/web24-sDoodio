@@ -19,7 +19,8 @@ import { useTodayBehaviorsQuery } from '@/features/behavior/hooks/useTodayBehavi
 import { useTodayBehaviorsDisplay } from '@/features/behavior/hooks/useTodayBehaviorsDisplay';
 
 export function IndexPage() {
-  const { data: behaviors = [] } = useTodayBehaviorsQuery();
+  const { user } = useAuthStore();
+  const { data: behaviors = [] } = useTodayBehaviorsQuery(user?.id);
   const { data: goals = [] } = useGoalsQuery();
 
   const toggleMutation = useToggleTodayBehaviorMutation();
@@ -37,7 +38,6 @@ export function IndexPage() {
   const heroRef = useRef<HTMLDivElement>(null);
   const [isHeroVisible, setIsHeroVisible] = useState(true);
 
-  const { user } = useAuthStore();
   useAutoWebPushSubscribe({ enabled: !!user, mode: 'silent' });
 
   const headerHeightValue = getComputedStyle(document.documentElement)

@@ -34,6 +34,12 @@ vi.mock('@/features/behavior/apis/fetchBehaviors.api', () => ({
   ]),
 }));
 
+vi.mock('@/stores/useAuthStore', () => ({
+  default: () => ({
+    user: { id: 'user-1' },
+  }),
+}));
+
 vi.mock('@/features/goal/apis/fetchGoals.api', () => ({
   fetchGoals: vi.fn().mockResolvedValue([
     {
