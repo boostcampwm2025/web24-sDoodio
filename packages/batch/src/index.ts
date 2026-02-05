@@ -3,6 +3,7 @@ export * from './batch.module';
 export * from './core/types';
 export * from './core/execution-context';
 export * from './core/job-registry';
+export * from './core/tokens';
 export * from './core/runner.service';
 
 export * from './step/step.interface';

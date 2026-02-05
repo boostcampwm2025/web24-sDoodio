@@ -1,23 +1,29 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { Inject, Injectable } from '@nestjs/common';
 import type { EntityManager } from 'typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { createHash } from 'node:crypto';
 import type { CountsDelta, JobParameters, JobStatus } from '../core/types';
 import { ExecutionContext } from '../core/execution-context';
 import { ExecutionContextEntity } from './entities/execution-context.entity';
 import { JobExecutionEntity } from './entities/job-execution.entity';
 import { StepExecutionEntity } from './entities/step-execution.entity';
+import { BATCH_DATA_SOURCE } from '../core/tokens';
 
 @Injectable()
 export class JobRepository {
-  constructor(
-    @InjectRepository(JobExecutionEntity) private readonly jobRepo: Repository<JobExecutionEntity>,
-    @InjectRepository(StepExecutionEntity)
-    private readonly stepRepo: Repository<StepExecutionEntity>,
-    @InjectRepository(ExecutionContextEntity)
-    private readonly ctxRepo: Repository<ExecutionContextEntity>,
-  ) {}
+  constructor(@Inject(BATCH_DATA_SOURCE) private readonly dataSource: DataSource) {}
+
+  private jobRepo(manager?: EntityManager): Repository<JobExecutionEntity> {
+    return (manager ?? this.dataSource.manager).getRepository(JobExecutionEntity);
+  }
+
+  private stepRepo(manager?: EntityManager): Repository<StepExecutionEntity> {
+    return (manager ?? this.dataSource.manager).getRepository(StepExecutionEntity);
+  }
+
+  private ctxRepo(manager?: EntityManager): Repository<ExecutionContextEntity> {
+    return (manager ?? this.dataSource.manager).getRepository(ExecutionContextEntity);
+  }
 
   // eslint-disable-next-line class-methods-use-this
   hashParams(params: JobParameters): string {
@@ -32,7 +38,7 @@ export class JobRepository {
   async startJob(jobName: string, params: JobParameters): Promise<JobExecutionEntity> {
     const paramsHash = this.hashParams(params);
 
-    const job = this.jobRepo.create({
+    const job = this.jobRepo().create({
       jobName,
       paramsHash,
       params,
@@ -42,7 +48,7 @@ export class JobRepository {
       exitMessage: null,
     });
 
-    const saved = await this.jobRepo.save(job);
+    const saved = await this.jobRepo().save(job);
 
     // job context (optional, but nice)
     await this.upsertContext('JOB', saved.id, {});
@@ -50,14 +56,14 @@ export class JobRepository {
   }
 
   async completeJob(jobExecId: string): Promise<void> {
-    await this.jobRepo.update(
+    await this.jobRepo().update(
       { id: jobExecId },
       { status: 'COMPLETED', endedAt: new Date(), exitMessage: null },
     );
   }
 
   async failJob(jobExecId: string, message: string): Promise<void> {
-    await this.jobRepo.update(
+    await this.jobRepo().update(
       { id: jobExecId },
       { status: 'FAILED', endedAt: new Date(), exitMessage: message?.slice(0, 4000) ?? 'FAILED' },
     );
@@ -65,7 +71,7 @@ export class JobRepository {
 
   async startStep(jobExecId: string, stepName: string): Promise<StepExecutionEntity> {
     // unique(jobExecId, stepName) -> restart 시 기존 step exec 계속 쓰게끔
-    const existing = await this.stepRepo.findOne({
+    const existing = await this.stepRepo().findOne({
       where: { jobExecutionId: jobExecId, stepName },
     });
 
@@ -73,7 +79,7 @@ export class JobRepository {
       // 이미 완료된 step이면 재실행 막고 싶으면 여기서 체크
       if (existing.status === 'COMPLETED') return existing;
 
-      await this.stepRepo.update(
+      await this.stepRepo().update(
         { id: existing.id },
         {
           status: 'STARTED',
@@ -82,10 +88,10 @@ export class JobRepository {
           exitMessage: null,
         },
       );
-      return this.stepRepo.findOneOrFail({ where: { id: existing.id } });
+      return this.stepRepo().findOneOrFail({ where: { id: existing.id } });
     }
 
-    const step = this.stepRepo.create({
+    const step = this.stepRepo().create({
       jobExecutionId: jobExecId,
       stepName,
       status: 'STARTED',
@@ -97,21 +103,21 @@ export class JobRepository {
       skipCount: 0,
       commitCount: 0,
     });
-    const saved = await this.stepRepo.save(step);
+    const saved = await this.stepRepo().save(step);
 
     await this.upsertContext('STEP', saved.id, {});
     return saved;
   }
 
   async completeStep(stepExecId: string): Promise<void> {
-    await this.stepRepo.update(
+    await this.stepRepo().update(
       { id: stepExecId },
       { status: 'COMPLETED', endedAt: new Date(), exitMessage: null },
     );
   }
 
   async failStep(stepExecId: string, message: string): Promise<void> {
-    await this.stepRepo.update(
+    await this.stepRepo().update(
       { id: stepExecId },
       { status: 'FAILED', endedAt: new Date(), exitMessage: message?.slice(0, 4000) ?? 'FAILED' },
     );
@@ -123,7 +129,7 @@ export class JobRepository {
     manager?: EntityManager,
   ): Promise<void> {
     // atomic increment (query builder)
-    const repo = manager?.getRepository(StepExecutionEntity) ?? this.stepRepo;
+    const repo = manager?.getRepository(StepExecutionEntity) ?? this.stepRepo();
     const qb = repo
       .createQueryBuilder()
       .update(StepExecutionEntity)
@@ -140,12 +146,12 @@ export class JobRepository {
   }
 
   async getStepStatus(stepExecId: string): Promise<JobStatus> {
-    const step = await this.stepRepo.findOneOrFail({ where: { id: stepExecId } });
+    const step = await this.stepRepo().findOneOrFail({ where: { id: stepExecId } });
     return step.status;
   }
 
   async loadStepContext(stepExecId: string): Promise<ExecutionContext> {
-    const row = await this.ctxRepo.findOne({ where: { scope: 'STEP', scopeId: stepExecId } });
+    const row = await this.ctxRepo().findOne({ where: { scope: 'STEP', scopeId: stepExecId } });
     return new ExecutionContext(row?.context ?? {});
   }
 
@@ -158,7 +164,7 @@ export class JobRepository {
   }
 
   async loadJobContext(jobExecId: string): Promise<ExecutionContext> {
-    const row = await this.ctxRepo.findOne({ where: { scope: 'JOB', scopeId: jobExecId } });
+    const row = await this.ctxRepo().findOne({ where: { scope: 'JOB', scopeId: jobExecId } });
     return new ExecutionContext(row?.context ?? {});
   }
 
@@ -181,7 +187,7 @@ export class JobRepository {
     manager?: EntityManager,
   ): Promise<void> {
     // ON CONFLICT (scope, scope_id) DO UPDATE
-    const repo = manager?.getRepository(ExecutionContextEntity) ?? this.ctxRepo;
+    const repo = manager?.getRepository(ExecutionContextEntity) ?? this.ctxRepo();
     await repo
       .createQueryBuilder()
       .insert()

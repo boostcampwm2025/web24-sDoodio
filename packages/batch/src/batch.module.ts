@@ -1,15 +1,13 @@
+import type { Provider } from '@nestjs/common';
 import { DynamicModule, Global, Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import type { InjectionToken } from '@nestjs/common/interfaces';
+import { getDataSourceToken } from '@nestjs/typeorm';
 import { DiscoveryModule } from '@nestjs/core';
-
-import { JobExecutionEntity } from './repository/entities/job-execution.entity';
-import { StepExecutionEntity } from './repository/entities/step-execution.entity';
-import { ExecutionContextEntity } from './repository/entities/execution-context.entity';
-import { JobLockEntity } from './repository/entities/job-lock.entity';
 
 import { JobRepository } from './repository/job-repository';
 import { TransactionRunner } from './transaction/transaction-runner';
 import { JobRegistry } from './core/job-registry';
+import { BATCH_DATA_SOURCE } from './core/tokens';
 import { BatchRunnerService } from './core/runner.service';
 import { StepFactory } from './dsl/builder';
 import { JobDiscoveryService } from './core/job-discovery.service';
@@ -20,26 +18,37 @@ export type BatchOptions = {
    * 기본 lock TTL (runner에서 옵션으로 override 가능)
    */
   defaultLockTtlSeconds?: number;
+  /**
+   * TypeORM DataSource provider token
+   * - 기본값: getDataSourceToken()
+   */
+  dataSourceToken?: InjectionToken;
 };
 
 @Global()
 @Module({})
 export class BatchModule {
   static forRoot(options: BatchOptions = {}): DynamicModule {
-    const entities = [
-      JobExecutionEntity,
-      StepExecutionEntity,
-      ExecutionContextEntity,
-      JobLockEntity,
-    ];
+    const batchDataSourceToken = getDataSourceToken();
+    const dataSourceToken = options.dataSourceToken ?? batchDataSourceToken;
+    const dataSourceProvider: Provider = {
+      provide: BATCH_DATA_SOURCE,
+      useExisting: dataSourceToken,
+    };
+    const dataSourceAliasProvider: Provider | null =
+      dataSourceToken === batchDataSourceToken
+        ? null
+        : {
+            provide: batchDataSourceToken,
+            useExisting: dataSourceToken,
+          };
 
     return {
       module: BatchModule,
-      imports: [
-        TypeOrmModule.forFeature(entities),
-        DiscoveryModule, // job auto-discovery
-      ],
+      imports: [DiscoveryModule], // job auto-discovery
       providers: [
+        dataSourceProvider,
+        ...(dataSourceAliasProvider ? [dataSourceAliasProvider] : []),
         JobRepository,
         TransactionRunner,
         LockService,
@@ -64,9 +73,7 @@ export class BatchModule {
         JobRepository,
         TransactionRunner,
         LockService,
-
-        // entities for app migrations/tests (optional)
-        TypeOrmModule,
+        BATCH_DATA_SOURCE,
       ],
     };
   }

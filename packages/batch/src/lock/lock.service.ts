@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { BatchError } from '../core/types';
+import { BATCH_DATA_SOURCE } from '../core/tokens';
 
 @Injectable()
 export class LockService {
-  constructor(private readonly dataSource: DataSource) {}
+  constructor(@Inject(BATCH_DATA_SOURCE) private readonly dataSource: DataSource) {}
 
   async withLock<T>(lockKey: string, ttlSeconds: number, fn: () => Promise<T>): Promise<T> {
     const acquired = await this.tryAcquire(lockKey, ttlSeconds);
