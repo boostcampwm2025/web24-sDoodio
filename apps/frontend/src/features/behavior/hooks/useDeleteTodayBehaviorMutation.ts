@@ -35,13 +35,6 @@ export function useDeleteTodayBehaviorMutation() {
       }
     },
 
-    // 성공 시
-    onSuccess: ({ id }) => {
-      queryClient.setQueryData<TodayBehavior[]>(['todayBehaviors'], (old = []) =>
-        old.filter((b) => b.id !== id),
-      );
-    },
-
     // 최종 동기화
     onSettled: () => {
       queryClient.invalidateQueries({

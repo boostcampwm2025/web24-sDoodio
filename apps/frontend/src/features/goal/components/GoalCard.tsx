@@ -23,8 +23,7 @@ export function GoalCard({
 }: GoalCardProps) {
   const { data: fetchedBehaviors } = useGoalBehaviorsQuery(goal.id, isOpen, propsBehaviors);
 
-  const behaviors =
-    fetchedBehaviors && fetchedBehaviors.length > 0 ? fetchedBehaviors : propsBehaviors || [];
+  const behaviors = fetchedBehaviors ?? propsBehaviors ?? [];
 
   return (
     <div

@@ -65,8 +65,6 @@ describe('GoalCard', () => {
   });
 
   it('열려 있고 props로 behaviors가 있으면 행동 리스트를 렌더링한다', () => {
-    queryClient.setQueryData(['goalBehaviors', 'goal-1'], []);
-
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>

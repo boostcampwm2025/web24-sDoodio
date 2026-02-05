@@ -90,7 +90,16 @@ export function IndexPage() {
     if (!target) return;
 
     const nextStatus = target.isChecked ? 'pending' : 'completed';
-    toggleMutation.mutate({ id, nextStatus });
+    toggleMutation.mutate(
+      { id, nextStatus },
+      {
+        onSuccess: () => {
+          if (nextStatus === 'completed') {
+            handleRewardInteraction(target.goalTemplateId);
+          }
+        },
+      },
+    );
   };
 
   const handleBehaviorDelete = (id: string) => {
