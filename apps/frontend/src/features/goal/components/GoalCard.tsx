@@ -21,7 +21,8 @@ export function GoalCard({
   onToggle,
   onNavigate,
 }: GoalCardProps) {
-  const { data: fetchedBehaviors } = useGoalBehaviorsQuery(goal.id, isOpen);
+  const { data: fetchedBehaviors } = useGoalBehaviorsQuery(goal.id, isOpen, propsBehaviors);
+
   const behaviors =
     fetchedBehaviors && fetchedBehaviors.length > 0 ? fetchedBehaviors : propsBehaviors || [];
 
