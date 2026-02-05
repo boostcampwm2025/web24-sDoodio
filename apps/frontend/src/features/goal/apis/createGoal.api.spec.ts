@@ -1,6 +1,8 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
 import type { CreateGoalRequest } from '@web24/shared';
 
+import { DomainError } from '@/shared/errors/domain-error';
+import { ERROR_MESSAGE_PREFIX } from '@web24/shared';
 import { createGoal } from './createGoal.api';
 
 describe('createGoal', () => {
@@ -58,6 +60,7 @@ describe('createGoal', () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: false,
       status: 500,
+      json: vi.fn().mockResolvedValue({ message: 'test' }),
     });
     vi.stubGlobal('fetch', fetchMock);
 
@@ -84,5 +87,23 @@ describe('createGoal', () => {
         behaviors: [{ title: '물 한 컵 마시기', difficulty: '마음열기' }],
       }),
     ).rejects.toThrow();
+  });
+
+  it('에러 메시지가 ERROR_MESSAGE_PREFIX로 시작하면 DomainError를 던진다', async () => {
+    const errorMessage = '이미 존재하는 목표입니다';
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: async () => ({ message: `${ERROR_MESSAGE_PREFIX}${errorMessage}` }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(
+      createGoal({
+        goalTitle: '건강',
+        goalColor: 'blue',
+        behaviors: [{ title: '물 한 컵 마시기', difficulty: '마음열기' }],
+      }),
+    ).rejects.toThrow(new DomainError(errorMessage));
   });
 });

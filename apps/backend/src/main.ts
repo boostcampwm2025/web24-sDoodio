@@ -1,13 +1,29 @@
+import * as Sentry from '@sentry/nestjs';
+import { nodeProfilingIntegration } from '@sentry/profiling-node';
 import { SwaggerModule } from '@nestjs/swagger';
 import type { OpenAPIObject } from '@nestjs/swagger';
 import { NestFactory } from '@nestjs/core';
+import { type NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import { HttpExceptionLoggingFilter } from './common/logger/http-exception.filter';
 import { LoggingInterceptor } from './common/logger/logging.interceptor';
 import { openApiDocument } from './common/docs/openapi';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.SENTRY_ENV ?? process.env.NODE_ENV ?? 'development',
+    release: process.env.SENTRY_RELEASE,
+    tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? 0.1),
+    profilesSampleRate: Number(process.env.SENTRY_PROFILES_SAMPLE_RATE ?? 0.01),
+    integrations: [nodeProfilingIntegration()],
+  });
+
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  if (process.env.NODE_ENV !== 'development') {
+    app.set('trust proxy', 1);
+  }
 
   if (process.env.NODE_ENV === 'development') {
     app.enableCors({

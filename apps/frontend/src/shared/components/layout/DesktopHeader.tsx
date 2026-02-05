@@ -1,17 +1,35 @@
 import { useScroll } from '@/shared/hooks/useScroll';
-import { Bell } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
 import { MENU_ITEMS } from '@/shared/constants/menu';
-import { toast } from 'react-toastify';
+import useAuthStore from '@/stores/useAuthStore';
 
 function DesktopHeader() {
   const navigate = useNavigate();
   const location = useLocation();
   const isScrolled = useScroll(10);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const { user, logout } = useAuthStore();
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isProfileOpen) {
+      return () => {};
+    }
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isProfileOpen]);
 
   return (
     <header
-      className={`bg-bg-normal border-bg-alternative fixed top-0 right-0 left-0 z-30 hidden justify-center border-b transition-all duration-300 ease-in-out md:flex ${isScrolled ? 'h-16 shadow-[var(--shadow-normal)]' : 'h-24 shadow-none'} `}
+      className={`bg-bg-normal border-bg-alternative fixed top-0 right-0 left-0 z-30 hidden justify-center border-b transition-all duration-300 ease-in-out md:flex ${isScrolled ? 'h-16 shadow-(--shadow-normal)' : 'h-24 shadow-none'} `}
     >
       <div className="flex h-full w-full max-w-5xl items-center justify-between px-8">
         {/* 로고 */}
@@ -20,10 +38,9 @@ function DesktopHeader() {
           className="flex cursor-pointer items-center gap-2"
           onClick={() => navigate('/')}
         >
-          <div className="bg-primary-strong text-bg-light flex h-8 w-8 items-center justify-center rounded-lg font-bold">
-            DW
-          </div>
-          <span className="text-heading-2 text-label-normal font-bold tracking-tight">뚜웰</span>
+          <span className="text-heading-2 text-label-disable font-bold tracking-tight">
+            Doowell
+          </span>
         </button>
 
         {/* 메뉴 */}
@@ -48,25 +65,43 @@ function DesktopHeader() {
 
         {/* 우측 아이콘 */}
         <div className="flex items-center gap-3">
-          <button
-            className="text-label-disable hover:text-label-normal relative p-2 transition-colors"
-            type="button"
-            onClick={() => {
-              toast('구현 예정입니다.');
-            }}
-          >
-            <Bell size={20} />
-            <span className="bg-goal-2 border-bg-light absolute top-2 right-2 h-1.5 w-1.5 rounded-full border" />
-          </button>
-          <button
-            className="hover:border-primary-strong text-label-2 text-label-alternative bg-bg-light border-primary-weak flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border font-bold transition-all"
-            type="button"
-            onClick={() => {
-              toast('구현 예정입니다.');
-            }}
-          >
-            U
-          </button>
+          {user ? (
+            <div className="relative" ref={profileRef}>
+              <button
+                className="hover:border-primary-strong text-label-2 text-label-alternative bg-bg-light border-primary-weak flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border font-bold transition-all"
+                type="button"
+                onClick={() => setIsProfileOpen((prev) => !prev)}
+              >
+                {user.nickname.charAt(0)}
+              </button>
+              {isProfileOpen && (
+                <div className="border-bg-alternative bg-bg-light shadow-emphasize absolute right-0 mt-2 w-36 overflow-hidden rounded-xl border">
+                  <button
+                    type="button"
+                    className="hover:bg-bg-alternative text-label-normal block w-full px-4 py-2 text-left text-sm transition-colors"
+                    onClick={() => {
+                      setIsProfileOpen(false);
+                      navigate('/mypage');
+                    }}
+                  >
+                    마이페이지
+                  </button>
+                  <div className="bg-bg-alternative h-px w-full" />
+                  <button
+                    type="button"
+                    className="hover:bg-bg-alternative block w-full px-4 py-2 text-left text-sm text-[#d84343] transition-colors"
+                    onClick={async () => {
+                      await logout();
+                      setIsProfileOpen(false);
+                      navigate('/login');
+                    }}
+                  >
+                    로그아웃
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : null}
         </div>
       </div>
     </header>

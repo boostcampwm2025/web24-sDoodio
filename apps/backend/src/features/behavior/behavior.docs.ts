@@ -1,9 +1,11 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
-import { z } from 'zod';
 import {
+  DeleteTodayBehaviorResponseSchema,
   GetAllBehaviorsResponseSchema,
   GetAIBehaviorResponseSchema,
   GetTodayBehaviorsResponseSchema,
+  PostTodayBehaviorRequestSchema,
+  PostTodayBehaviorResponseSchema,
   PatchAIBehaviorStatusRequestSchema,
   PatchAIBehaviorStatusResponseSchema,
   PostAIBehaviorResponseSchema,
@@ -11,7 +13,11 @@ import {
   PatchTodayBehaviorStatusResponseSchema,
 } from '@web24/shared';
 
-export function registerBehaviorApi(registry: OpenAPIRegistry) {
+type CommonSchemas = {
+  errorResponse: ReturnType<OpenAPIRegistry['register']>;
+};
+
+export function registerBehaviorApi(registry: OpenAPIRegistry, common: CommonSchemas) {
   const getTodayBehaviorsResponse = registry.register(
     'GetTodayBehaviorsResponse',
     GetTodayBehaviorsResponseSchema,
@@ -23,6 +29,14 @@ export function registerBehaviorApi(registry: OpenAPIRegistry) {
   const patchTodayBehaviorStatusResponse = registry.register(
     'PatchTodayBehaviorStatusResponse',
     PatchTodayBehaviorStatusResponseSchema,
+  );
+  const postTodayBehaviorRequest = registry.register(
+    'PostTodayBehaviorRequest',
+    PostTodayBehaviorRequestSchema,
+  );
+  const postTodayBehaviorResponse = registry.register(
+    'PostTodayBehaviorResponse',
+    PostTodayBehaviorResponseSchema,
   );
   const getAllBehaviorsResponse = registry.register(
     'GetAllBehaviorsResponse',
@@ -44,19 +58,18 @@ export function registerBehaviorApi(registry: OpenAPIRegistry) {
     'PatchAIBehaviorStatusResponse',
     PatchAIBehaviorStatusResponseSchema,
   );
-  const errorResponse = registry.register(
-    'ErrorResponse',
-    z.object({
-      statusCode: z.number().int(),
-      message: z.string(),
-      path: z.string(),
-      timestamp: z.string(),
-    }),
+
+  const { errorResponse } = common;
+
+  const deleteTodayBehaviorResponse = registry.register(
+    'DeleteTodayBehaviorResponse',
+    DeleteTodayBehaviorResponseSchema,
   );
 
   registry.registerPath({
     method: 'get',
     path: '/today-behaviors',
+    security: [{ sessionAuth: [] }],
     responses: {
       200: {
         description:
@@ -71,8 +84,65 @@ export function registerBehaviorApi(registry: OpenAPIRegistry) {
   });
 
   registry.registerPath({
+    method: 'post',
+    path: '/today-behaviors/refresh',
+    responses: {
+      200: {
+        description:
+          '오늘 행동을 새로 추출해 반환한다. 기존 pending은 skipped 처리하고, completed는 유지한다.',
+        content: {
+          'application/json': {
+            schema: getTodayBehaviorsResponse,
+          },
+        },
+      },
+    },
+  });
+
+  registry.registerPath({
+    method: 'post',
+    path: '/today-behaviors',
+    request: {
+      body: {
+        content: {
+          'application/json': {
+            schema: postTodayBehaviorRequest,
+          },
+        },
+      },
+    },
+    responses: {
+      200: {
+        description: '오늘 행동을 추가하고 전체 목록을 반환',
+        content: {
+          'application/json': {
+            schema: postTodayBehaviorResponse,
+          },
+        },
+      },
+      400: {
+        description: '이미 존재하거나 완료/AI 행동인 경우',
+        content: {
+          'application/json': {
+            schema: errorResponse,
+          },
+        },
+      },
+      404: {
+        description: 'User 또는 Behavior를 찾을 수 없음',
+        content: {
+          'application/json': {
+            schema: errorResponse,
+          },
+        },
+      },
+    },
+  });
+
+  registry.registerPath({
     method: 'get',
     path: '/today-behaviors/ai',
+    security: [{ sessionAuth: [] }],
     responses: {
       200: {
         description: '오늘 AI 행동 목록을 반환, 없으면 빈 리스트',
@@ -88,6 +158,7 @@ export function registerBehaviorApi(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: 'post',
     path: '/today-behaviors/ai',
+    security: [{ sessionAuth: [] }],
     responses: {
       200: {
         description:
@@ -104,6 +175,7 @@ export function registerBehaviorApi(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: 'patch',
     path: '/today-behaviors/ai/{id}/status',
+    security: [{ sessionAuth: [] }],
     request: {
       body: {
         content: {
@@ -136,6 +208,7 @@ export function registerBehaviorApi(registry: OpenAPIRegistry) {
   registry.registerPath({
     method: 'patch',
     path: '/today-behaviors/{id}/status',
+    security: [{ sessionAuth: [] }],
     request: {
       body: {
         content: {
@@ -167,8 +240,40 @@ export function registerBehaviorApi(registry: OpenAPIRegistry) {
   });
 
   registry.registerPath({
+    method: 'delete',
+    path: '/today-behaviors/{id}',
+    responses: {
+      200: {
+        description: 'Today behavior deleted',
+        content: {
+          'application/json': {
+            schema: deleteTodayBehaviorResponse,
+          },
+        },
+      },
+      400: {
+        description: 'Completed behavior cannot be deleted',
+        content: {
+          'application/json': {
+            schema: errorResponse,
+          },
+        },
+      },
+      404: {
+        description: 'Today behavior not found',
+        content: {
+          'application/json': {
+            schema: errorResponse,
+          },
+        },
+      },
+    },
+  });
+
+  registry.registerPath({
     method: 'get',
     path: '/behaviors/all',
+    security: [{ sessionAuth: [] }],
     responses: {
       200: {
         description: 'List of all behaviors',

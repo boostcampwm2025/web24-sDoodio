@@ -1,21 +1,25 @@
+version: '3.9'
+
 services:
   frontend:
     image: ghcr.io/boostcampwm2025/web24-sdoodio-frontend:staging
     container_name: web24-frontend-staging
     restart: unless-stopped
-    ports:
-      - "8081:8080"
-    depends_on:
-      - backend
+    expose:
+      - '8080'
+    networks:
+      - web-network
 
   backend:
     image: ghcr.io/boostcampwm2025/web24-sdoodio-backend:staging
     container_name: web24-backend-staging
     restart: unless-stopped
-    ports:
-      - "3001:3000"
+    expose:
+      - '3000'
     environment:
       NODE_ENV: production
+      NODE_OPTIONS: ${NODE_OPTIONS}
+      UV_THREADPOOL_SIZE: ${UV_THREADPOOL_SIZE}
       PORT: 3000
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
@@ -23,3 +27,24 @@ services:
       DB_PASS: ${DB_PASS}
       DB_NAME: ${DB_NAME}
       CLOVA_API_KEY: ${CLOVA_API_KEY}
+      SESSION_SECRET: ${SESSION_SECRET}
+      SESSION_MAX_AGE_MS: ${SESSION_MAX_AGE_MS}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
+      VAPID_SUBJECT: ${VAPID_SUBJECT}
+      SENTRY_DSN: ${SENTRY_DSN}
+      SENTRY_ENV: ${SENTRY_ENV}
+      SENTRY_RELEASE: ${SENTRY_RELEASE}
+      SENTRY_TRACES_SAMPLE_RATE: ${SENTRY_TRACES_SAMPLE_RATE}
+      SENTRY_PROFILES_SAMPLE_RATE: ${SENTRY_PROFILES_SAMPLE_RATE}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL}
+      FRONTEND_URL: ${FRONTEND_URL}
+      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}
+    networks:
+      - web-network
+
+networks:
+  web-network:
+    external: true

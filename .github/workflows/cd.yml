@@ -95,16 +95,37 @@ jobs:
             git fetch --all
             git checkout develop
             git pull
-            export DB_HOST="${{ secrets.STAGING_DB_HOST }}"
-            export DB_PORT="${{ secrets.STAGING_DB_PORT }}"
-            export DB_USER="${{ secrets.STAGING_DB_USER }}"
-            export DB_PASS="${{ secrets.STAGING_DB_PASS }}"
-            export DB_NAME="${{ secrets.STAGING_DB_NAME }}"
-            export CLOVA_API_KEY="${{ secrets.STAGING_CLOVA_API_KEY }}"
+            sed 's/^[[:space:]]*//' <<'EOF' > infra/staging/.env
+            DB_HOST=${{ secrets.STAGING_DB_HOST }}
+            DB_PORT=${{ secrets.STAGING_DB_PORT }}
+            DB_USER=${{ secrets.STAGING_DB_USER }}
+            DB_PASS=${{ secrets.STAGING_DB_PASS }}
+            DB_NAME=${{ secrets.STAGING_DB_NAME }}
+            CLOVA_API_KEY=${{ secrets.STAGING_CLOVA_API_KEY }}
+            SESSION_SECRET=${{ secrets.STAGING_SESSION_SECRET }}
+            SESSION_MAX_AGE_MS=${{ secrets.STAGING_SESSION_MAX_AGE_MS }}
+            NODE_OPTIONS=${{ secrets.STAGING_NODE_OPTIONS }}
+            UV_THREADPOOL_SIZE=${{ secrets.STAGING_UV_THREADPOOL_SIZE }}
+            SENTRY_DSN=${{ secrets.STAGING_SENTRY_DSN }}
+            SENTRY_ENV=staging
+            SENTRY_RELEASE=${{ github.sha }}
+            SENTRY_TRACES_SAMPLE_RATE=${{ secrets.STAGING_SENTRY_TRACES_SAMPLE_RATE }}
+            SENTRY_PROFILES_SAMPLE_RATE=${{ secrets.STAGING_SENTRY_PROFILES_SAMPLE_RATE }}
+            VAPID_PUBLIC_KEY=${{ secrets.STAGING_VAPID_PUBLIC_KEY }}
+            VAPID_PRIVATE_KEY=${{ secrets.STAGING_VAPID_PRIVATE_KEY }}
+            VAPID_SUBJECT=${{ secrets.STAGING_VAPID_SUBJECT }}
+            GOOGLE_CLIENT_ID=${{ secrets.STAGING_GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_SECRET=${{ secrets.STAGING_GOOGLE_CLIENT_SECRET }}
+            GOOGLE_CALLBACK_URL=${{ secrets.STAGING_GOOGLE_CALLBACK_URL }}
+            FRONTEND_URL=${{ secrets.STAGING_FRONTEND_URL }}
+            SLACK_WEBHOOK_URL=${{ secrets.STAGING_SLACK_WEBHOOK_URL }}
+            EOF
+            chmod 600 infra/staging/.env
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
-            docker compose -f infra/staging/docker-compose.staging.yml pull
-            docker compose -f infra/staging/docker-compose.staging.yml run --rm backend node ./node_modules/typeorm/cli.js -d ./dist/common/database/data-source.js migration:run
-            docker compose -f infra/staging/docker-compose.staging.yml up -d
+            docker compose -f infra/staging/docker-compose.staging.yml --env-file infra/staging/.env pull
+            docker compose -f infra/staging/docker-compose.staging.yml --env-file infra/staging/.env run --rm backend node ./node_modules/typeorm/cli.js -d ./dist/common/database/data-source.js migration:run
+            docker compose -f infra/staging/docker-compose.staging.yml --env-file infra/staging/.env up -d
+            docker exec web24-nginx nginx -s reload || echo "Nginx reload skipped"
 
   deploy-production:
     if: github.ref == 'refs/heads/main' && (github.event_name != 'workflow_dispatch' || inputs.target == 'all' || inputs.target == 'deploy-production')
@@ -126,13 +147,34 @@ jobs:
             git fetch --all
             git checkout main
             git pull
-            export DB_HOST="${{ secrets.PROD_DB_HOST }}"
-            export DB_PORT="${{ secrets.PROD_DB_PORT }}"
-            export DB_USER="${{ secrets.PROD_DB_USER }}"
-            export DB_PASS="${{ secrets.PROD_DB_PASS }}"
-            export DB_NAME="${{ secrets.PROD_DB_NAME }}"
-            export CLOVA_API_KEY="${{ secrets.PROD_CLOVA_API_KEY }}"
+            sed 's/^[[:space:]]*//' <<'EOF' > infra/prod/.env
+            DB_HOST=${{ secrets.PROD_DB_HOST }}
+            DB_PORT=${{ secrets.PROD_DB_PORT }}
+            DB_USER=${{ secrets.PROD_DB_USER }}
+            DB_PASS=${{ secrets.PROD_DB_PASS }}
+            DB_NAME=${{ secrets.PROD_DB_NAME }}
+            CLOVA_API_KEY=${{ secrets.PROD_CLOVA_API_KEY }}
+            SESSION_SECRET=${{ secrets.PROD_SESSION_SECRET }}
+            SESSION_MAX_AGE_MS=${{ secrets.PROD_SESSION_MAX_AGE_MS }}
+            NODE_OPTIONS=${{ secrets.PROD_NODE_OPTIONS }}
+            UV_THREADPOOL_SIZE=${{ secrets.PROD_UV_THREADPOOL_SIZE }}
+            SENTRY_DSN=${{ secrets.PROD_SENTRY_DSN }}
+            SENTRY_ENV=production
+            SENTRY_RELEASE=${{ github.sha }}
+            SENTRY_TRACES_SAMPLE_RATE=${{ secrets.PROD_SENTRY_TRACES_SAMPLE_RATE }}
+            SENTRY_PROFILES_SAMPLE_RATE=${{ secrets.PROD_SENTRY_PROFILES_SAMPLE_RATE }}
+            VAPID_PUBLIC_KEY=${{ secrets.PROD_VAPID_PUBLIC_KEY }}
+            VAPID_PRIVATE_KEY=${{ secrets.PROD_VAPID_PRIVATE_KEY }}
+            VAPID_SUBJECT=${{ secrets.PROD_VAPID_SUBJECT }}
+            GOOGLE_CLIENT_ID=${{ secrets.PROD_GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_SECRET=${{ secrets.PROD_GOOGLE_CLIENT_SECRET }}
+            GOOGLE_CALLBACK_URL=${{ secrets.PROD_GOOGLE_CALLBACK_URL }}
+            FRONTEND_URL=${{ secrets.PROD_FRONTEND_URL }}
+            SLACK_WEBHOOK_URL=${{ secrets.PROD_SLACK_WEBHOOK_URL }}
+            EOF
+            chmod 600 infra/prod/.env
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u "${{ secrets.GHCR_USERNAME }}" --password-stdin
-            docker compose -f infra/prod/docker-compose.prod.yml pull
-            docker compose -f infra/prod/docker-compose.prod.yml run --rm backend node ./node_modules/typeorm/cli.js -d ./dist/common/database/data-source.js migration:run
-            docker compose -f infra/prod/docker-compose.prod.yml up -d
+            docker compose -f infra/prod/docker-compose.prod.yml --env-file infra/prod/.env pull
+            docker compose -f infra/prod/docker-compose.prod.yml --env-file infra/prod/.env run --rm backend node ./node_modules/typeorm/cli.js -d ./dist/common/database/data-source.js migration:run
+            docker compose -f infra/prod/docker-compose.prod.yml --env-file infra/prod/.env up -d
+            docker exec web24-nginx nginx -s reload || echo "Nginx reload skipped"

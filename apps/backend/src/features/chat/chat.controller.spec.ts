@@ -1,0 +1,69 @@
+import { Test, TestingModule } from '@nestjs/testing';
+
+import { ChatController } from './chat.controller';
+import { ChatService } from './chat.service';
+
+describe('ChatController', () => {
+  let controller: ChatController;
+  const service = {
+    getDodoChat: jest.fn(),
+    getDodoChatHistory: jest.fn(),
+  };
+
+  beforeEach(async () => {
+    service.getDodoChat.mockReset();
+    service.getDodoChatHistory.mockReset();
+
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [ChatController],
+      providers: [
+        {
+          provide: ChatService,
+          useValue: service,
+        },
+      ],
+    }).compile();
+
+    controller = module.get<ChatController>(ChatController);
+  });
+
+  it('getDodoChat은 서비스 결과를 반환한다', async () => {
+    service.getDodoChat.mockResolvedValue({ reply: '반가워요!', action: 'None', limited: false });
+    const res = { status: jest.fn() };
+
+    const result = await controller.getDodoChat('user-1', { message: '안녕' }, res as any);
+
+    expect(service.getDodoChat).toHaveBeenCalledWith('user-1', '안녕');
+    expect(res.status).not.toHaveBeenCalled();
+    expect(result).toEqual({ reply: '반가워요!', action: 'None' });
+  });
+
+  it('getDodoChat은 제한일 때 429 상태를 설정한다', async () => {
+    service.getDodoChat.mockResolvedValue({
+      reply: '잠시 쉬어갈게요',
+      action: 'None',
+      limited: true,
+    });
+    const res = { status: jest.fn() };
+
+    const result = await controller.getDodoChat('user-1', { message: '안녕' }, res as any);
+
+    expect(res.status).toHaveBeenCalledWith(429);
+    expect(result).toEqual({ reply: '잠시 쉬어갈게요', action: 'None' });
+  });
+
+  it('getDodoChatHistory는 서비스 결과를 반환한다', async () => {
+    const mockResponse = {
+      messages: [],
+      hasMore: false,
+      nextCursor: null,
+    };
+
+    service.getDodoChatHistory = jest.fn().mockResolvedValue(mockResponse);
+
+    const result = await controller.getDodoChatHistory('user-1', { limit: 10 });
+
+    expect(service.getDodoChatHistory).toHaveBeenCalledWith('user-1', undefined, 10);
+    expect(result).toEqual(mockResponse);
+  });
+});

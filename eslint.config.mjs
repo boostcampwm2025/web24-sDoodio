@@ -107,6 +107,7 @@ export default [
       '**/test/**/*.{ts,tsx,js,jsx}',
       '**/playwright.config.{ts,js,mjs,cjs}',
       '**/vite.config.{ts,js,mjs,cjs}',
+      '**/main.{ts,tsx}',
     ],
     rules: {
       'import/no-extraneous-dependencies': [

@@ -1,5 +1,14 @@
 @import 'tailwindcss';
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css');
+
+:root {
+  --header-h: 56px;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --header-h: 96px;
+  }
+}
 
 @theme {
   /* ===== Typography ===== */
@@ -48,6 +57,9 @@
   --color-label-normal: #252322;
   --color-label-alternative: #383533;
   --color-label-disable: #6b5a4a;
+
+  /* Accent Colors */
+  --color-accent-red: #d84343;
 
   /* ===== Shadows ===== */
   --shadow-normal:
@@ -198,6 +210,14 @@
     background: rgba(0, 0, 0, 0.2);
     border: 2px solid transparent;
     background-clip: padding-box;
+  }
+}
+
+@layer base {
+  button,
+  [role='button'],
+  [role='link'] {
+    cursor: pointer;
   }
 }
 

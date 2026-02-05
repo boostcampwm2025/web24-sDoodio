@@ -18,13 +18,19 @@
     "format:check": "pnpm exec prettier --check ."
   },
   "dependencies": {
+    "@nivo/core": "^0.99.0",
+    "@nivo/pie": "^0.99.0",
+    "@tanstack/react-query": "^5.90.20",
     "@web24/shared": "workspace:*",
+    "framer-motion": "^12.27.1",
     "lucide-react": "^0.562.0",
     "react": "^19.2.3",
     "react-compiler-runtime": "^1.0.0",
     "react-dom": "^19.2.3",
+    "react-modal": "^3.16.3",
     "react-router-dom": "^7.10.1",
     "react-toastify": "^11.0.5",
+    "seedrandom": "^3.0.5",
     "swiper": "^12.0.3",
     "uuid": "^13.0.0",
     "zustand": "^5.0.8"
@@ -32,12 +38,15 @@
   "devDependencies": {
     "@playwright/test": "^1.54.2",
     "@tailwindcss/vite": "^4.1.18",
+    "@tanstack/react-query-devtools": "^5.91.3",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.1",
     "@testing-library/user-event": "^14.6.1",
     "@types/node": "^20.17.11",
     "@types/react": "^19.1.7",
     "@types/react-dom": "^19.1.4",
+    "@types/react-modal": "^3.16.3",
+    "@types/seedrandom": "^3.0.8",
     "@vitejs/plugin-react": "^5.1.2",
     "@vitest/coverage-v8": "3.2.4",
     "@vitest/ui": "^3.2.4",
@@ -46,9 +55,12 @@
     "jsdom": "^26.1.0",
     "prettier": "^3.4.2",
     "prettier-plugin-tailwindcss": "^0.7.2",
+    "rollup-plugin-visualizer": "^6.0.5",
     "tailwindcss": "^4.1.18",
     "typescript": "~5.9.3",
     "vite": "^7.2.4",
+    "vite-plugin-pwa": "^1.2.0",
+    "vite-plugin-svgr": "^4.5.0",
     "vitest": "^3.2.4"
   }
 }

@@ -1,7 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Between, DataSource, In, Not, Repository } from 'typeorm';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { AIBehaviorStatus, BEHAVIOR_DIFFICULTIES, TodayBehaviorStatus } from '@web24/shared';
+import {
+  AIBehaviorStatus,
+  BEHAVIOR_DIFFICULTIES,
+  BEHAVIOR_LEVEL_SCORES,
+  BEHAVIOR_TITLE_MAX_LENGTH,
+  DEFAULT_BEHAVIOR_WEIGHT,
+  TodayBehaviorStatus,
+} from '@web24/shared';
 import { getKstDayKey } from '../../common/utils/time.utils';
 import { Behavior } from './behavior.entity';
 import { TodayBehavior } from './today-behavior.entity';
@@ -24,17 +31,21 @@ export class BehaviorService {
     private readonly aiService: AIService,
   ) {}
 
-  async getTodayBehaviors() {
+  async getTodayBehaviors(userId: string) {
     return this.dataSource.transaction(async (manager) => {
       const todayDate = getKstDayKey();
 
-      const user = await manager.getRepository(User).findOne({ where: { nickname: '테스트유저' } });
+      const user = await manager.getRepository(User).findOne({ where: { id: userId } });
       if (!user) {
         throw new NotFoundException('User not found');
       }
 
       const existingTodayBehavior = await manager.getRepository(TodayBehavior).find({
-        where: { date: todayDate, user: { id: user.id }, status: Not(In(['skipped', 'ignored'])) },
+        where: {
+          date: todayDate,
+          user: { id: user.id },
+          status: Not(In(['skipped', 'ignored', 'deleted'])),
+        },
         relations: { behavior: { goal: true }, user: true },
       });
 
@@ -44,6 +55,7 @@ export class BehaviorService {
           title: b.behavior.title,
           goalTitle: b.behavior.goal.title,
           goalColor: b.behavior.goal.color,
+          goalTemplateId: b.behavior.goal.templateId ?? undefined,
           difficulty: b.behavior.difficulty,
           isChecked: b.status === 'completed',
           isRecommended: false, // AI 추천 여부
@@ -52,9 +64,10 @@ export class BehaviorService {
 
       const behaviors = await manager.getRepository(Behavior).find({
         relations: { goal: true },
+        where: { goal: { user: { id: userId } } },
       });
 
-      const extractedTodayBehavior = this.extractTodayBehaviors(behaviors);
+      const extractedTodayBehavior = this.extractTodayBehaviors(behaviors, user.behaviorRatio);
 
       const toSave = extractedTodayBehavior.map((behavior) =>
         manager.getRepository(TodayBehavior).create({
@@ -73,6 +86,7 @@ export class BehaviorService {
         title: b.behavior.title,
         goalTitle: b.behavior.goal.title,
         goalColor: b.behavior.goal.color,
+        goalTemplateId: b.behavior.goal.templateId ?? undefined,
         difficulty: b.behavior.difficulty,
         isChecked: false,
         isRecommended: false,
@@ -80,38 +94,250 @@ export class BehaviorService {
     });
   }
 
-  async updateTodayBehaviorStatus(id: string, status: TodayBehaviorStatus) {
-    const result = await this.todayBehaviorRepository.update({ id }, { status });
+  async updateTodayBehaviorStatus(userId: string, id: string, status: TodayBehaviorStatus) {
+    const result = await this.todayBehaviorRepository.update(
+      { id, user: { id: userId } },
+      { status },
+    );
     if (result.affected === 0) {
       throw new NotFoundException('TodayBehavior not found');
     }
     return { id, status };
   }
 
-  extractTodayBehaviors(behaviors: Behavior[]): Behavior[] {
-    const LEVEL_SCORE = {
-      마음열기: 1,
-      시작하기: 2,
-      이어가기: 3,
-      몰입하기: 4,
-    } as const;
-    const DEFAULT_TODAY_BEHAVIOR_RATIO = 0.8;
-    const DEFAULT_WEIGHT = 5;
+  async refreshTodayBehaviors(userId: string) {
+    return this.dataSource.transaction(async (manager) => {
+      const todayDate = getKstDayKey();
 
+      // 같은 사용자에 대한 새로고침을 직렬화해 중복 생성을 방지한다.
+      const user = await manager
+        .getRepository(User)
+        .createQueryBuilder('user')
+        .setLock('pessimistic_write')
+        .where('user.id = :id', { id: userId })
+        .getOne();
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      const todayBehaviorRepository = manager.getRepository(TodayBehavior);
+      const behaviorRepository = manager.getRepository(Behavior);
+
+      const existingTodayBehaviors = await todayBehaviorRepository.find({
+        where: {
+          date: todayDate,
+          user: { id: user.id },
+          status: Not(In(['deleted'])),
+        },
+        relations: { behavior: { goal: true }, user: true },
+      });
+
+      // 새로고침 전에 기존 pending을 skipped로 변경한다.
+      await todayBehaviorRepository.update(
+        { date: todayDate, user: { id: user.id }, status: 'pending' },
+        { status: 'skipped' },
+      );
+
+      const behaviors = await behaviorRepository.find({
+        where: { goal: { user: { id: userId } } },
+        relations: { goal: true },
+      });
+
+      const deletedTodayBehaviors = await todayBehaviorRepository.find({
+        where: { date: todayDate, user: { id: user.id }, status: 'deleted' },
+        relations: { behavior: true },
+      });
+
+      const deletedBehaviorIds = new Set(
+        deletedTodayBehaviors.map((todayBehavior) => todayBehavior.behavior.id),
+      );
+
+      const completedBehaviorIds = new Set(
+        existingTodayBehaviors
+          .filter((tb) => tb.status === 'completed')
+          .map((tb) => tb.behavior.id),
+      );
+
+      const candidateBehaviors = behaviors.filter(
+        (behavior) =>
+          !deletedBehaviorIds.has(behavior.id) && !completedBehaviorIds.has(behavior.id),
+      );
+
+      const extractedTodayBehavior = this.extractTodayBehaviors(
+        candidateBehaviors,
+        user.behaviorRatio,
+      );
+
+      // behaviorId 기준으로 중복을 제거하고, 기존 row를 재사용한다.
+      const existingByBehaviorId = new Map(
+        existingTodayBehaviors.map((todayBehavior) => [todayBehavior.behavior.id, todayBehavior]),
+      );
+
+      // 새로 삽입할 today-behaviors row
+      const toInsert: TodayBehavior[] = [];
+      // pending으로 되돌릴 기존 today-behaviors id 목록
+      const toRestoreIds: string[] = [];
+      // 이번 새로고침에 포함된 기존 today-behaviors
+      const selectedExisting: TodayBehavior[] = [];
+
+      extractedTodayBehavior.forEach((behavior) => {
+        const existing = existingByBehaviorId.get(behavior.id);
+        if (existing) {
+          // completed는 유지하고, 나머지는 pending으로 복구한다.
+          if (existing.status !== 'completed') {
+            toRestoreIds.push(existing.id);
+            existing.status = 'pending';
+          }
+          selectedExisting.push(existing);
+          return;
+        }
+
+        // 새로 선택된 행동은 today-behaviors row를 생성한다.
+        toInsert.push(
+          todayBehaviorRepository.create({
+            date: todayDate,
+            status: 'pending',
+            origin: 'system',
+            user,
+            behavior,
+          }),
+        );
+      });
+
+      if (toRestoreIds.length > 0) {
+        await todayBehaviorRepository.update({ id: In(toRestoreIds) }, { status: 'pending' });
+      }
+
+      const newTodayBehaviors =
+        toInsert.length > 0 ? await todayBehaviorRepository.save(toInsert) : [];
+
+      const completedTodayBehaviors = existingTodayBehaviors.filter(
+        (tb) => tb.status === 'completed',
+      );
+
+      // TodayBehavior를 응답 형태로 매핑한다(관계 누락 시 fallback 사용).
+      const mapToResponse = (todayBehavior: TodayBehavior, fallbackBehavior?: Behavior) => {
+        const behavior = todayBehavior.behavior ?? fallbackBehavior;
+        if (!behavior) {
+          throw new NotFoundException('Behavior not found');
+        }
+
+        return {
+          id: todayBehavior.id,
+          title: behavior.title,
+          goalTitle: behavior.goal.title,
+          goalColor: behavior.goal.color,
+          difficulty: behavior.difficulty,
+          isChecked: todayBehavior.status === 'completed',
+          isRecommended: false,
+        };
+      };
+
+      return [
+        ...completedTodayBehaviors.map((behavior) => mapToResponse(behavior)),
+        ...selectedExisting.map((behavior) => mapToResponse(behavior)),
+        ...newTodayBehaviors.map((behavior, index) =>
+          mapToResponse(behavior, toInsert[index]?.behavior),
+        ),
+      ];
+    });
+  }
+
+  async deleteTodayBehavior(userId: string, id: string) {
+    const todayBehavior = await this.todayBehaviorRepository.findOne({
+      where: { id, user: { id: userId } },
+    });
+    if (!todayBehavior) {
+      throw new NotFoundException('TodayBehavior not found');
+    }
+    if (todayBehavior.status === 'completed') {
+      throw new BadRequestException('Completed behavior cannot be deleted');
+    }
+
+    await this.todayBehaviorRepository.update({ id, user: { id: userId } }, { status: 'deleted' });
+    await this.todayBehaviorRepository.softDelete({ id, user: { id: userId } });
+    return { id };
+  }
+
+  async createTodayBehavior(userId: string, behaviorId: string) {
+    return this.dataSource.transaction(async (manager) => {
+      const todayDate = getKstDayKey();
+      const user = await manager.getRepository(User).findOne({ where: { id: userId } });
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      const behavior = await manager.getRepository(Behavior).findOne({
+        where: { id: behaviorId, goal: { user: { id: userId } } },
+        relations: { goal: true },
+      });
+      if (!behavior) {
+        throw new NotFoundException('Behavior not found');
+      }
+      if (behavior.difficulty === 'AI') {
+        throw new BadRequestException('AI behavior is not allowed');
+      }
+
+      const todayBehaviorRepository = manager.getRepository(TodayBehavior);
+      const existingTodayBehavior = await todayBehaviorRepository.findOne({
+        where: { date: todayDate, user: { id: user.id }, behavior: { id: behaviorId } },
+      });
+
+      if (existingTodayBehavior) {
+        // 중복 추가는 막되, skipped 상태는 pending으로 복구한다.
+        if (existingTodayBehavior.status !== 'skipped') {
+          throw new BadRequestException('Today behavior already exists');
+        }
+        await todayBehaviorRepository.update(
+          { id: existingTodayBehavior.id },
+          { status: 'pending', origin: 'user' },
+        );
+      } else {
+        // 신규 추가는 오늘 날짜 기준으로 pending 상태로 생성한다.
+        const toCreate = todayBehaviorRepository.create({
+          date: todayDate,
+          status: 'pending',
+          origin: 'user',
+          user,
+          behavior,
+        });
+        await todayBehaviorRepository.save(toCreate);
+      }
+
+      // 최종 목록을 다시 조회해서 일관된 형태로 반환한다.
+      const todayBehaviors = await todayBehaviorRepository.find({
+        where: {
+          date: todayDate,
+          user: { id: user.id },
+          status: Not(In(['skipped', 'ignored', 'deleted'])),
+        },
+        relations: { behavior: { goal: true }, user: true },
+      });
+
+      return todayBehaviors.map((b) => ({
+        id: b.id,
+        title: b.behavior.title,
+        goalTitle: b.behavior.goal.title,
+        goalColor: b.behavior.goal.color,
+        difficulty: b.behavior.difficulty,
+        isChecked: b.status === 'completed',
+        isRecommended: false,
+      }));
+    });
+  }
+
+  extractTodayBehaviors(behaviors: Behavior[], ratio: number): Behavior[] {
     const nonAiBehaviors = behaviors.filter((behavior) => behavior.difficulty !== 'AI');
 
     const totalBehaviorScore = nonAiBehaviors.reduce(
-      (sum, behavior) => sum + LEVEL_SCORE[behavior.difficulty],
+      (sum, behavior) =>
+        sum + BEHAVIOR_LEVEL_SCORES[behavior.difficulty as keyof typeof BEHAVIOR_LEVEL_SCORES],
       0,
     );
-    // MEMO:
-    // let todayBehaviorRatio = null;
-    // todayBehaviorRatio을 구하는 로직을 추가
-    // todayBehaviorRatio가 null 이 아니라면 아래 줄에서 DEFAULT_TODAY_BEHAVIOR_RATIO 가 아니라 todayBehaviorRatio 사용
-    const totalTodayBehaviorScore = Math.round(totalBehaviorScore * DEFAULT_TODAY_BEHAVIOR_RATIO);
+    const totalTodayBehaviorScore = Math.round(totalBehaviorScore * ratio);
 
     const weightsMap = nonAiBehaviors.reduce(
-      (acc, behavior) => acc.set(behavior, DEFAULT_WEIGHT),
+      (acc, behavior) => acc.set(behavior, DEFAULT_BEHAVIOR_WEIGHT),
       new Map<Behavior, number>(),
     );
     // MEMO:
@@ -136,7 +362,8 @@ export class BehaviorService {
 
       const [pickedBehavior] = pickedEntry;
       const nextTodayBehaviorScore: number =
-        currTodayBehaviorScore + LEVEL_SCORE[pickedBehavior.difficulty];
+        currTodayBehaviorScore +
+        BEHAVIOR_LEVEL_SCORES[pickedBehavior.difficulty as keyof typeof BEHAVIOR_LEVEL_SCORES];
       if (nextTodayBehaviorScore <= totalTodayBehaviorScore) {
         selected.push(pickedBehavior);
         currTodayBehaviorScore = nextTodayBehaviorScore;
@@ -147,9 +374,10 @@ export class BehaviorService {
     return selected;
   }
 
-  async getAllBehaviors() {
+  async getAllBehaviors(userId: string) {
     const behaviors = await this.behaviorRepository.find({
       relations: ['goal'],
+      where: { goal: { user: { id: userId } } },
     });
 
     return behaviors.map((b) => ({
@@ -160,11 +388,11 @@ export class BehaviorService {
     }));
   }
 
-  async getAIBehaviors() {
+  async getAIBehaviors(userId: string) {
     return this.dataSource.transaction(async (manager) => {
       const todayDate = getKstDayKey();
 
-      const user = await manager.getRepository(User).findOne({ where: { nickname: '테스트유저' } });
+      const user = await manager.getRepository(User).findOne({ where: { id: userId } });
       if (!user) {
         throw new NotFoundException('User not found');
       }
@@ -179,6 +407,7 @@ export class BehaviorService {
         title: b.title,
         goalTitle: b.goal.title,
         goalColor: b.goal.color,
+        goalTemplateId: b.goal.templateId ?? undefined,
         difficulty: BEHAVIOR_DIFFICULTIES[4],
         isChecked: b.status === 'completed',
         isRecommended: true,
@@ -186,7 +415,7 @@ export class BehaviorService {
     });
   }
 
-  async createAIBehaviors() {
+  async createAIBehaviors(userId: string) {
     const now = new Date();
     const weekBefore = new Date(now);
     weekBefore.setDate(now.getDate() - 7);
@@ -195,7 +424,7 @@ export class BehaviorService {
     const weekBeforeDate = getKstDayKey(weekBefore);
 
     return this.dataSource.transaction(async (manager) => {
-      const user = await manager.getRepository(User).findOne({ where: { nickname: '테스트유저' } });
+      const user = await manager.getRepository(User).findOne({ where: { id: userId } });
       if (!user) {
         throw new NotFoundException('User not found');
       }
@@ -266,9 +495,30 @@ export class BehaviorService {
 
       if (!bestGoal) return [];
 
-      const aiBehaviorTitles = await this.aiService.getAIBehaviorTitles(bestGoal);
+      const previousAIBehaviors = await manager.getRepository(AIBehavior).find({
+        where: {
+          goal: { id: bestGoal.id },
+          user: { id: user.id },
+        },
+        select: { title: true },
+      });
+      const previousBehaviorTitles = Array.from(
+        new Set(previousAIBehaviors.map((behavior) => behavior.title)),
+      );
 
-      const toSave = aiBehaviorTitles.map((title) =>
+      const aiBehaviorTitles = await this.aiService.getAIBehaviorTitles(
+        bestGoal,
+        previousBehaviorTitles,
+      );
+
+      const normalizedTitles = aiBehaviorTitles
+        .map((title) => title.trim())
+        .map((title) => title.slice(0, BEHAVIOR_TITLE_MAX_LENGTH))
+        .filter((title) => title.length > 0);
+
+      const uniqueTitles = Array.from(new Set(normalizedTitles));
+
+      const toSave = uniqueTitles.map((title) =>
         manager.getRepository(AIBehavior).create({
           goal: bestGoal,
           title,
@@ -284,6 +534,7 @@ export class BehaviorService {
         title: b.title,
         goalTitle: b.goal.title,
         goalColor: b.goal.color,
+        goalTemplateId: b.goal.templateId ?? undefined,
         difficulty: BEHAVIOR_DIFFICULTIES[4],
         isChecked: false,
         isRecommended: true,
@@ -291,8 +542,8 @@ export class BehaviorService {
     });
   }
 
-  async updateAIBehaviorStatus(id: string, status: AIBehaviorStatus) {
-    const result = await this.aiBehaviorRepository.update({ id }, { status });
+  async updateAIBehaviorStatus(userId: string, id: string, status: AIBehaviorStatus) {
+    const result = await this.aiBehaviorRepository.update({ id, user: { id: userId } }, { status });
     if (result.affected === 0) {
       throw new NotFoundException('AIBehavior not found');
     }

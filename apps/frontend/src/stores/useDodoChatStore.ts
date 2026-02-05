@@ -1,28 +1,26 @@
 import { create } from 'zustand';
+import { DEFAULT, REWARD_LINES } from '@/features/goal/constants/dodo';
+import { getRandomElement } from '@/shared/utils/random';
 
-const DEFAULT_QUOTE = '완벽하지 않아도 일단 해보면 재미있을거에요!';
+const DEFAULT_QUOTE = DEFAULT;
 
 interface DodoChatState {
   quote: string;
-  quotes: string[];
   isFirstStampToday: boolean;
   setQuote: (quote: string) => void;
-  setRandomQuote: () => void;
+  setRewardQuote: (goalTitle: string) => void;
   resetQuote: () => void;
   showFirstStampOverlay: () => void;
   hideFirstStampOverlay: () => void;
 }
 
-const useDodoChatStore = create<DodoChatState>((set, get) => ({
+const useDodoChatStore = create<DodoChatState>((set) => ({
   quote: DEFAULT_QUOTE,
-  quotes: ['오늘도 하나 해냈어요!', '대단해요!'],
   isFirstStampToday: false,
   setQuote: (quote) => set({ quote }),
-  setRandomQuote: () => {
-    const { quotes, quote: currentQuote } = get();
-    const availableQuotes = quotes.filter((q) => q !== currentQuote);
-    const randomIndex = Math.floor(Math.random() * availableQuotes.length);
-    set({ quote: availableQuotes[randomIndex] });
+  setRewardQuote: (goalTitle) => {
+    const lines = REWARD_LINES[goalTitle] || REWARD_LINES.default;
+    set({ quote: getRandomElement(lines) });
   },
   resetQuote: () => set({ quote: DEFAULT_QUOTE }),
   showFirstStampOverlay: () => set({ isFirstStampToday: true }),

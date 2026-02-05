@@ -1,7 +1,17 @@
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { IndexPage } from './IndexPage';
+
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
 
 vi.mock('@/stores/useDodoChatStore', () => ({
   default: () => ({
@@ -36,12 +46,48 @@ vi.mock('@/features/goal/apis/fetchGoals.api', () => ({
   ]),
 }));
 
+// useDodoToastStore 모킹
+vi.mock('@/stores/useDodoToastStore', () => ({
+  default: vi.fn(),
+}));
+
 describe('IndexPage', () => {
+  const originalMatchMedia = window.matchMedia;
+
+  beforeAll(() => {
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+  });
+
+  afterAll(() => {
+    window.matchMedia = originalMatchMedia;
+  });
+
   it('IndexPage가 크래시 없이 렌더링된다', async () => {
+    // useDodoToastStore가 반환할 showToast 모킹
+    const showToastMock = vi.fn();
+    (
+      (await import('@/stores/useDodoToastStore')).default as unknown as ReturnType<typeof vi.fn>
+    ).mockReturnValue({
+      showToast: showToastMock,
+    });
+
+    const queryClient = createTestQueryClient();
+
     render(
-      <MemoryRouter>
-        <IndexPage />
-      </MemoryRouter>,
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <IndexPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
 
     expect(await screen.findByText('물 2L 마시기')).toBeInTheDocument();

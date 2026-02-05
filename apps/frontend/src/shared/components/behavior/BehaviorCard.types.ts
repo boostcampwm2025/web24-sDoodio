@@ -5,6 +5,7 @@ export interface Behavior {
   title: string;
   goalTitle: string;
   goalColor: GoalColor;
+  goalTemplateId?: string;
   isChecked: boolean;
   difficulty: BehaviorDifficulty;
   isRecommended: boolean;

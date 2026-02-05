@@ -15,9 +15,9 @@ function MobileTabBar() {
             key={tab.path}
             type="button"
             onClick={() => navigate(tab.path)}
-            className={`flex w-12 flex-col items-center justify-center gap-1 transition-colors duration-200 ${isActive ? 'text-primary-strong' : 'text-label-disable'} `}
+            className={`flex w-12 flex-col items-center justify-center gap-1 transition-colors duration-200 ${isActive ? 'text-label-alternative' : 'text-primary-normal'} `}
           >
-            {Icon && <Icon size={24} />}
+            {Icon && <Icon width={24} height={24} aria-hidden="true" focusable="false" />}
             <span className="text-[10px] font-medium">{tab.label}</span>
           </button>
         );

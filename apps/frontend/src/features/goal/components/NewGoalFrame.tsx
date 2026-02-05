@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export interface NewGoalFrameStep {
@@ -7,6 +7,7 @@ export interface NewGoalFrameStep {
   headerText: string;
   dialogue: string[]; // string[]로 변경
   content: React.ReactNode;
+  validate?: () => boolean;
 }
 
 export interface NewGoalFrameProps {
@@ -29,8 +30,10 @@ export function NewGoalFrame({
   const [isExiting, setIsExiting] = useState(false);
   const [direction, setDirection] = useState<'next' | 'prev'>('next');
   const [dialogueIdx, setDialogueIdx] = useState(0);
-  const [dialogueFade, setDialogueFade] = useState(true);
-  const [resetTimer, setResetTimer] = useState(0);
+  const [isDialogueVisible, setIsDialogueVisible] = useState(true);
+  const [isAutoMode, setIsAutoMode] = useState(true);
+
+  const changeDialogueTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentStep = steps[currStepIdx];
   const isFirstStep = currStepIdx === 0;
@@ -39,38 +42,58 @@ export function NewGoalFrame({
   const currentProgressIndex = progressSteps.indexOf(currentStep.step);
   const isProgressShown = progressSteps.includes(currentStep.step);
 
-  const currentDialogue = currentStep.dialogue[dialogueIdx] || '';
+  const hasMultipleDialogues = currentStep.dialogue.length > 1;
+  const isFirstDialogue = dialogueIdx <= 0;
   const isLastDialogue = dialogueIdx >= currentStep.dialogue.length - 1;
 
   useEffect(() => {
     setDialogueIdx(0);
-    setDialogueFade(true);
-    setResetTimer((prev) => prev + 1);
+    setIsDialogueVisible(true);
+    setIsAutoMode(true);
   }, [currStepIdx]);
 
+  // 대사 변경 함수
+  const changeDialogue = (targetIdx: number, isAutoTrigger = false) => {
+    if (!isAutoTrigger) {
+      setIsAutoMode(false);
+    }
+
+    setIsDialogueVisible(false);
+    if (changeDialogueTimerRef.current) {
+      clearTimeout(changeDialogueTimerRef.current);
+    }
+
+    changeDialogueTimerRef.current = setTimeout(() => {
+      setDialogueIdx(targetIdx);
+      setIsDialogueVisible(true);
+    }, 300);
+  };
+
+  // 자동 대사 전환 로직
   useEffect(() => {
-    let timer: NodeJS.Timeout | undefined;
+    let autoTimer: ReturnType<typeof setTimeout> | undefined;
 
-    const transitionToNextDialogue = () => {
-      setDialogueIdx((prev) => prev + 1);
-      setDialogueFade(true);
-    };
-
-    const startTransition = () => {
-      setDialogueFade(false);
-      setTimeout(transitionToNextDialogue, 300);
-    };
-
-    if (!isLastDialogue) {
-      timer = setTimeout(startTransition, 3000);
+    if (isAutoMode && !isLastDialogue) {
+      autoTimer = setTimeout(() => {
+        changeDialogue(dialogueIdx + 1, true);
+      }, 3000);
     }
 
     return () => {
-      if (timer) {
-        clearTimeout(timer);
+      if (autoTimer) {
+        clearTimeout(autoTimer);
       }
     };
-  }, [dialogueIdx, isLastDialogue, resetTimer]);
+  }, [dialogueIdx, isAutoMode, isLastDialogue]);
+
+  useEffect(
+    () => () => {
+      if (changeDialogueTimerRef.current) {
+        clearTimeout(changeDialogueTimerRef.current);
+      }
+    },
+    [],
+  );
 
   const animationStyles = {
     next: '-translate-x-full opacity-0',
@@ -84,13 +107,18 @@ export function NewGoalFrame({
 
     // 마지막 스텝이면 완료
     if (isLastStep) {
+      if (currentStep.validate && !currentStep.validate()) return;
       onComplete?.();
       return;
     }
 
+    // 검증 로직 수행
+    if (currentStep.validate && !currentStep.validate()) return;
+
     // 다음 스텝으로
     setDirection('next');
     setIsExiting(true);
+    setIsDialogueVisible(false);
     setTimeout(() => {
       onMove(currStepIdx + 1);
       setIsExiting(false);
@@ -103,6 +131,7 @@ export function NewGoalFrame({
     // 이전 스텝으로
     setDirection('prev');
     setIsExiting(true);
+    setIsDialogueVisible(false);
     setTimeout(() => {
       onMove(currStepIdx - 1);
       setIsExiting(false);
@@ -110,47 +139,92 @@ export function NewGoalFrame({
   };
 
   const handleSkip = () => {
+    if (currentStep.validate && !currentStep.validate()) return;
     onSkip?.();
   };
 
+  const handlePrevDialogue = () => {
+    if (isFirstDialogue) return;
+    changeDialogue(dialogueIdx - 1);
+  };
+
+  const handleNextDialogue = () => {
+    if (isLastDialogue) return;
+    changeDialogue(dialogueIdx + 1);
+  };
+
   return (
-    <div className="bg-bg-normal flex h-full w-full items-center justify-center p-4 md:p-8 lg:p-12">
-      <div className="bg-bg-light shadow-heavy flex h-[700px] w-full max-w-sm flex-shrink-0 flex-col overflow-hidden rounded-3xl md:h-[800px] md:max-w-3xl md:rounded-4xl lg:h-[850px] lg:max-w-[1240px] lg:flex-row">
+    <div className="bg-bg-normal flex h-full w-full items-center justify-center px-0 py-2 font-sans lg:p-4">
+      <div className="bg-bg-light lg:shadow-heavy relative flex h-full w-full flex-col overflow-hidden rounded-3xl lg:h-180 lg:max-w-250 lg:flex-row lg:rounded-4xl">
         {/* 왼쪽 - 두두 캐릭터 및 대사 영역 */}
-        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center p-6 pb-0 md:p-8 md:pb-0 lg:p-12 lg:pb-12">
-          {/* 말풍선 */}
-          {/* TODO: 타이핑 효과 넣기 */}
-          <div className="relative mb-2 flex w-full flex-col items-center md:mb-6 lg:mb-12">
-            <div className="bg-bg-alternative relative flex min-h-16 w-full max-w-xs items-center justify-center rounded-3xl px-6 shadow-sm md:min-h-28 md:max-w-sm md:rounded-4xl lg:min-h-50">
-              <p
-                className={`text-label-normal text-body-1 md:text-headline-1 lg:text-heading-2 text-center leading-relaxed font-bold break-keep whitespace-pre-line transition-opacity duration-300 ${
-                  dialogueFade ? 'opacity-100' : 'opacity-0'
-                }`}
-              >
-                {currentDialogue}
-              </p>
-            </div>
-            <div className="absolute -bottom-10 left-10 flex flex-col gap-1 md:-bottom-18 md:left-16 md:gap-2">
-              <div className="bg-bg-alternative -ml-4 h-3 w-3 rounded-full opacity-80 md:-ml-8 md:h-6 md:w-6" />
-              <div className="bg-bg-alternative -ml-3 h-2 w-2 rounded-full opacity-60 md:-ml-5 md:h-4 md:w-4" />
-              <div className="bg-bg-alternative -ml-2 h-1.5 w-1.5 rounded-full opacity-50 md:h-2 md:w-2" />
+        <div className="relative flex flex-none flex-row items-end gap-6 p-4 pb-0 md:p-6 md:pb-0 lg:flex-1 lg:flex-col-reverse lg:justify-center lg:p-12 lg:pb-12">
+          {/* 두두 */}
+          <div className="flex flex-none items-end justify-center lg:mt-auto lg:mb-10 lg:w-full lg:justify-start">
+            <div className="w-full max-w-16 md:max-w-24 lg:max-w-50">
+              <img
+                src="/DodoSitdown.webp"
+                alt="앉은 두두"
+                className="h-full w-full object-contain"
+              />
             </div>
           </div>
 
-          {/* 두두 */}
-          <div className="mt-auto flex w-full items-center justify-center lg:block">
-            <div className="w-full max-w-24 md:max-w-40 lg:max-w-75">
-              <img src="/DodoSit.png" alt="앉은 두두" className="h-full w-full object-contain" />
+          {/* 말풍선 컨테이너 (너비 고정 및 꼬리 정렬용) */}
+          <div className="relative flex min-w-0 flex-1 flex-col items-center lg:mb-20 lg:w-full lg:max-w-md">
+            <div
+              className={`bg-bg-alternative relative flex min-h-20 w-full items-center justify-center rounded-3xl p-4 shadow-sm md:min-h-32 md:rounded-4xl md:p-6 lg:min-h-50 lg:px-10 lg:py-8 ${
+                hasMultipleDialogues ? 'pr-12 pb-8 md:pr-14' : ''
+              }`}
+            >
+              <p
+                className={`text-label-normal md:text-headline-1 lg:text-heading-2 text-center text-sm leading-relaxed font-bold break-keep whitespace-pre-line transition-opacity duration-300 md:text-base ${
+                  isDialogueVisible ? 'opacity-100' : 'opacity-0'
+                }`}
+              >
+                {currentStep.dialogue[dialogueIdx] || ''}
+              </p>
+              {hasMultipleDialogues && (
+                <div className="absolute right-3 bottom-3 flex items-center gap-1.5 md:right-4 md:bottom-4">
+                  {/* 이전 대사 전환 버튼 */}
+                  <button
+                    type="button"
+                    onClick={handlePrevDialogue}
+                    disabled={isFirstDialogue}
+                    className="disabled:opacity-40"
+                    aria-label="Previous Dialogue"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  {/* 다음 대사 전환 버튼 */}
+                  <button
+                    type="button"
+                    onClick={handleNextDialogue}
+                    disabled={isLastDialogue}
+                    className="disabled:opacity-40"
+                    aria-label="Next Dialogue"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </div>
+              )}
+            </div>
+            {/* 말풍선 꼬리 (말풍선 왼쪽 정렬) */}
+            <div className="absolute top-1/2 -left-4 flex -translate-y-1/2 flex-row-reverse gap-1 lg:top-auto lg:-bottom-10 lg:left-6 lg:translate-y-0 lg:flex-col lg:gap-2">
+              <div className="bg-bg-alternative h-2 w-2 rounded-full opacity-80 md:h-4 md:w-4 lg:h-6 lg:w-6" />
+              <div className="bg-bg-alternative h-1.5 w-1.5 rounded-full opacity-60 md:h-3 md:w-3 lg:h-4 lg:w-4" />
+              <div className="bg-bg-alternative h-1 w-1 rounded-full opacity-50 md:h-2 md:w-2" />
             </div>
           </div>
         </div>
 
         {/* Divider */}
-        <div className="my-4 h-[1.5px] w-full shrink-0 bg-[#EAEAEA] lg:my-12 lg:h-auto lg:w-[1.5px]" />
+        <div className="bg-bg-alternative m-4 h-[1.5px] shrink-0 lg:my-12 lg:h-auto lg:w-[1.5px]" />
 
         {/* 오른쪽 */}
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-6 pt-0 md:p-8 md:pt-0 lg:p-12">
-          <div className="flex shrink-0 items-center justify-between">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-6 pt-0 lg:p-12">
+          <div
+            className={`flex shrink-0 items-center justify-between ${currentStep.headerText === '' ? '' : 'py-2'}`}
+          >
             <h2 className="text-label-normal text-headline-1 md:text-heading-1 font-bold">
               {currentStep.headerText}
             </h2>
@@ -160,7 +234,7 @@ export function NewGoalFrame({
               <button
                 onClick={handleSkip}
                 type="button"
-                className="text-label-1 text-primary-weak hover:text-primary-strong md:text-headline-1 transition-colors md:font-bold"
+                className="text-label-1 text-primary-weak hover:text-primary-strong md:text-headline-1 font-bold transition-colors"
               >
                 skip
               </button>
@@ -168,13 +242,13 @@ export function NewGoalFrame({
           </div>
 
           {/* 콘텐츠 영역 */}
-          <div className="relative mt-4 flex-1 overflow-x-hidden overflow-y-auto md:mt-8">
+          <div className="scrollbar-pretty relative -mx-2 flex-1 overflow-x-hidden overflow-y-auto p-2">
             <div className={`transition-all duration-300 ease-in-out ${currentAnimation}`}>
-              <div className="flex min-h-full w-full py-4 lg:py-0">{currentStep.content}</div>
+              <div className="flex min-h-full w-full lg:py-0">{currentStep.content}</div>
             </div>
           </div>
 
-          <div className="flex flex-row items-center justify-between pt-4 md:pt-6 lg:pt-8">
+          <div className="flex flex-row items-center justify-between pt-2 md:pt-3 lg:pt-4">
             {/* 이전 버튼 */}
             <button
               onClick={handlePrev}
@@ -185,7 +259,7 @@ export function NewGoalFrame({
               }`}
               aria-label="Previous Step"
             >
-              <ChevronLeft className="text-label-normal h-10 w-10 stroke-[1.5px]" />
+              <ChevronLeft className="text-label-normal size-6 stroke-[1.5px] md:size-8 lg:size-10" />
             </button>
 
             {/* Progress Indicators */}
@@ -216,7 +290,7 @@ export function NewGoalFrame({
               className="group transition-transform active:scale-90 disabled:opacity-50"
               aria-label="Next Step"
             >
-              <ChevronRight className="text-label-normal h-10 w-10 stroke-[1.5px]" />
+              <ChevronRight className="text-label-normal size-6 stroke-[1.5px] md:size-8 lg:size-10" />
             </button>
           </div>
         </div>

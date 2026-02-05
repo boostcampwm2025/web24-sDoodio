@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import {
   AI_BEHAVIOR_STATUS,
   BEHAVIOR_TITLE_MAX_LENGTH,
@@ -8,6 +8,8 @@ import { BaseIdCreatedUpdatedDeletedEntity } from '../../common/entities/base.en
 import { User } from '../user/user.entity';
 import { Goal } from '../goal/goal.entity';
 
+@Index('idx_ai_behaviors_goal_id', ['goal'])
+@Index('idx_ai_behaviors_user_id', ['user'])
 @Entity({ name: 'ai_behaviors' })
 export class AIBehavior extends BaseIdCreatedUpdatedDeletedEntity {
   @ManyToOne(() => Goal, (goal) => goal.behaviors, {

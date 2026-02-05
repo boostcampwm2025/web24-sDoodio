@@ -37,6 +37,14 @@ export type GetGoalBehaviorsResponse = Behavior[];
 export const GetTodayBehaviorsResponseSchema = z.array(TodayBehaviorSchema);
 export type GetTodayBehaviorsResponse = z.infer<typeof GetTodayBehaviorsResponseSchema>;
 
+export const PostTodayBehaviorRequestSchema = z.object({
+  behaviorId: z.uuid({ version: 'v7' }),
+});
+export type PostTodayBehaviorRequest = z.infer<typeof PostTodayBehaviorRequestSchema>;
+
+export const PostTodayBehaviorResponseSchema = GetTodayBehaviorsResponseSchema;
+export type PostTodayBehaviorResponse = GetTodayBehaviorsResponse;
+
 export const PatchTodayBehaviorStatusRequestSchema = z.object({
   status: z.enum(TODAY_BEHAVIOR_STATUS),
 });
@@ -49,6 +57,11 @@ export const PatchTodayBehaviorStatusResponseSchema = z.object({
 export type PatchTodayBehaviorStatusResponse = z.infer<
   typeof PatchTodayBehaviorStatusResponseSchema
 >;
+
+export const DeleteTodayBehaviorResponseSchema = z.object({
+  id: z.uuid({ version: 'v7' }),
+});
+export type DeleteTodayBehaviorResponse = z.infer<typeof DeleteTodayBehaviorResponseSchema>;
 
 export const GetAIBehaviorResponseSchema = z.array(AIBehaviorSchema);
 export type GetAIBehaviorResponse = z.infer<typeof GetAIBehaviorResponseSchema>;

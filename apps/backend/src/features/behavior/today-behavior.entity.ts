@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import {
   TODAY_BEHAVIOR_ORIGIN,
   TODAY_BEHAVIOR_STATUS,
@@ -9,6 +9,8 @@ import { BaseIdCreatedUpdatedDeletedEntity } from '../../common/entities/base.en
 import { Behavior } from './behavior.entity';
 import { User } from '../user/user.entity';
 
+@Index('idx_today_behaviors_behavior_id', ['behavior'])
+@Index('idx_today_behaviors_user_id', ['user'])
 @Entity({ name: 'today_behaviors' })
 export class TodayBehavior extends BaseIdCreatedUpdatedDeletedEntity {
   @ManyToOne(() => Behavior, (behavior) => behavior.todayBehaviors, {
