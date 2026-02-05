@@ -5,19 +5,19 @@ import { ChevronsDown, ChevronsUp, Plus } from 'lucide-react';
 import { ICON_SIZE } from '@/shared/constants/icon';
 import { useNavigate } from 'react-router-dom';
 import { GoalCard } from '@/features/goal/components/GoalCard';
-import { useAllBehaviors } from '@/features/goal/hooks/useAllBehaviors';
-import { useGoals } from '@/features/goal/hooks/useGoals';
 import { EmptyGoal } from '@/shared/components/goal/EmptyGoal';
+import { useGoalsQuery } from '@/features/goal/hooks/useGoalsQuery';
+import { useAllBehaviorsQuery } from '@/features/goal/hooks/useAllBehaviorsQuery';
 
 export function AllGoalsPage() {
   const navigate = useNavigate();
   const [columns, setColumns] = useState(1);
-  const { goals, isLoading: isGoalsLoading } = useGoals();
+  const { data: goals, isLoading: isGoalsLoading } = useGoalsQuery();
 
   const [expandedGoalIds, setExpandedGoalIds] = useState<Set<string>>(new Set());
   const [isAllExpanded, setIsAllExpanded] = useState(false);
 
-  const { allBehaviors, isLoading: isBehaviorsLoading } = useAllBehaviors(isAllExpanded);
+  const { data: allBehaviors, isLoading: isBehaviorsLoading } = useAllBehaviorsQuery(isAllExpanded);
 
   // 전체 토글 상태 동기화 로직
   useEffect(() => {
