@@ -38,10 +38,9 @@ function DesktopHeader() {
           className="flex cursor-pointer items-center gap-2"
           onClick={() => navigate('/')}
         >
-          <div className="bg-primary-strong text-bg-light flex h-8 w-8 items-center justify-center rounded-lg font-bold">
-            DW
-          </div>
-          <span className="text-heading-2 text-label-normal font-bold tracking-tight">뚜웰</span>
+          <span className="text-heading-2 text-label-disable font-bold tracking-tight">
+            Doowell
+          </span>
         </button>
 
         {/* 메뉴 */}
