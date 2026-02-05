@@ -58,6 +58,7 @@ export default defineConfig({
       workbox: {
         importScripts: ['push-handlers.js'],
         navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api/],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
