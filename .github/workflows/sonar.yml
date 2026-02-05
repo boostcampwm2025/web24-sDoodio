@@ -30,6 +30,9 @@ jobs:
       - name: Build shared package
         run: pnpm -F @web24/shared build
 
+      - name: Build batch package
+        run: pnpm -F @web24/batch build
+
       - name: Run backend tests with coverage
         run: pnpm -F @web24/backend test:cov
 
