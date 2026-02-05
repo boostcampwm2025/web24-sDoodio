@@ -12,6 +12,8 @@ export class ChatService {
 
   private static readonly LIMIT_WINDOW_HOURS = 3;
 
+  private static readonly MS_PER_HOUR = 60 * 60 * 1000;
+
   private static readonly GUEST_CHAT_LIMIT = 10;
 
   private static readonly USER_CHAT_LIMIT = 30;
@@ -101,7 +103,7 @@ export class ChatService {
   private async enforceChatLimit(user: User) {
     const limit =
       user.kind === 'guest' ? ChatService.GUEST_CHAT_LIMIT : ChatService.USER_CHAT_LIMIT;
-    const since = new Date(Date.now() - ChatService.LIMIT_WINDOW_HOURS * 60 * 60 * 1000);
+    const since = new Date(Date.now() - ChatService.LIMIT_WINDOW_HOURS * ChatService.MS_PER_HOUR);
 
     const recentCount = await this.dodoChatRepository.count({
       where: {
