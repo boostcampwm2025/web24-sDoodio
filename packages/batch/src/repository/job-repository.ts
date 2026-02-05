@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import type { EntityManager } from 'typeorm';
 import { Repository } from 'typeorm';
 import { createHash } from 'node:crypto';
 import type { CountsDelta, JobParameters, JobStatus } from '../core/types';
@@ -116,9 +117,14 @@ export class JobRepository {
     );
   }
 
-  async updateCounts(stepExecId: string, delta: CountsDelta): Promise<void> {
+  async updateCounts(
+    stepExecId: string,
+    delta: CountsDelta,
+    manager?: EntityManager,
+  ): Promise<void> {
     // atomic increment (query builder)
-    const qb = this.stepRepo
+    const repo = manager?.getRepository(StepExecutionEntity) ?? this.stepRepo;
+    const qb = repo
       .createQueryBuilder()
       .update(StepExecutionEntity)
       .where('id = :id', { id: stepExecId });
@@ -143,8 +149,12 @@ export class JobRepository {
     return new ExecutionContext(row?.context ?? {});
   }
 
-  async saveStepContext(stepExecId: string, ctx: ExecutionContext): Promise<void> {
-    await this.upsertContext('STEP', stepExecId, ctx.toJSON());
+  async saveStepContext(
+    stepExecId: string,
+    ctx: ExecutionContext,
+    manager?: EntityManager,
+  ): Promise<void> {
+    await this.upsertContext('STEP', stepExecId, ctx.toJSON(), manager);
   }
 
   async loadJobContext(jobExecId: string): Promise<ExecutionContext> {
@@ -152,8 +162,12 @@ export class JobRepository {
     return new ExecutionContext(row?.context ?? {});
   }
 
-  async saveJobContext(jobExecId: string, ctx: ExecutionContext): Promise<void> {
-    await this.upsertContext('JOB', jobExecId, ctx.toJSON());
+  async saveJobContext(
+    jobExecId: string,
+    ctx: ExecutionContext,
+    manager?: EntityManager,
+  ): Promise<void> {
+    await this.upsertContext('JOB', jobExecId, ctx.toJSON(), manager);
   }
 
   /**
@@ -164,9 +178,11 @@ export class JobRepository {
     scope: 'JOB' | 'STEP',
     scopeId: string,
     context: Record<string, any>,
+    manager?: EntityManager,
   ): Promise<void> {
     // ON CONFLICT (scope, scope_id) DO UPDATE
-    await this.ctxRepo
+    const repo = manager?.getRepository(ExecutionContextEntity) ?? this.ctxRepo;
+    await repo
       .createQueryBuilder()
       .insert()
       .into(ExecutionContextEntity)

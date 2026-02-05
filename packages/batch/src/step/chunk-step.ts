@@ -53,35 +53,42 @@ export class ChunkStep<I, O> implements Step {
       /* eslint-disable no-await-in-loop */
       // eslint-disable-next-line no-constant-condition
       while (true) {
-        const items = await this.reader.read(ctx, this.opts.chunkSize);
-        if (items.length === 0) break;
+        const shouldContinue = await this.tx.runInTransaction(async (manager) => {
+          const items = await this.reader.read(ctx, this.opts.chunkSize, manager);
+          if (items.length === 0) return false;
 
-        await this.tx.runInTransaction(async () => {
           const out: O[] = [];
 
           // iterator 금지 규칙은 프런트 번들 정책용; 여기서는 노드 런타임
           // eslint-disable-next-line no-restricted-syntax
           for (const item of items) {
             const processed = this.processor
-              ? await this.processor.process(item, ctx)
+              ? await this.processor.process(item, ctx, manager)
               : (item as unknown as O);
 
             if (processed !== null) out.push(processed);
           }
 
-          await this.writer.write(out, ctx);
+          await this.writer.write(out, ctx, manager);
 
-          await this.repo.updateCounts(stepExec.id, {
-            read: items.length,
-            write: out.length,
-            commit: countCommit ? 1 : 0,
-          });
+          await this.repo.updateCounts(
+            stepExec.id,
+            {
+              read: items.length,
+              write: out.length,
+              commit: countCommit ? 1 : 0,
+            },
+            manager,
+          );
 
           if (saveEveryChunk) {
             // ★ 재시작 포인트: chunk 성공마다 context 저장
-            await this.repo.saveStepContext(stepExec.id, ctx);
+            await this.repo.saveStepContext(stepExec.id, ctx, manager);
           }
+          return true;
         });
+
+        if (!shouldContinue) break;
       }
       /* eslint-enable no-await-in-loop */
 

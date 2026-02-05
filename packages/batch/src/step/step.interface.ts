@@ -1,3 +1,4 @@
+import type { EntityManager } from 'typeorm';
 import type { JobParameters } from '../core/types';
 import type { ExecutionContext } from '../core/execution-context';
 
@@ -8,14 +9,14 @@ export interface Step {
 
 export interface ItemReader<I> {
   open(ctx: ExecutionContext): Promise<void>;
-  read(ctx: ExecutionContext, chunkSize: number): Promise<I[]>; // [] => end
+  read(ctx: ExecutionContext, chunkSize: number, manager?: EntityManager): Promise<I[]>; // [] => end
   close(ctx: ExecutionContext): Promise<void>;
 }
 
 export interface ItemProcessor<I, O> {
-  process(item: I, ctx: ExecutionContext): Promise<O | null>; // null => filter out
+  process(item: I, ctx: ExecutionContext, manager?: EntityManager): Promise<O | null>; // null => filter out
 }
 
 export interface ItemWriter<O> {
-  write(items: O[], ctx: ExecutionContext): Promise<void>;
+  write(items: O[], ctx: ExecutionContext, manager?: EntityManager): Promise<void>;
 }
