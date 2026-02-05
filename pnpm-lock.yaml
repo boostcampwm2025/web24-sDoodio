@@ -73,13 +73,13 @@ importers:
         version: 8.4.0(zod@4.3.5)
       '@langchain/core':
         specifier: ^1.1.18
-        version: 1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.18.3)(zod@4.3.5))
+        version: 1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.18.3)(zod@4.3.5))
       '@langchain/langgraph':
         specifier: ^1.1.2
-        version: 1.1.2(@langchain/core@1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.18.3)(zod@4.3.5)))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(zod@4.3.5)
+        version: 1.1.2(@langchain/core@1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.18.3)(zod@4.3.5)))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(zod@4.3.5)
       '@langchain/openai':
         specifier: ^1.2.4
-        version: 1.2.4(@langchain/core@1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.18.3)(zod@4.3.5)))(ws@8.18.3)
+        version: 1.2.4(@langchain/core@1.1.18(@opentelemetry/api@1.9.0)(@opentelemetry/sdk-trace-base@2.5.0(@opentelemetry/api@1.9.0))(openai@6.17.0(ws@8.18.3)(zod@4.3.5)))(ws@8.18.3)
       '@nestjs/common':
         specifier: ^11.0.1
         version: 11.1.11(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -5908,6 +5908,11 @@ packages:
     deprecated: Rimraf versions prior to v4 are no longer supported
     hasBin: true
 
+  rimraf@6.1.2:
+    resolution: {integrity: sha512-cFCkPslJv7BAXJsYlK1dZsbP8/ZNLkCAQ0bi1hf5EKX2QHegmDFEFA6QhuYJlk7UDdc+02JjO80YSOrWPpw06g==}
+    engines: {node: 20 || >=22}
+    hasBin: true
+
   rollup-plugin-visualizer@6.0.5:
     resolution: {integrity: sha512-9+HlNgKCVbJDs8tVtjQ43US12eqaiHyyiLMdBwQ7vSZPiHMysGNo2E88TAp1si5wx8NAoYriI2A5kuKfIakmJg==}
     engines: {node: '>=18'}
@@ -5920,11 +5925,6 @@ packages:
         optional: true
       rollup:
         optional: true
-
-  rimraf@6.1.2:
-    resolution: {integrity: sha512-cFCkPslJv7BAXJsYlK1dZsbP8/ZNLkCAQ0bi1hf5EKX2QHegmDFEFA6QhuYJlk7UDdc+02JjO80YSOrWPpw06g==}
-    engines: {node: 20 || >=22}
-    hasBin: true
 
   rollup@2.79.2:
     resolution: {integrity: sha512-fS6iqSPZDs3dr/y7Od6y5nha8dW1YnbgtsyotCVvoFGKbERG++CVRFv1meyGDE1SNItQA8BrnCw7ScdAhRJ3XQ==}
@@ -13318,6 +13318,11 @@ snapshots:
     dependencies:
       glob: 7.2.3
 
+  rimraf@6.1.2:
+    dependencies:
+      glob: 13.0.0
+      package-json-from-dist: 1.0.1
+
   rollup-plugin-visualizer@6.0.5(rollup@2.79.2):
     dependencies:
       open: 8.4.2
@@ -13326,11 +13331,6 @@ snapshots:
       yargs: 17.7.2
     optionalDependencies:
       rollup: 2.79.2
-
-  rimraf@6.1.2:
-    dependencies:
-      glob: 13.0.0
-      package-json-from-dist: 1.0.1
 
   rollup@2.79.2:
     optionalDependencies:
