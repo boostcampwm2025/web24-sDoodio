@@ -94,7 +94,7 @@ export function DifficultyGraph() {
               >
                 {isEmpty ? (
                   <img
-                    src="/DodoStand.png"
+                    src="/DodoStand.webp"
                     alt="두두"
                     className="absolute inset-x-0 bottom-0 mx-auto w-full px-0.5 opacity-60"
                   />

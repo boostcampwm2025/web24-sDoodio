@@ -162,7 +162,7 @@ export function NewGoalFrame({
           <div className="flex flex-none items-end justify-center lg:mt-auto lg:mb-10 lg:w-full lg:justify-start">
             <div className="w-full max-w-16 md:max-w-24 lg:max-w-50">
               <img
-                src="/DodoSitdown.png"
+                src="/DodoSitdown.webp"
                 alt="앉은 두두"
                 className="h-full w-full object-contain"
               />
