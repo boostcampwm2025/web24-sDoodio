@@ -5,6 +5,7 @@ import {
   AIBehaviorStatus,
   BEHAVIOR_DIFFICULTIES,
   BEHAVIOR_LEVEL_SCORES,
+  BEHAVIOR_TITLE_MAX_LENGTH,
   DEFAULT_BEHAVIOR_WEIGHT,
   TodayBehaviorStatus,
 } from '@web24/shared';
@@ -510,7 +511,14 @@ export class BehaviorService {
         previousBehaviorTitles,
       );
 
-      const toSave = aiBehaviorTitles.map((title) =>
+      const normalizedTitles = aiBehaviorTitles
+        .map((title) => title.trim())
+        .map((title) => title.slice(0, BEHAVIOR_TITLE_MAX_LENGTH))
+        .filter((title) => title.length > 0);
+
+      const uniqueTitles = Array.from(new Set(normalizedTitles));
+
+      const toSave = uniqueTitles.map((title) =>
         manager.getRepository(AIBehavior).create({
           goal: bestGoal,
           title,
