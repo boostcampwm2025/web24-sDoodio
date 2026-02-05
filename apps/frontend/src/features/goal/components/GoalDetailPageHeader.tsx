@@ -53,7 +53,7 @@ function ViewHeader({ goal, onStartEdit }: ViewHeaderProps) {
         >
           편집
         </button>
-
+        {/* 삭제 버튼 주석처리
         <button
           disabled
           type="button"
@@ -61,6 +61,7 @@ function ViewHeader({ goal, onStartEdit }: ViewHeaderProps) {
         >
           삭제
         </button>
+        */}
       </div>
     </div>
   );

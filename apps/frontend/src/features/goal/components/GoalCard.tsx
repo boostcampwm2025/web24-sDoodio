@@ -1,9 +1,8 @@
 import { GOAL_COLOR_STYLES } from '@/shared/constants/goalColor';
 import type { GoalSummary, Behavior } from '@web24/shared';
-import { ChevronsUp, ChevronsDown, Trash2 } from 'lucide-react';
+import { ChevronsUp, ChevronsDown } from 'lucide-react';
 import { ICON_SIZE } from '@/shared/constants/icon';
 import { DifficultyBadge } from '@/shared/components/behavior/DifficultyBadge';
-import { toast } from 'react-toastify';
 import { useGoalBehaviorsQuery } from '../hooks/useGoalBehaviorsQuery';
 
 interface GoalCardProps {
@@ -46,6 +45,7 @@ export function GoalCard({
             <span>{goal.behaviorCount}개의 행동</span>
           </div>
           {/* 삭제 기능 추가 필요 */}
+          {/* 삭제 아이콘 주석 처리 
           <button
             type="button"
             onClick={(e) => {
@@ -55,6 +55,7 @@ export function GoalCard({
           >
             <Trash2 size={ICON_SIZE.sm} />
           </button>
+          */}
         </div>
         {/* 카드 바디 */}
         <div
