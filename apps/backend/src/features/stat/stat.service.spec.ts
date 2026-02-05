@@ -7,8 +7,8 @@ import {
   type BehaviorDifficulty,
   type TodayBehaviorOrigin,
 } from '@web24/shared';
+import { BatchRunnerService } from '@web24/batch';
 import { StatService } from './stat.service';
-import { User } from '../user/user.entity';
 import { TodayBehavior } from '../behavior/today-behavior.entity';
 import { COMPLETION_TIME_BUCKET, COUNT_DEGREE, DailyUserStat } from './daily-user-stat.entity';
 import { StatEventLog } from './stat-event-log.entity';
@@ -34,21 +34,20 @@ describe('StatService', () => {
     getCount: jest.fn().mockResolvedValue(count ?? rows.length),
   });
   const createService = async ({
-    userRepository: userRepositoryOverride,
     todayBehaviorRepository: todayBehaviorRepositoryOverride,
     dailyUserStatRepository: dailyUserStatRepositoryOverride,
     statEventLogRepository: statEventLogRepositoryOverride,
     goalRepository: goalRepositoryOverride,
     behaviorRepository: behaviorRepositoryOverride,
+    batchRunnerService: batchRunnerServiceOverride,
   }: {
-    userRepository?: Partial<Repository<User>>;
     todayBehaviorRepository?: Partial<Repository<TodayBehavior>>;
     dailyUserStatRepository?: Partial<Repository<DailyUserStat>>;
     statEventLogRepository?: Partial<Repository<StatEventLog>>;
     goalRepository?: Partial<Repository<Goal>>;
     behaviorRepository?: Partial<Repository<Behavior>>;
+    batchRunnerService?: Partial<BatchRunnerService>;
   } = {}) => {
-    const userRepository = { find: jest.fn(), ...userRepositoryOverride };
     const todayBehaviorRepository = { count: jest.fn(), ...todayBehaviorRepositoryOverride };
     const dailyUserStatRepository = {
       upsert: jest.fn(),
@@ -62,28 +61,29 @@ describe('StatService', () => {
     const goalRepository = { count: jest.fn(), ...goalRepositoryOverride };
     const behaviorRepository = { count: jest.fn(), ...behaviorRepositoryOverride };
     const slackService = { send: jest.fn() };
+    const batchRunnerService = { run: jest.fn(), ...batchRunnerServiceOverride };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         StatService,
-        { provide: getRepositoryToken(User), useValue: userRepository },
         { provide: getRepositoryToken(TodayBehavior), useValue: todayBehaviorRepository },
         { provide: getRepositoryToken(DailyUserStat), useValue: dailyUserStatRepository },
         { provide: getRepositoryToken(StatEventLog), useValue: statEventLogRepository },
         { provide: getRepositoryToken(Goal), useValue: goalRepository },
         { provide: getRepositoryToken(Behavior), useValue: behaviorRepository },
+        { provide: BatchRunnerService, useValue: batchRunnerService },
         { provide: SlackService, useValue: slackService },
       ],
     }).compile();
 
     return {
       service: module.get<StatService>(StatService),
-      userRepository,
       todayBehaviorRepository,
       dailyUserStatRepository,
       statEventLogRepository,
       goalRepository,
       behaviorRepository,
+      batchRunnerService,
       slackService,
     };
   };
@@ -96,89 +96,19 @@ describe('StatService', () => {
 
     it('일/주간 기준 키로 통계 계산 함수를 호출한다', async () => {
       jest.useFakeTimers().setSystemTime(new Date('2026-01-21T03:00:00.000Z'));
+      const { service, batchRunnerService } = await createService();
 
-      const user = { id: 'user-1' } as User;
-      const userRepository = { find: jest.fn().mockResolvedValue([user]) };
-      const dailyUserStatRepository = { upsert: jest.fn().mockResolvedValue(undefined) };
-      const goalRepository = { count: jest.fn().mockResolvedValue(0) };
-      const behaviorRepository = { count: jest.fn().mockResolvedValue(0) };
-
-      const { service } = await createService({
-        userRepository,
-        dailyUserStatRepository,
-        goalRepository,
-        behaviorRepository,
-      });
-
-      const svc = service as any;
-      const calcTotalCompletedCounts = jest
-        .spyOn(svc, 'calcTotalCompletedCounts')
-        .mockResolvedValue(0);
-      const calcBehaviorCompletedTopNCounts = jest
-        .spyOn(svc, 'calcBehaviorCompletedTopNCounts')
-        .mockResolvedValue([]);
-      const calcGoalCompletedTopNCounts = jest
-        .spyOn(svc, 'calcGoalCompletedTopNCounts')
-        .mockResolvedValue([]);
-      const countByDifficulty = jest.spyOn(svc, 'countByDifficulty').mockResolvedValue({});
-      const calcweeklyDailyDifficultyCompletedCounts = jest
-        .spyOn(svc, 'calcweeklyDailyDifficultyCompletedCounts')
-        .mockResolvedValue([]);
-      const calcGoalCompletedCounts = jest
-        .spyOn(svc, 'calcGoalCompletedCounts')
-        .mockResolvedValue([]);
-      const calcOriginCompletedCounts = jest
-        .spyOn(svc, 'calcOriginCompletedCounts')
-        .mockResolvedValue({ system: 0, user: 0 });
-      const calcNotDoneCounts = jest.spyOn(svc, 'calcNotDoneCounts').mockResolvedValue({});
-      const calcCompletionTimeBuckets = jest
-        .spyOn(svc, 'calcCompletionTimeBuckets')
-        .mockResolvedValue({});
-      const countEvent = jest.spyOn(svc, 'countEvent').mockResolvedValue(0);
-      const countCompletedInRange = jest.spyOn(svc, 'countCompletedInRange').mockResolvedValue(0);
+      const yesterDayKey = getKstDayKey(addDays(new Date(), -1));
+      const todayKey = getKstDayKey(new Date());
+      const weekStartKey = getKstDayKey(addDays(new Date(), -7));
 
       await service.calculateDailyUserStats();
 
-      const yesterDayKey = getKstDayKey(addDays(new Date(), -1));
-      const weekStartKey = getKstDayKey(addDays(new Date(), -7));
-
-      expect(calcTotalCompletedCounts).toHaveBeenCalledWith(user, yesterDayKey);
-      expect(calcBehaviorCompletedTopNCounts).toHaveBeenCalledWith(user, yesterDayKey);
-      expect(calcGoalCompletedTopNCounts).toHaveBeenCalledWith(user, yesterDayKey);
-      expect(countByDifficulty).toHaveBeenNthCalledWith(1, user.id, yesterDayKey, yesterDayKey);
-      expect(countByDifficulty).toHaveBeenNthCalledWith(2, user.id, weekStartKey, yesterDayKey);
-      expect(countByDifficulty).toHaveBeenNthCalledWith(3, user.id, undefined, yesterDayKey);
-      expect(calcweeklyDailyDifficultyCompletedCounts).toHaveBeenCalledWith(
-        user.id,
-        weekStartKey,
+      expect(batchRunnerService.run).toHaveBeenCalledWith('daily_user_stat', {
+        todayKey,
         yesterDayKey,
-      );
-      expect(calcGoalCompletedCounts).toHaveBeenCalledWith(user.id, yesterDayKey);
-      expect(calcOriginCompletedCounts).toHaveBeenCalledWith(user.id, weekStartKey, yesterDayKey);
-      expect(calcNotDoneCounts).toHaveBeenCalledWith(user.id, weekStartKey, yesterDayKey);
-      expect(calcCompletionTimeBuckets).toHaveBeenCalledWith(user.id, weekStartKey, yesterDayKey);
-      expect(countEvent).toHaveBeenNthCalledWith(
-        1,
-        user.id,
-        'CHECK_IN',
         weekStartKey,
-        yesterDayKey,
-      );
-      expect(countEvent).toHaveBeenNthCalledWith(
-        2,
-        user.id,
-        'DUDU_CATCH',
-        weekStartKey,
-        yesterDayKey,
-      );
-      expect(countEvent).toHaveBeenNthCalledWith(
-        3,
-        user.id,
-        'REFRESH_TODAY_BEHAVIORS',
-        weekStartKey,
-        yesterDayKey,
-      );
-      expect(countCompletedInRange).toHaveBeenCalledWith(user.id, weekStartKey, yesterDayKey);
+      });
     });
   });
 
@@ -364,10 +294,7 @@ describe('StatService', () => {
       const todayBehaviorRepository = { count: jest.fn().mockResolvedValue(5) };
       const { service } = await createService({ todayBehaviorRepository });
 
-      const result = await (service as any).calcTotalCompletedCounts(
-        { id: 'user-1' } as User,
-        '2026-01-20',
-      );
+      const result = await (service as any).calcTotalCompletedCounts('user-1', '2026-01-20');
 
       expect(todayBehaviorRepository.count).toHaveBeenCalledWith({
         where: expect.objectContaining({
@@ -391,10 +318,7 @@ describe('StatService', () => {
 
       const { service } = await createService({ todayBehaviorRepository });
 
-      const result = await (service as any).calcBehaviorCompletedTopNCounts(
-        { id: 'user-1' } as User,
-        '2026-01-20',
-      );
+      const result = await (service as any).calcBehaviorCompletedTopNCounts('user-1', '2026-01-20');
 
       expect(qb.andWhere).toHaveBeenCalledWith('tb.date <= :end', { end: '2026-01-20' });
       expect(result).toEqual([
@@ -420,10 +344,7 @@ describe('StatService', () => {
 
       const { service } = await createService({ todayBehaviorRepository });
 
-      const result = await (service as any).calcGoalCompletedTopNCounts(
-        { id: 'user-1' } as User,
-        '2026-01-20',
-      );
+      const result = await (service as any).calcGoalCompletedTopNCounts('user-1', '2026-01-20');
 
       expect(qb.andWhere).toHaveBeenCalledWith('tb.date <= :end', { end: '2026-01-20' });
       const goalOne = result.find((entry: any) => entry.goalId === 'g1');
