@@ -348,34 +348,35 @@ importers:
         version: 3.2.4(@types/node@20.19.27)(@vitest/ui@3.2.4)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.30.2)(terser@5.44.1)(yaml@2.8.2)
 
   packages/batch:
-    devDependencies:
+    dependencies:
       '@nestjs/common':
-        specifier: ^11.0.1
+        specifier: ^11.0.0
         version: 11.1.11(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/core':
-        specifier: ^11.0.1
+        specifier: ^11.0.0
         version: 11.1.11(@nestjs/common@11.1.11(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.11)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@nestjs/typeorm':
         specifier: ^11.0.0
         version: 11.0.0(@nestjs/common@11.1.11(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.11)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@0.3.28(pg@8.16.3)(ts-node@10.9.2(@types/node@22.19.8)(typescript@5.9.3)))
+      reflect-metadata:
+        specifier: ^0.2.0
+        version: 0.2.2
+      rxjs:
+        specifier: ^7.8.0
+        version: 7.8.2
+      typeorm:
+        specifier: ^0.3.0
+        version: 0.3.28(pg@8.16.3)(ts-node@10.9.2(@types/node@22.19.8)(typescript@5.9.3))
+    devDependencies:
       '@types/node':
         specifier: ^22.19.8
         version: 22.19.8
       concurrently:
         specifier: ^9.1.0
         version: 9.2.1
-      reflect-metadata:
-        specifier: ^0.2.2
-        version: 0.2.2
       rimraf:
         specifier: ^6.0.1
         version: 6.1.2
-      rxjs:
-        specifier: ^7.8.1
-        version: 7.8.2
-      typeorm:
-        specifier: ^0.3.28
-        version: 0.3.28(pg@8.16.3)(ts-node@10.9.2(@types/node@22.19.8)(typescript@5.9.3))
       typescript:
         specifier: ^5.7.3
         version: 5.9.3
