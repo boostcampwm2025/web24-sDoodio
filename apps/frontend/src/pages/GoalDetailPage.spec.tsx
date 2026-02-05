@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { fetchGoalStamps } from '@/features/goal/apis/fetchGoalStamps.api';
 import { fetchGoal } from '@/features/goal/apis/fetchGoal.api';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GoalDetailPage } from './GoalDetailPage';
 
 // fetchGoalStamps mock
@@ -28,8 +29,12 @@ vi.mock('@/features/goal/components/GoalBehaviorList', () => ({
 }));
 
 describe('GoalDetailPage', () => {
+  let queryClient: any;
+
   beforeEach(() => {
     vi.clearAllMocks();
+
+    queryClient = new QueryClient();
 
     // GoalDetailPage에서 현재는 mockGoal 사용, title만 교체
     // 필요한 경우 goalId로 가져오는 API도 Mock 가능
@@ -43,11 +48,13 @@ describe('GoalDetailPage', () => {
 
   function renderPage(goalId = 'goal-abc') {
     return render(
-      <MemoryRouter initialEntries={[`/goals/${goalId}`]}>
-        <Routes>
-          <Route path="/goals/:goalId" element={<GoalDetailPage />} />
-        </Routes>
-      </MemoryRouter>,
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={[`/goals/${goalId}`]}>
+          <Routes>
+            <Route path="/goals/:goalId" element={<GoalDetailPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>,
     );
   }
 
@@ -86,10 +93,12 @@ describe('GoalDetailPage', () => {
 
     renderPage();
 
-    const texts = await screen.findAllByText(/달성한 스탬프/);
-    expect(texts.length).toBeGreaterThan(0);
-    texts.forEach((text) => {
-      expect(text).toHaveTextContent('2');
+    const stampCountElements = await screen.findAllByText(/달성한 스탬프/);
+
+    await waitFor(() => {
+      stampCountElements.forEach((el) => {
+        expect(el).toHaveTextContent('2');
+      });
     });
   });
 
@@ -117,10 +126,11 @@ describe('GoalDetailPage', () => {
 
     renderPage();
 
-    const boards = await screen.findAllByTestId('goal-stamp-board');
-    expect(boards.length).toBeGreaterThan(0);
-    boards.forEach((board) => {
-      expect(board).toHaveTextContent('stamps:3');
+    await waitFor(() => {
+      const boards = screen.getAllByTestId('goal-stamp-board');
+      boards.forEach((board) => {
+        expect(board).toHaveTextContent('stamps:3');
+      });
     });
   });
 

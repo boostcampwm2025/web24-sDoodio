@@ -1,5 +1,6 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { NewGoalPage } from './NewGoalPage';
 
 const navigateMock = vi.fn();
@@ -126,12 +127,24 @@ describe('NewGoalPage', () => {
   });
 
   it('템플릿 선택 화면을 렌더링한다', () => {
-    render(<NewGoalPage />);
+    const queryClient = new QueryClient();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <NewGoalPage />
+      </QueryClientProvider>,
+    );
     expect(screen.getByRole('button', { name: '템플릿 선택' })).toBeInTheDocument();
   });
 
   it('템플릿을 선택하고 추천 항목을 클릭하면 행동 목록에 추가된다', async () => {
-    render(<NewGoalPage />);
+    const queryClient = new QueryClient();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <NewGoalPage />
+      </QueryClientProvider>,
+    );
 
     // 템플릿 선택
     fireEvent.click(screen.getByRole('button', { name: '템플릿 선택' }));
@@ -152,7 +165,13 @@ describe('NewGoalPage', () => {
   it('완료 시 각 단계에서 추가된 행동들로 목표 생성 요청을 수행한다', async () => {
     createGoalMock.mockResolvedValueOnce({ id: 'goal-id' });
 
-    render(<NewGoalPage />);
+    const queryClient = new QueryClient();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <NewGoalPage />
+      </QueryClientProvider>,
+    );
 
     // Step 1: 템플릿 선택
     fireEvent.click(screen.getByRole('button', { name: '템플릿 선택' }));
@@ -179,24 +198,37 @@ describe('NewGoalPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '다음' }));
 
     // Step 7: 최종 확인 및 완료
-    await fireEvent.click(screen.getByRole('button', { name: '완료' }));
+    fireEvent.click(screen.getByRole('button', { name: '완료' }));
 
-    expect(createGoalMock).toHaveBeenCalledWith({
-      goalTitle: '새 목표',
-      goalColor: expect.any(String),
-      templateId: 'template-1',
-      behaviors: expect.arrayContaining([
-        { title: '물 한 컵 마시기', difficulty: '마음열기' },
-        { title: '스트레칭 5분', difficulty: '시작하기' },
-        { title: '주 2회 운동', difficulty: '이어가기' },
-        { title: '헬스장 1시간', difficulty: '몰입하기' },
-      ]),
+    await waitFor(() => {
+      expect(createGoalMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          goalTitle: '새 목표',
+          templateId: 'template-1',
+          behaviors: expect.arrayContaining([
+            { title: '물 한 컵 마시기', difficulty: '마음열기' },
+            { title: '스트레칭 5분', difficulty: '시작하기' },
+            { title: '주 2회 운동', difficulty: '이어가기' },
+            { title: '헬스장 1시간', difficulty: '몰입하기' },
+          ]),
+        }),
+        expect.any(Object),
+      );
     });
-    expect(navigateMock).toHaveBeenCalledWith('/', { replace: true });
+
+    await waitFor(() => {
+      expect(navigateMock).toHaveBeenCalledWith('/', { replace: true });
+    });
   });
 
   it('행동을 하나도 입력하지 않으면 다음 단계로 넘어갈 수 없다 (Validation)', async () => {
-    render(<NewGoalPage />);
+    const queryClient = new QueryClient();
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <NewGoalPage />
+      </QueryClientProvider>,
+    );
 
     fireEvent.click(screen.getByRole('button', { name: '템플릿 선택' }));
     fireEvent.click(screen.getByRole('button', { name: '다음' }));

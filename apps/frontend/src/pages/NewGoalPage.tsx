@@ -12,15 +12,16 @@ import { useGoalTemplates } from '@/features/goal/hooks/useGoalTemplates';
 import { TemplateSelection } from '@/features/goal/components/TemplateSelection';
 import { BehaviorSelection, type BehaviorItem } from '@/features/goal/components/BehaviorSelection';
 import { NewGoal } from '@/features/goal/components/NewGoal';
-import { createGoal } from '@/features/goal/apis/createGoal.api';
 import { v7 } from 'uuid';
 import { SummaryView } from '@/features/goal/components/SummaryView';
 import { useDodoToast } from '@/shared/hooks/useDodoToast';
-import { DomainError } from '@/shared/errors/domain-error';
+import { useCreateGoal } from '@/features/goal/hooks/useCreateGoalMutation';
 
 export function NewGoalPage() {
   const navigate = useNavigate();
   const showToast = useDodoToast();
+  const createGoalMutation = useCreateGoal();
+
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
@@ -287,22 +288,20 @@ export function NewGoalPage() {
       ...buildBehaviors(BEHAVIOR_DIFFICULTIES[3], deepBehaviors),
     ];
 
-    try {
-      await createGoal({
+    createGoalMutation.mutate(
+      {
         goalTitle: newGoalTitle.trim(),
         goalColor: newGoalColor,
         templateId:
           selectedTemplateId === customTemplateId ? undefined : (selectedTemplateId ?? undefined),
         behaviors,
-      });
-      navigate('/', { replace: true });
-    } catch (error) {
-      if (error instanceof DomainError) {
-        showToast(error.message, { position: 'top' });
-      } else {
-        showToast('알 수 없는 문제가 생겼네.');
-      }
-    }
+      },
+      {
+        onSuccess: () => {
+          navigate('/', { replace: true });
+        },
+      },
+    );
   };
 
   return (

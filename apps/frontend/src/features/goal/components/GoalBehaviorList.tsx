@@ -9,9 +9,9 @@ import { DifficultyBadge } from '@/shared/components/behavior/DifficultyBadge';
 import { Minus, Plus } from 'lucide-react';
 import { DIFFICULTY_COLOR_STYLES } from '@/shared/constants/difficultyColor';
 import { toast } from 'react-toastify';
-import { createGoalBehaviors } from '../apis/createGoalBehaviors.api';
-import { updateGoalBehaviors } from '../apis/updateGoalBehaviors.api';
-import { deleteGoalBehaviors } from '../apis/deleteGoalBehaviors.api';
+import { useCreateGoalBehaviors } from '../hooks/useCreateGoalBehaviorsMutation';
+import { useUpdateGoalBehaviors } from '../hooks/useUpdateGoalBehaviorsMutation';
+import { useDeleteGoalBehaviors } from '../hooks/useDeleteGoalBehaviorsMutation';
 
 type DifficultyFilter = 'ALL' | BehaviorDifficulty;
 const VISIBLE_DIFFICULTIES = BEHAVIOR_DIFFICULTIES.filter((difficulty) => difficulty !== 'AI');
@@ -20,19 +20,17 @@ interface GoalBehaviorListProps {
   goalId: string;
   behaviors?: Behavior[];
   isLoading: boolean;
-  onRefetch: () => void;
 }
 
-export function GoalBehaviorList({
-  goalId,
-  behaviors,
-  isLoading,
-  onRefetch,
-}: GoalBehaviorListProps) {
+export function GoalBehaviorList({ goalId, behaviors, isLoading }: GoalBehaviorListProps) {
   const [activeFilter, setActiveFilter] = useState<DifficultyFilter>('ALL');
   const [isEditing, setIsEditing] = useState(false);
   const [localBehaviors, setLocalBehaviors] = useState<Behavior[]>([]);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+
+  const createMutation = useCreateGoalBehaviors();
+  const updateMutation = useUpdateGoalBehaviors();
+  const deleteMutation = useDeleteGoalBehaviors();
 
   // 초기 데이터 로드 시 로컬 상태 동기화
   useEffect(() => {
@@ -44,7 +42,7 @@ export function GoalBehaviorList({
   // 편집 모드 토글
   const toggleEditMode = () => {
     if (isEditing) {
-      if (behaviors) setLocalBehaviors(behaviors);
+      setLocalBehaviors(behaviors || []);
       setIsEditing(false);
     } else {
       setIsEditing(true);
@@ -98,18 +96,17 @@ export function GoalBehaviorList({
       const promises = [];
 
       if (toCreate.length > 0) {
-        promises.push(createGoalBehaviors(goalId, toCreate));
+        promises.push(createMutation.mutateAsync({ goalId, behaviors: toCreate }));
       }
       if (toUpdate.length > 0) {
-        promises.push(updateGoalBehaviors(goalId, toUpdate));
+        promises.push(updateMutation.mutateAsync({ goalId, behaviors: toUpdate }));
       }
       if (toDeleteIds.length > 0) {
-        promises.push(deleteGoalBehaviors(goalId, toDeleteIds));
+        promises.push(deleteMutation.mutateAsync({ goalId, behaviorIds: toDeleteIds }));
       }
 
-      // 3. 병렬 처리
       await Promise.all(promises);
-      onRefetch();
+
       setIsEditing(false);
     } catch (e) {
       toast.error(`저장에 실패했습니다. 다시 시도해주세요: ${e}`);

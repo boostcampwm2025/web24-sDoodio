@@ -3,15 +3,29 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Behavior, GetGoalSummary } from '@web24/shared';
 import { fetchGoalBehaviors } from '@/features/goal/apis/fetchGoalBehaviors.api';
 import { toast } from 'react-toastify';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useTodayBehaviorAdd } from './useTodayBehaviorAdd';
+import * as todayBehaviorApi from '../apis/createTodayBehavior.api';
 
 vi.mock('@/features/goal/apis/fetchGoalBehaviors.api', () => ({
   fetchGoalBehaviors: vi.fn(),
 }));
 
+vi.mock('../apis/createTodayBehavior.api', () => ({
+  createTodayBehavior: vi.fn(() => Promise.resolve({ id: 'b-1' })),
+}));
+
 vi.mock('react-toastify', () => ({
   toast: vi.fn(),
 }));
+
+const createTestQueryClient = () =>
+  new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
+const wrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const queryClient = createTestQueryClient();
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+};
 
 describe('useTodayBehaviorAdd', () => {
   const goals: GetGoalSummary[] = [
@@ -44,8 +58,7 @@ describe('useTodayBehaviorAdd', () => {
   });
 
   it('초기 상태를 반환한다', () => {
-    const onAddBehavior = vi.fn();
-    const { result } = renderHook(() => useTodayBehaviorAdd({ goals, onAddBehavior }));
+    const { result } = renderHook(() => useTodayBehaviorAdd({ goals }), { wrapper });
 
     expect(result.current.isAddOpen).toBe(false);
     expect(result.current.selectedGoal).toBeNull();
@@ -54,8 +67,7 @@ describe('useTodayBehaviorAdd', () => {
   });
 
   it('모달을 열고 닫으면 상태와 스크롤이 갱신된다', async () => {
-    const onAddBehavior = vi.fn();
-    const { result } = renderHook(() => useTodayBehaviorAdd({ goals, onAddBehavior }));
+    const { result } = renderHook(() => useTodayBehaviorAdd({ goals }), { wrapper });
 
     act(() => {
       result.current.openAddModal();
@@ -78,8 +90,7 @@ describe('useTodayBehaviorAdd', () => {
 
   it('목표를 선택하면 행동 목록을 불러온다', async () => {
     vi.mocked(fetchGoalBehaviors).mockResolvedValue(goalBehaviors);
-    const onAddBehavior = vi.fn();
-    const { result } = renderHook(() => useTodayBehaviorAdd({ goals, onAddBehavior }));
+    const { result } = renderHook(() => useTodayBehaviorAdd({ goals }), { wrapper });
 
     await act(async () => {
       await result.current.handleGoalSelect('goal-1');
@@ -96,8 +107,7 @@ describe('useTodayBehaviorAdd', () => {
 
   it('목표 행동 로드 실패 시 토스트를 표시한다', async () => {
     vi.mocked(fetchGoalBehaviors).mockRejectedValue(new Error('fail'));
-    const onAddBehavior = vi.fn();
-    const { result } = renderHook(() => useTodayBehaviorAdd({ goals, onAddBehavior }));
+    const { result } = renderHook(() => useTodayBehaviorAdd({ goals }), { wrapper });
 
     await act(async () => {
       await result.current.handleGoalSelect('goal-1');
@@ -111,27 +121,28 @@ describe('useTodayBehaviorAdd', () => {
   });
 
   it('행동 추가 성공 시 모달을 닫는다', async () => {
-    const onAddBehavior = vi.fn().mockResolvedValue(undefined);
-    const { result } = renderHook(() => useTodayBehaviorAdd({ goals, onAddBehavior }));
+    const { result } = renderHook(() => useTodayBehaviorAdd({ goals }), { wrapper });
 
     act(() => {
       result.current.openAddModal();
     });
 
     await act(async () => {
-      await result.current.handleBehaviorSelect('b-1');
+      result.current.handleBehaviorSelect('b-1');
     });
 
-    expect(onAddBehavior).toHaveBeenCalledWith('b-1');
     expect(result.current.isAddOpen).toBe(false);
   });
 
   it('이미 추가된 행동이면 안내 토스트를 표시한다', async () => {
-    const onAddBehavior = vi.fn().mockRejectedValue(new Error('already exists'));
-    const { result } = renderHook(() => useTodayBehaviorAdd({ goals, onAddBehavior }));
+    vi.spyOn(todayBehaviorApi, 'createTodayBehavior').mockRejectedValue(
+      new Error('Already exists'),
+    );
+
+    const { result } = renderHook(() => useTodayBehaviorAdd({ goals }), { wrapper });
 
     await act(async () => {
-      await result.current.handleBehaviorSelect('b-1');
+      result.current.handleBehaviorSelect('b-1');
     });
 
     expect(toast).toHaveBeenCalledWith('이미 존재합니다.');

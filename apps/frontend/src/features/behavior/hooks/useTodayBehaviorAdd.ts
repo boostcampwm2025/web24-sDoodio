@@ -2,13 +2,15 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Behavior, GetGoalSummary } from '@web24/shared';
 import { toast } from 'react-toastify';
 import { fetchGoalBehaviors } from '@/features/goal/apis/fetchGoalBehaviors.api';
+import { useCreateTodayBehaviorMutation } from './useCreateTodayBehaviorMutation';
 
 interface UseTodayBehaviorAddOptions {
   goals: GetGoalSummary[];
-  onAddBehavior: (behaviorId: string) => Promise<void>;
 }
 
-export function useTodayBehaviorAdd({ goals, onAddBehavior }: UseTodayBehaviorAddOptions) {
+export function useTodayBehaviorAdd({ goals }: UseTodayBehaviorAddOptions) {
+  const createMutation = useCreateTodayBehaviorMutation();
+
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
   const [goalBehaviors, setGoalBehaviors] = useState<Behavior[]>([]);
@@ -62,22 +64,14 @@ export function useTodayBehaviorAdd({ goals, onAddBehavior }: UseTodayBehaviorAd
     }
   };
 
-  const handleBehaviorSelect = async (behaviorId: string) => {
+  const handleBehaviorSelect = (behaviorId: string) => {
     if (isAddingBehavior) return;
     setIsAddingBehavior(true);
-    try {
-      await onAddBehavior(behaviorId);
-      closeAddModal();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : '';
-      if (message.toLowerCase().includes('already')) {
-        toast('이미 존재합니다.');
-      } else {
-        toast('오늘 행동을 추가하지 못했어요.');
-      }
-    } finally {
-      setIsAddingBehavior(false);
-    }
+
+    createMutation.mutate(behaviorId, {
+      onSuccess: () => closeAddModal(),
+      onSettled: () => setIsAddingBehavior(false),
+    });
   };
 
   return {

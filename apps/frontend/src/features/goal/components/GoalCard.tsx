@@ -4,7 +4,7 @@ import { ChevronsUp, ChevronsDown, Trash2 } from 'lucide-react';
 import { ICON_SIZE } from '@/shared/constants/icon';
 import { DifficultyBadge } from '@/shared/components/behavior/DifficultyBadge';
 import { toast } from 'react-toastify';
-import { useGoalBehaviors } from '../hooks/useGoalBehaviors';
+import { useGoalBehaviorsQuery } from '../hooks/useGoalBehaviorsQuery';
 
 interface GoalCardProps {
   goal: GoalSummary;
@@ -21,8 +21,9 @@ export function GoalCard({
   onToggle,
   onNavigate,
 }: GoalCardProps) {
-  const { behaviors: fetchedBehaviors } = useGoalBehaviors(goal.id, isOpen && !propsBehaviors);
-  const behaviors = propsBehaviors || fetchedBehaviors;
+  const { data: fetchedBehaviors } = useGoalBehaviorsQuery(goal.id, isOpen, propsBehaviors);
+
+  const behaviors = fetchedBehaviors ?? propsBehaviors ?? [];
 
   return (
     <div

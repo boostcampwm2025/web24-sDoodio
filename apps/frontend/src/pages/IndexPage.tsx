@@ -4,25 +4,28 @@ import useDodoChatStore from '@/stores/useDodoChatStore';
 import { useDodoToast } from '@/shared/hooks/useDodoToast';
 import { REWARD_LINES } from '@/features/goal/constants/dodo';
 import { AIBehaviorContainer } from '@/features/behavior/components/AIBehaviorContainer';
-import type { Behavior } from '@/shared/components/behavior/BehaviorCard.types';
 import { TodayBehaviorList } from '@/features/behavior/components/TodayBehaviorList';
-import { fetchTodayBehaviors } from '@/features/behavior/apis/fetchBehaviors.api';
-import { fetchGoals } from '@/features/goal/apis/fetchGoals.api';
-import { updateTodayBehaviorStatus } from '@/features/behavior/apis/updateTodayBehaviorStatus.api';
 import { useAIBehaviors } from '@/features/behavior/hooks/useAIBehaviors';
 import { updateAIBehaviorStatus } from '@/features/behavior/apis/updateAIBehaviorStatus.api';
-import { refreshTodayBehaviors } from '@/features/behavior/apis/refreshTodayBehaviors.api';
-import { deleteTodayBehavior } from '@/features/behavior/apis/deleteTodayBehavior.api';
 import { toast } from 'react-toastify';
-import { createTodayBehavior } from '@/features/behavior/apis/createTodayBehavior.api';
-import type { GetGoalSummary } from '@web24/shared';
 import { getRandomElement } from '@/shared/utils/random';
 import useAuthStore from '@/stores/useAuthStore';
 import { useAutoWebPushSubscribe } from '@/features/push/hooks/useAutoWebPushSubscribe';
+import { useToggleTodayBehaviorMutation } from '@/features/behavior/hooks/useToggleTodayBehaviorMutation';
+import { useDeleteTodayBehaviorMutation } from '@/features/behavior/hooks/useDeleteTodayBehaviorMutation';
+import { useRefreshTodayBehaviorsMutation } from '@/features/behavior/hooks/useRefreshTodayBehaviorsMutation';
+import { useGoalsQuery } from '@/features/goal/hooks/useGoalsQuery';
+import { useTodayBehaviorsQuery } from '@/features/behavior/hooks/useTodayBehaviorsQuery';
+import { useTodayBehaviorsDisplay } from '@/features/behavior/hooks/useTodayBehaviorsDisplay';
 
 export function IndexPage() {
-  const [behaviors, setBehaviors] = useState<Behavior[]>([]);
-  const [goals, setGoals] = useState<GetGoalSummary[]>([]);
+  const { data: behaviors = [] } = useTodayBehaviorsQuery();
+  const { data: goals = [] } = useGoalsQuery();
+
+  const toggleMutation = useToggleTodayBehaviorMutation();
+  const deleteMutation = useDeleteTodayBehaviorMutation();
+  const refreshMutation = useRefreshTodayBehaviorsMutation();
+
   const { quote, resetQuote } = useDodoChatStore();
   const {
     behaviors: aiBehaviors,
@@ -77,11 +80,11 @@ export function IndexPage() {
     }
   };
 
-  const toggleBehaviorIsChecked = (behaviorId: string) => {
-    setBehaviors((bs) =>
-      bs.map((b) => (b.id === behaviorId ? { ...b, isChecked: !b.isChecked } : b)),
-    );
-  };
+  const { displayBehaviors, handleBehaviorToggle } = useTodayBehaviorsDisplay({
+    behaviors,
+    toggleMutation,
+    handleRewardInteraction,
+  });
 
   const toggleAIBehaviorIsChecked = (behaviorId: string) => {
     setAIBehaviors((bs) =>
@@ -89,33 +92,10 @@ export function IndexPage() {
     );
   };
 
-  const handleBehaviorToggle = (id: string) => {
-    const targetBehavior = behaviors.find((bs) => bs.id === id);
-    if (!targetBehavior) return;
-
-    toggleBehaviorIsChecked(id);
-
-    const nextStatus = targetBehavior.isChecked ? 'pending' : 'completed';
-    updateTodayBehaviorStatus(id, nextStatus)
-      .then(() => {
-        if (nextStatus === 'completed') {
-          handleRewardInteraction(targetBehavior.goalTemplateId);
-        }
-      })
-      .catch(() => toggleBehaviorIsChecked(id));
-  };
-
-  const removeBehavior = (behaviorId: string) => {
-    setBehaviors((bs) => bs.filter((b) => b.id !== behaviorId));
-  };
-
-  const handleBehaviorDelete = async (id: string) => {
-    try {
-      await deleteTodayBehavior(id);
-      removeBehavior(id);
-    } catch {
-      toast('삭제에 실패했습니다.');
-    }
+  const handleBehaviorDelete = (id: string) => {
+    deleteMutation.mutate(id, {
+      onError: () => toast('삭제에 실패했습니다.'),
+    });
   };
 
   const handleAIBehaviorToggle = (id: string) => {
@@ -135,24 +115,10 @@ export function IndexPage() {
   };
 
   const handleRefreshTodayBehaviors = () => {
-    refreshTodayBehaviors()
-      .then((refreshedBehaviors) => setBehaviors(refreshedBehaviors))
-      .catch(() => {
-        toast('새로고침에 실패했습니다.');
-      });
-  };
-
-  const handleBehaviorAdd = async (behaviorId: string) => {
-    const nextBehaviors = await createTodayBehavior(behaviorId);
-    setBehaviors(nextBehaviors);
-  };
-
-  useEffect(() => {
-    Promise.all([fetchTodayBehaviors(), fetchGoals()]).then(([behaviorsData, goalsData]) => {
-      setBehaviors(behaviorsData);
-      setGoals(goalsData);
+    refreshMutation.mutate(undefined, {
+      onError: () => toast('새로고침에 실패했습니다.'),
     });
-  }, []);
+  };
 
   useEffect(
     () => () => {
@@ -179,9 +145,8 @@ export function IndexPage() {
       {/* 오늘의 행동 */}
       <TodayBehaviorList
         goals={goals}
-        behaviors={behaviors}
+        behaviors={displayBehaviors}
         onToggle={handleBehaviorToggle}
-        onAddBehavior={handleBehaviorAdd}
         onRefresh={handleRefreshTodayBehaviors}
         onDelete={handleBehaviorDelete}
       />

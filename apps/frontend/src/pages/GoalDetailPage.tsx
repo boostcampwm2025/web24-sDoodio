@@ -1,29 +1,21 @@
-import { fetchGoalStamps } from '@/features/goal/apis/fetchGoalStamps.api';
-import { fetchGoal } from '@/features/goal/apis/fetchGoal.api';
 import { GoalBehaviorList } from '@/features/goal/components/GoalBehaviorList';
 import { GoalStampBoard } from '@/features/goal/components/GoalStampBoard';
-import { type Goal, type GoalColor, type GoalStamp } from '@web24/shared';
+import { type GoalColor } from '@web24/shared';
 import { useEffect, useState, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import GoalDetailPageHeader from '@/features/goal/components/GoalDetailPageHeader';
-import { updateGoal } from '@/features/goal/apis/updateGoal.api';
-import { useGoalBehaviors } from '@/features/goal/hooks/useGoalBehaviors';
+import { toast } from 'react-toastify';
+import { useGoalQuery } from '@/features/goal/hooks/useGoalQuery';
+import { useGoalStampsQuery } from '@/features/goal/hooks/useGoalStampsQuery';
+import { useGoalBehaviorsDetailQuery } from '@/features/goal/hooks/useGoalBehaviorsDetailQuery';
+import { useUpdateGoalMutation } from '@/features/goal/hooks/useUpdateGoalMutation';
 
 export function GoalDetailPage() {
-  const { goalId } = useParams<{ goalId: string }>();
+  const { goalId = '' } = useParams<{ goalId: string }>();
+  const navigate = useNavigate();
 
-  const {
-    behaviors,
-    isLoading: isBehaviorsLoading,
-    refetch: refetchBehaviors,
-  } = useGoalBehaviors(goalId!, Boolean(goalId));
-
-  const [goal, setGoal] = useState<Goal | undefined>();
-  const [stamps, setStamps] = useState<GoalStamp[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const swiperRef = useRef<any>(null);
 
@@ -31,52 +23,38 @@ export function GoalDetailPage() {
   const [editTitle, setEditTitle] = useState('');
   const [editColor, setEditColor] = useState<GoalColor>('beige');
 
+  const { data: goal, isLoading: isGoalLoading, error: goalError } = useGoalQuery(goalId);
+  const { data: stamps = [] } = useGoalStampsQuery(goalId);
+  const { data: behaviors = [], isLoading: isBehaviorsLoading } =
+    useGoalBehaviorsDetailQuery(goalId);
+
+  const updateGoalMutation = useUpdateGoalMutation(goalId);
+
   useEffect(() => {
-    let cancelled = false;
+    if (!goalId) {
+      toast('잘못된 접근입니다.');
+      navigate('/all-goals');
+    }
+  }, [goalId, navigate]);
 
-    // MEMO: goalId가 null이면 에러페이지로 이동로직 추가
-    if (!goalId) return () => {};
-
-    setIsLoading(true);
-
-    Promise.all([fetchGoal(goalId), fetchGoalStamps(goalId)])
-      .then(([goalData, stampsData]) => {
-        if (cancelled) return;
-        setGoal(goalData);
-        setStamps(stampsData);
-        setEditTitle(goalData.title);
-        setEditColor(goalData.color);
-        setError(null);
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        setError(err instanceof Error ? err : new Error('Failed to fetch goal'));
-      })
-      .finally(() => {
-        if (cancelled) return;
-        setIsLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [goalId]);
+  useEffect(() => {
+    if (goal) {
+      setEditTitle(goal.title);
+      setEditColor(goal.color);
+    }
+  }, [goal]);
 
   // 수정 핸들러
-  const handleUpdate = async () => {
+  const handleUpdate = () => {
     if (!goalId || !goal) return;
-
-    try {
-      const updated = await updateGoal(goalId, {
-        title: editTitle,
-        color: editColor,
-      });
-
-      setGoal(updated);
-      setIsEditing(false);
-    } catch (e) {
-      setError(e instanceof Error ? e : new Error('Failed to update goal'));
-    }
+    updateGoalMutation.mutate(
+      { title: editTitle, color: editColor },
+      {
+        onSuccess: () => {
+          setIsEditing(false);
+        },
+      },
+    );
   };
 
   // 수정 취소 핸들러
@@ -93,7 +71,7 @@ export function GoalDetailPage() {
       {/* 목표 헤더 */}
       <GoalDetailPageHeader
         goal={goal}
-        isLoading={isLoading}
+        isLoading={isGoalLoading}
         isEditing={isEditing}
         editColor={editColor}
         editTitle={editTitle}
@@ -103,7 +81,7 @@ export function GoalDetailPage() {
         onCancel={handleCancel}
         onSave={handleUpdate}
       />
-      {error && <p>데이터를 불러오는 데 실패했습니다.</p>}
+      {goalError && <p>데이터를 불러오는 데 실패했습니다.</p>}
 
       {/* 목표 본문(>=TABLET) */}
       <div className="hidden flex-row gap-12 md:flex">
@@ -119,7 +97,6 @@ export function GoalDetailPage() {
               goalId={goalId}
               behaviors={behaviors}
               isLoading={isBehaviorsLoading}
-              onRefetch={refetchBehaviors}
             />
           )}
         </div>
@@ -165,7 +142,6 @@ export function GoalDetailPage() {
                   goalId={goalId}
                   behaviors={behaviors}
                   isLoading={isBehaviorsLoading}
-                  onRefetch={refetchBehaviors}
                 />
               )}
             </SwiperSlide>
