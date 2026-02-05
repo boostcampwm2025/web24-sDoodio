@@ -13,6 +13,15 @@ interface TodayBehaviorCardGridProps {
 
 const findItemById = (list: Behavior[], id: string) => list.find((item) => item.id === id);
 
+const checkIsToggleAction = (prevList: Behavior[], newList: Behavior[]) => {
+  if (prevList.length !== newList.length) return false;
+
+  return prevList.some((oldItem) => {
+    const matchedItem = findItemById(newList, oldItem.id);
+    return matchedItem && matchedItem.isChecked !== oldItem.isChecked;
+  });
+};
+
 export function TodayBehaviorCardGrid({
   behaviors,
   onToggle,
@@ -21,7 +30,6 @@ export function TodayBehaviorCardGrid({
 }: TodayBehaviorCardGridProps) {
   const [displayBehaviors, setDisplayBehaviors] = useState<Behavior[]>([]);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const prevBehaviorsRef = useRef<Behavior[]>(behaviors);
   const CHECK_SORT_DELAY_MS = 800;
 
   const getSortedBehaviors = useCallback((list: Behavior[]) => {
@@ -39,40 +47,33 @@ export function TodayBehaviorCardGrid({
     });
   }, []);
 
-  const syncDisplayWithNewData = useCallback(
-    (currentDisplay: Behavior[]) => currentDisplay.map((d) => findItemById(behaviors, d.id) || d),
-    [behaviors],
-  );
+  const handleToggle = (behaviorId: string) => {
+    setDisplayBehaviors((prev) =>
+      prev.map((b) => (b.id === behaviorId ? { ...b, isChecked: !b.isChecked } : b)),
+    );
+
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      setDisplayBehaviors((prev) => getSortedBehaviors(prev));
+      onToggle(behaviorId);
+    }, CHECK_SORT_DELAY_MS);
+  };
 
   useEffect(() => {
-    const prevBehaviors = prevBehaviorsRef.current;
+    // 상위 props 변경이 토글로 인한 것이라면 무시
+    setDisplayBehaviors((prev) => {
+      const isToggle = checkIsToggleAction(prev, behaviors);
+      if (isToggle) return prev;
+      return getSortedBehaviors(behaviors);
+    });
+  }, [behaviors, getSortedBehaviors]);
 
-    // 토글 동작인지 확인
-    const isToggleAction =
-      prevBehaviors.length === behaviors.length &&
-      behaviors.some((newItem) => {
-        const prevItem = findItemById(prevBehaviors, newItem.id);
-        return prevItem?.isChecked !== newItem.isChecked;
-      });
-
-    if (isToggleAction) {
-      setDisplayBehaviors(syncDisplayWithNewData);
-
+  useEffect(
+    () => () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      timeoutRef.current = setTimeout(() => {
-        setDisplayBehaviors(getSortedBehaviors(behaviors));
-      }, CHECK_SORT_DELAY_MS);
-    } else {
-      setDisplayBehaviors(getSortedBehaviors(behaviors));
-    }
-
-    // 다음 비교를 위해 저장
-    prevBehaviorsRef.current = behaviors;
-
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-  }, [behaviors, getSortedBehaviors, syncDisplayWithNewData]);
+    },
+    [],
+  );
 
   return (
     <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
@@ -80,7 +81,7 @@ export function TodayBehaviorCardGrid({
         <BehaviorCard
           key={behavior.id}
           behavior={behavior}
-          onToggle={() => onToggle(behavior.id)}
+          onToggle={() => handleToggle(behavior.id)}
           onDelete={onDelete ? () => onDelete(behavior.id) : undefined}
         />
       ))}

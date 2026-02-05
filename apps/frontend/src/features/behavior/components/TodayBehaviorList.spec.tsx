@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import type { GetGoalSummary } from '@web24/shared';
@@ -116,7 +116,7 @@ describe('TodayBehaviorList', () => {
     expect(screen.queryByText('Behavior 2')).not.toBeInTheDocument();
   });
 
-  it('행동 카드를 클릭하면 onToggle이 호출된다', () => {
+  it('행동 카드를 클릭하면 onToggle이 호출된다', async () => {
     const onToggleMock = vi.fn();
     renderWithProviders(
       <TodayBehaviorList goals={mockGoals} behaviors={mockBehaviors} onToggle={onToggleMock} />,
@@ -125,7 +125,9 @@ describe('TodayBehaviorList', () => {
     const toggleButton = screen.getByLabelText('Behavior 1 완료 토글');
     fireEvent.click(toggleButton);
 
-    expect(onToggleMock).toHaveBeenCalledWith('1');
+    await waitFor(() => {
+      expect(onToggleMock).toHaveBeenCalledWith('1');
+    });
   });
 
   it('추가 버튼 클릭 시 새 목표 페이지로 이동한다', () => {
