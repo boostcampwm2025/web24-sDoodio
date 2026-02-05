@@ -2,6 +2,12 @@ import 'reflect-metadata';
 import * as path from 'node:path';
 import { config as loadEnv, DotenvConfigOptions } from 'dotenv';
 import { DataSource } from 'typeorm';
+import {
+  ExecutionContextEntity,
+  JobExecutionEntity,
+  JobLockEntity,
+  StepExecutionEntity,
+} from '@web24/batch';
 
 const isProd = process.env.NODE_ENV === 'production';
 const envFile = isProd ? '.env.production.local' : '.env.development.local';
@@ -15,7 +21,13 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USER,
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
-  entities: [path.join(__dirname, '..', '..', '**', '*.entity.{ts,js}')],
+  entities: [
+    path.join(__dirname, '..', '..', '**', '*.entity.{ts,js}'),
+    JobExecutionEntity,
+    StepExecutionEntity,
+    ExecutionContextEntity,
+    JobLockEntity,
+  ],
   migrations: [path.join(__dirname, 'migrations', '*.{ts,js}')],
   synchronize: false,
   logging: !isProd,

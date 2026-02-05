@@ -110,6 +110,9 @@ importers:
       '@sentry/profiling-node':
         specifier: ^10.38.0
         version: 10.38.0
+      '@web24/batch':
+        specifier: workspace:*
+        version: link:../../packages/batch
       '@web24/shared':
         specifier: workspace:*
         version: link:../../packages/shared

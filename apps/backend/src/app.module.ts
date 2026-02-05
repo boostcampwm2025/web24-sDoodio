@@ -7,6 +7,7 @@ import type { RequestHandler } from 'express';
 import connectPgSimple from 'connect-pg-simple';
 import { Pool } from 'pg';
 
+import { BatchModule } from '@web24/batch';
 import { GoalModule } from './features/goal/goal.module';
 import { BehaviorModule } from './features/behavior/behavior.module';
 import { AIModule } from './features/ai/ai.module';
@@ -58,6 +59,7 @@ import { ChatModule } from './features/chat/chat.module';
         };
       },
     }),
+    BatchModule.forRoot(),
     GoalModule,
     BehaviorModule,
     AIModule,
