@@ -15,7 +15,9 @@ export class LockService {
       return await fn();
     } finally {
       // 정상적으로 끝나면 즉시 락 제거(= 다음 실행 바로 가능)
-      await this.release(lockKey).catch(() => {});
+      await this.release(lockKey).catch(() => {
+        // MEMO: 추후 추가, 최소 Log 남기기
+      });
     }
   }
 

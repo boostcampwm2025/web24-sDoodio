@@ -35,6 +35,9 @@ export class ChunkStep<I, O> implements Step {
 
   async execute(jobExecutionId: string, params: JobParameters): Promise<void> {
     const stepExec = await this.repo.startStep(jobExecutionId, this.name);
+    if (stepExec.status === 'COMPLETED') {
+      return;
+    }
 
     // step context: restart state lives here
     const ctx = await this.repo.loadStepContext(stepExec.id);
@@ -100,7 +103,9 @@ export class ChunkStep<I, O> implements Step {
       await this.reader.close(ctx);
       await this.repo.completeStep(stepExec.id);
     } catch (e: any) {
-      await this.reader.close(ctx).catch(() => {});
+      await this.reader.close(ctx).catch(() => {
+        // MEMO: 추후 추가, 최소 Log 남기기
+      });
       await this.repo.failStep(stepExec.id, e?.message ?? 'unknown error');
       throw e;
     }
