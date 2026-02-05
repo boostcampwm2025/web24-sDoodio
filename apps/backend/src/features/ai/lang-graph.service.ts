@@ -33,6 +33,13 @@ export class LangGraphService {
 
   private readonly graph;
 
+  private readonly modelConfig = {
+    toolPlan: 'HCX-005',
+    action: 'HCX-DASH-002',
+    chat: 'HCX-005',
+    failed: 'HCX-005',
+  } as const;
+
   constructor(
     private readonly configService: ConfigService,
     @InjectRepository(TodayBehavior)
@@ -93,7 +100,7 @@ export class LangGraphService {
       new HumanMessage(state.userInput),
     ];
 
-    const content = await this.callClova(messages);
+    const content = await this.callClova(messages, this.modelConfig.toolPlan);
     return {
       llmCalls: 1,
       toolPlanRaw: content,
@@ -245,7 +252,7 @@ export class LangGraphService {
       new SystemMessage(systemPrompt),
       new HumanMessage(state.dodoReply ?? ''),
     ];
-    const action = await this.callClova(messages);
+    const action = await this.callClova(messages, this.modelConfig.action);
     const dodoAction = DODO_ACTION_VALUES.includes(action as (typeof DODO_ACTION_VALUES)[number])
       ? (action as (typeof DODO_ACTION_VALUES)[number])
       : DODO_ACTIONS.none;
@@ -262,7 +269,7 @@ export class LangGraphService {
       new HumanMessage(state.userInput),
     ];
 
-    const dodoReply = await this.callClova(messages);
+    const dodoReply = await this.callClova(messages, this.modelConfig.chat);
     return { llmCalls: 1, dodoReply };
   };
 
@@ -277,7 +284,7 @@ export class LangGraphService {
       new HumanMessage(state.userInput),
     ];
 
-    const dodoReply = await this.callClova(messages);
+    const dodoReply = await this.callClova(messages, this.modelConfig.chat);
     return state.dodoAction
       ? { llmCalls: 1, dodoReply }
       : { llmCalls: 1, dodoReply, dodoAction: DODO_ACTIONS.none };
@@ -293,7 +300,7 @@ export class LangGraphService {
       new HumanMessage(state.userInput),
     ];
 
-    const dodoReply = await this.callClova(messages);
+    const dodoReply = await this.callClova(messages, this.modelConfig.failed);
     return { llmCalls: 1, dodoReply, dodoAction: DODO_ACTIONS.none };
   };
 
@@ -335,6 +342,7 @@ export class LangGraphService {
     });
 
     try {
+      this.logger.debug(`CLOVA model: ${model ?? DEFAULT_MODEL}`);
       const response = await llm.invoke(messages);
       const content = this.extractContent(response.content);
       if (!content) {

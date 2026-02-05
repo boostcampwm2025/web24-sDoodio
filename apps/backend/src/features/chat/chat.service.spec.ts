@@ -12,6 +12,7 @@ describe('ChatService', () => {
     find: jest.fn(),
     create: jest.fn((value) => value),
     save: jest.fn((value) => value),
+    count: jest.fn(),
     createQueryBuilder: jest.mock,
   };
   const userRepository = {
@@ -27,6 +28,7 @@ describe('ChatService', () => {
     dodoChatRepository.find.mockReset();
     dodoChatRepository.save.mockReset();
     dodoChatRepository.create.mockReset();
+    dodoChatRepository.count.mockReset();
     userRepository.findOne.mockReset();
     configService.getOrThrow.mockClear();
 
@@ -66,7 +68,8 @@ describe('ChatService', () => {
   });
 
   it('getDodoChat은 응답을 저장하고 reply와 action을 반환한다', async () => {
-    userRepository.findOne.mockResolvedValue({ id: 'user-1' });
+    userRepository.findOne.mockResolvedValue({ id: 'user-1', kind: 'user' });
+    dodoChatRepository.count.mockResolvedValue(0);
 
     dodoChatRepository.find.mockResolvedValue([
       { role: DODO_CHAT_ROLE.USER, content: '이전 질문' },
@@ -94,7 +97,49 @@ describe('ChatService', () => {
       }),
     ]);
 
-    expect(result).toEqual({ reply: '반가워요!', action: 'None' });
+    expect(result).toEqual({ reply: '반가워요!', action: 'None', limited: false });
+  });
+
+  it('getDodoChat은 게스트 유저 10회 기준을 적용한다', async () => {
+    userRepository.findOne.mockResolvedValue({ id: 'user-1', kind: 'guest' });
+
+    dodoChatRepository.count.mockResolvedValue(9);
+    aiService.invokeDodoAgent.mockResolvedValue({ reply: '반가워요!', action: 'None' });
+    dodoChatRepository.find.mockResolvedValue([]);
+
+    const underLimit = await service.getDodoChat('user-1', '안녕');
+    expect(underLimit.limited).toBe(false);
+    expect(dodoChatRepository.save).toHaveBeenCalledTimes(1);
+
+    dodoChatRepository.save.mockClear();
+    aiService.invokeDodoAgent.mockClear();
+
+    dodoChatRepository.count.mockResolvedValue(10);
+    const atLimit = await service.getDodoChat('user-1', '안녕');
+    expect(atLimit.limited).toBe(true);
+    expect(aiService.invokeDodoAgent).not.toHaveBeenCalled();
+    expect(dodoChatRepository.save).not.toHaveBeenCalled();
+  });
+
+  it('getDodoChat은 로그인 유저 30회 기준을 적용한다', async () => {
+    userRepository.findOne.mockResolvedValue({ id: 'user-1', kind: 'user' });
+
+    dodoChatRepository.count.mockResolvedValue(29);
+    aiService.invokeDodoAgent.mockResolvedValue({ reply: '반가워요!', action: 'None' });
+    dodoChatRepository.find.mockResolvedValue([]);
+
+    const underLimit = await service.getDodoChat('user-1', '안녕');
+    expect(underLimit.limited).toBe(false);
+    expect(dodoChatRepository.save).toHaveBeenCalledTimes(1);
+
+    dodoChatRepository.save.mockClear();
+    aiService.invokeDodoAgent.mockClear();
+
+    dodoChatRepository.count.mockResolvedValue(30);
+    const atLimit = await service.getDodoChat('user-1', '안녕');
+    expect(atLimit.limited).toBe(true);
+    expect(aiService.invokeDodoAgent).not.toHaveBeenCalled();
+    expect(dodoChatRepository.save).not.toHaveBeenCalled();
   });
 
   describe('getDodoChatHistory', () => {

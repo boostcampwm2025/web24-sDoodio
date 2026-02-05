@@ -47,6 +47,8 @@ services:
       - '3000'
     environment:
       NODE_ENV: production
+      NODE_OPTIONS: ${NODE_OPTIONS}
+      UV_THREADPOOL_SIZE: ${UV_THREADPOOL_SIZE}
       PORT: 3000
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
