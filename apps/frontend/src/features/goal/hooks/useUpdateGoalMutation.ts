@@ -1,0 +1,14 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { UpdateGoalRequest } from '@web24/shared';
+import { updateGoal } from '../apis/updateGoal.api';
+
+export function useUpdateGoalMutation(goalId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: UpdateGoalRequest) => updateGoal(goalId, payload),
+    onSuccess: (updatedGoal) => {
+      queryClient.setQueryData(['goal', goalId], updatedGoal);
+    },
+  });
+}
