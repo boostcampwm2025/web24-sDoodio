@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseIdCreatedEntity } from '../../common/entities/base.entity';
 import { User } from '../user/user.entity';
 
@@ -8,6 +8,7 @@ export const DODO_CHAT_ROLE = {
 } as const;
 export type DodoChatRole = (typeof DODO_CHAT_ROLE)[keyof typeof DODO_CHAT_ROLE];
 
+@Index('idx_dodo_chat_messages_user_id', ['user'])
 @Entity({ name: 'dodo_chat_messages' })
 export class DodoChatMessage extends BaseIdCreatedEntity {
   @ManyToOne(() => User, { createForeignKeyConstraints: false })
