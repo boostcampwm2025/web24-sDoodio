@@ -1,12 +1,19 @@
 import { Inject, Module, type NestModule, type MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import Joi from 'joi';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmModule, getDataSourceToken } from '@nestjs/typeorm';
 import session from 'express-session';
 import type { RequestHandler } from 'express';
 import connectPgSimple from 'connect-pg-simple';
 import { Pool } from 'pg';
 
+import {
+  BatchModule,
+  ExecutionContextEntity,
+  JobExecutionEntity,
+  JobLockEntity,
+  StepExecutionEntity,
+} from '@web24/batch';
 import { GoalModule } from './features/goal/goal.module';
 import { BehaviorModule } from './features/behavior/behavior.module';
 import { AIModule } from './features/ai/ai.module';
@@ -52,12 +59,19 @@ import { ChatModule } from './features/chat/chat.module';
           username: config.getOrThrow<string>('DB_USER'),
           password: config.getOrThrow<string>('DB_PASS'),
           database: config.getOrThrow<string>('DB_NAME'),
+          entities: [
+            JobExecutionEntity,
+            StepExecutionEntity,
+            ExecutionContextEntity,
+            JobLockEntity,
+          ],
           autoLoadEntities: true,
           synchronize: false,
           logging: !isProd,
         };
       },
     }),
+    BatchModule.forRoot({ dataSourceToken: getDataSourceToken() }),
     GoalModule,
     BehaviorModule,
     AIModule,

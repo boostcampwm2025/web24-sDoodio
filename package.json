@@ -8,8 +8,9 @@
   },
   "scripts": {
     "format": "pnpm -r format",
-    "build": "pnpm run build:shared && pnpm run build:fe && pnpm run build:be",
+    "build": "pnpm run build:batch && pnpm run build:shared && pnpm run build:fe && pnpm run build:be",
     "build:shared": "pnpm -F @web24/shared build",
+    "build:batch": "pnpm -F @web24/batch build",
     "build:fe": "pnpm -F @web24/frontend build",
     "build:be": "pnpm -F @web24/backend build",
     "dev": "concurrently \"pnpm run dev:shared\" \"pnpm run dev:fe\" \"pnpm run dev:be\"",

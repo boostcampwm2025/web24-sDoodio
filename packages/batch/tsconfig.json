@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "lib": ["ES2022"],
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "verbatimModuleSyntax": false,
+    "noEmit": false,
+    "allowImportingTsExtensions": false,
+    "outDir": "./dist",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "emitDeclarationOnly": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+  },
+  "include": ["src"]
+}

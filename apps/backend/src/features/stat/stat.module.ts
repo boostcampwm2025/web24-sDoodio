@@ -10,6 +10,7 @@ import { Goal } from '../goal/goal.entity';
 import { Behavior } from '../behavior/behavior.entity';
 import { StatController } from './stat.controller';
 import { SlackModule } from '../../common/slack/slack.module';
+import { DailyUserStatJob } from './daily-user-stat.job';
 
 @Module({
   imports: [
@@ -18,6 +19,6 @@ import { SlackModule } from '../../common/slack/slack.module';
     SlackModule,
   ],
   controllers: [StatController],
-  providers: [StatService],
+  providers: [StatService, DailyUserStatJob],
 })
 export class StatModule {}
